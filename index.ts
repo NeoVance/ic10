@@ -532,9 +532,12 @@ export class InterpreterIc10 {
 	public constants: {}
 	private settings: {
 		debug: boolean;
+		debugCallback: Function;
+		logCallback: Function;
+		executionCallback: Function;
 	};
 	
-	constructor(code: string, settings = {}) {
+	constructor(code: string = '', settings = {}) {
 		this.code = code
 		this.tickTime = 200
 		this.memory = new Memory(this)
@@ -542,16 +545,25 @@ export class InterpreterIc10 {
 		this.labels = {}
 		this.settings = Object.assign({
 			debug: true,
+			debugCallback: () => {
+				console.log(...arguments)
+			},
+			logCallback: () => {
+				console.log(...arguments)
+			},
+			executionCallback: (e: ic10Error) => {
+			},
 		}, settings)
-		this.init(code)
+		if (code) {
+			this.init(code)
+		}
 	}
 	
 	init(text) {
-		this.lines = text.split("\r\n")
+		this.lines = text.split("\r")
 		var commands = this.lines
 			.map((line: string) => {
 				const args = line.trim().split(/ +/)
-				// args.reduce((accumulator, currentValue) => accumulator + " " + currentValue)
 				const command = args.shift()
 				return {command, args}
 			})
@@ -635,6 +647,7 @@ export class InterpreterIc10 {
 				}
 			} catch (e) {
 				// @ts-ignore
+				this.settings.executionCallback(e)
 				Execution.display(e)
 			}
 		}
@@ -1271,12 +1284,12 @@ export class InterpreterIc10 {
 				}
 			}
 		}
-		console.log(`Log [${this.position}]: `, ...out)
+		this.settings.logCallback(`Log [${this.position}]: `, ...out)
 	}
 	
 	__debug(p: string, iArguments: string[]) {
 		if (this.settings.debug) {
-			console.debug(...arguments)
+			this.settings.debugCallback(...arguments)
 		}
 	}
 }

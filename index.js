@@ -424,7 +424,7 @@ class Slot {
     }
 }
 class InterpreterIc10 {
-    constructor(code, settings = {}) {
+    constructor(code = '', settings = {}) {
         this.code = code;
         this.tickTime = 200;
         this.memory = new Memory(this);
@@ -432,11 +432,21 @@ class InterpreterIc10 {
         this.labels = {};
         this.settings = Object.assign({
             debug: true,
+            debugCallback: () => {
+                console.log(...arguments);
+            },
+            logCallback: () => {
+                console.log(...arguments);
+            },
+            executionCallback: (e) => {
+            },
         }, settings);
-        this.init(code);
+        if (code) {
+            this.init(code);
+        }
     }
     init(text) {
-        this.lines = text.split("\r\n");
+        this.lines = text.split("\r");
         var commands = this.lines
             .map((line) => {
             const args = line.trim().split(/ +/);
@@ -523,6 +533,7 @@ class InterpreterIc10 {
                 }
             }
             catch (e) {
+                this.settings.executionCallback(e);
                 Execution.display(e);
             }
         }
@@ -1041,11 +1052,11 @@ class InterpreterIc10 {
                 }
             }
         }
-        console.log(`Log [${this.position}]: `, ...out);
+        this.settings.logCallback(`Log [${this.position}]: `, ...out);
     }
     __debug(p, iArguments) {
         if (this.settings.debug) {
-            console.debug(...arguments);
+            this.settings.debugCallback(...arguments);
         }
     }
 }

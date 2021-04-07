@@ -110,7 +110,7 @@ export declare class InterpreterIc10 {
     labels: {};
     constants: {};
     private settings;
-    constructor(code: string, settings?: {});
+    constructor(code?: string, settings?: {});
     init(text: any): void;
     run(): void;
     prepareLine(): any;
