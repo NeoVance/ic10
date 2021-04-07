@@ -2,6 +2,8 @@
 
 ic10 interpiter
 
+[npm](https://www.npmjs.com/package/ic10)
+
 ```typescript
 var code = "some ic10 script"
 var settings = {
