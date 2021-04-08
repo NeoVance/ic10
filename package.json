@@ -25,7 +25,7 @@
     "main.js.map",
     "test.js"
   ],
-  "exclude":[
+  "exclude": [
     ".idea"
   ],
   "homepage": "https://github.com/Traineratwot/ic10#readme",
@@ -34,6 +34,7 @@
     "chalk": "^4.1.0"
   },
   "devDependencies": {
+    "@types/node": "^14.14.37",
     "typescript": "^4.2.4"
   }
 }
