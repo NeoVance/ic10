@@ -1,12 +1,12 @@
 {
   "name": "ic10",
-  "version": "1.0.2",
+  "version": "1.0.7",
   "description": "ic10 interpreter",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "main.js",
+  "types": "main.d.ts",
   "scripts": {
     "watch": "tsc -w",
-    "watch": "node test.js"
+    "test": "node test.js"
   },
   "repository": {
     "type": "git",
@@ -18,6 +18,16 @@
   "bugs": {
     "url": "https://github.com/Traineratwot/ic10/issues"
   },
+  "files": [
+    "main.ts",
+    "main.d.ts",
+    "main.js",
+    "main.js.map",
+    "test.js"
+  ],
+  "exclude":[
+    ".idea"
+  ],
   "homepage": "https://github.com/Traineratwot/ic10#readme",
   "dependencies": {
     "caller-id": "^0.1.0",

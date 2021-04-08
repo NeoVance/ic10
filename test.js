@@ -1,5 +1,5 @@
 const fs = require('fs')
-const {InterpreterIc10} = require('./index')
+const {InterpreterIc10} = require('./main')
 const text = fs.readFileSync(".ic10", "utf8")
 var interpreterIc10 = new InterpreterIc10(text)
 interpreterIc10.run()
