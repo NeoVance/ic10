@@ -23,6 +23,7 @@ export declare class InterpreterIc10 {
     private settings;
     constructor(code?: string, settings?: {});
     init(text: any): this;
+    stop(): void;
     run(): this;
     prepareLine(): any;
     __issetLabel(x: string): boolean;

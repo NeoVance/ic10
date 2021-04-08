@@ -427,12 +427,12 @@ class Slot {
 class InterpreterIc10 {
     constructor(code = '', settings = {}) {
         this.code = code;
-        this.tickTime = 200;
         this.memory = new Memory(this);
         this.constants = {};
         this.labels = {};
         this.settings = Object.assign({
             debug: true,
+            tickTime: 200,
             debugCallback: () => {
                 console.log(...arguments);
             },
@@ -493,6 +493,9 @@ class InterpreterIc10 {
         this.commands = commands;
         return this;
     }
+    stop() {
+        clearInterval(this.interval);
+    }
     run() {
         this.position = 0;
         while (this.position < this.commands.length) {
@@ -507,7 +510,7 @@ class InterpreterIc10 {
             if (!this.prepareLine()) {
                 clearInterval(this.interval);
             }
-        }, this.tickTime);
+        }, this.settings.tickTime);
         return this;
     }
     prepareLine() {

@@ -1,5 +1,6 @@
 import {ic10Error,InterpreterIc10} from "./main";
-var fs = require('fs')
+import fs from "fs";
+
 var code = fs.readFileSync(".ic10", "utf8")
 var settings = {
   debug: true,
