@@ -22,8 +22,8 @@ export declare class InterpreterIc10 {
     private constants;
     private settings;
     constructor(code?: string, settings?: {});
-    init(text: any): void;
-    run(): void;
+    init(text: any): this;
+    run(): this;
     prepareLine(): any;
     __issetLabel(x: string): boolean;
     define(op1: any, op2: any, op3: any, op4: any): void;

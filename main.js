@@ -491,6 +491,7 @@ class InterpreterIc10 {
             }
         }
         this.commands = commands;
+        return this;
     }
     run() {
         this.position = 0;
@@ -507,6 +508,7 @@ class InterpreterIc10 {
                 clearInterval(this.interval);
             }
         }, this.tickTime);
+        return this;
     }
     prepareLine() {
         this.memory.environ.randomize();

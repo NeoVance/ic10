@@ -598,6 +598,7 @@ export class InterpreterIc10 {
       }
     }
     this.commands = commands
+    return this
   }
 
   run() {
@@ -615,6 +616,7 @@ export class InterpreterIc10 {
         clearInterval(this.interval)
       }
     }, this.tickTime)
+    return this
   }
 
   prepareLine() {
