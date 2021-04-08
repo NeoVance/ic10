@@ -432,7 +432,7 @@ class InterpreterIc10 {
         this.labels = {};
         this.settings = Object.assign({
             debug: true,
-            tickTime: 200,
+            tickTime: 100,
             debugCallback: () => {
                 console.log(...arguments);
             },
@@ -449,6 +449,7 @@ class InterpreterIc10 {
     }
     setSettings(settings = {}) {
         this.settings = Object.assign(this.settings, settings);
+        return this;
     }
     init(text) {
         this.lines = text.split("\r");
@@ -498,6 +499,7 @@ class InterpreterIc10 {
     }
     stop() {
         clearInterval(this.interval);
+        return this;
     }
     run() {
         this.position = 0;
@@ -542,7 +544,7 @@ class InterpreterIc10 {
                 }
             }
             catch (e) {
-                this.settings.executionCallback(e);
+                this.settings.executionCallback.call(this, e);
             }
         }
         if (command === "hcf")
@@ -1060,11 +1062,11 @@ class InterpreterIc10 {
                 }
             }
         }
-        this.settings.logCallback(`Log [${this.position}]: `, ...out);
+        this.settings.logCallback.call(this, `Log [${this.position}]: `, ...out);
     }
     __debug(p, iArguments) {
         if (this.settings.debug) {
-            this.settings.debugCallback(...arguments);
+            this.settings.debugCallback.call(this, ...arguments);
         }
     }
 }

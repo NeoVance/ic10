@@ -517,16 +517,15 @@ class Slot {
 }
 
 export class InterpreterIc10 {
-	private code: string
-	private commands: { args: string[]; command: string }[]
-	private lines: string[]
-	private memory: Memory
+	public code: string
+	public commands: { args: string[]; command: string }[]
+	public lines: string[]
+	public memory: Memory
 	public position: number
-	private interval: any
-	private tickTime: number
-	private labels: {}
-	private constants: {}
-	private settings: {
+	public interval: any
+	public labels: {}
+	public constants: {}
+	public settings: {
 		debug: boolean;
 		debugCallback: Function;
 		logCallback: Function;
@@ -541,7 +540,7 @@ export class InterpreterIc10 {
 		this.labels = {}
 		this.settings = Object.assign({
 			debug: true,
-			tickTime: 200,
+			tickTime: 100,
 			debugCallback: () => {
 				console.log(...arguments)
 			},
@@ -557,11 +556,12 @@ export class InterpreterIc10 {
 		}
 	}
 	
-	setSettings(settings: object = {}): void {
+	setSettings(settings: object = {}): InterpreterIc10 {
 		this.settings = Object.assign(this.settings, settings)
+		return this;
 	}
 	
-	init(text) {
+	init(text): InterpreterIc10 {
 		this.lines = text.split("\r")
 		var commands = this.lines
 			.map((line: string) => {
@@ -606,8 +606,9 @@ export class InterpreterIc10 {
 		return this
 	}
 	
-	stop() {
+	stop(): InterpreterIc10 {
 		clearInterval(this.interval)
+		return this;
 	}
 	
 	run() {
@@ -653,7 +654,7 @@ export class InterpreterIc10 {
 				}
 			} catch (e) {
 				// @ts-ignore
-				this.settings.executionCallback(e)
+				this.settings.executionCallback.call(this, e)
 			}
 		}
 		if (command === "hcf") return false
@@ -1289,12 +1290,12 @@ export class InterpreterIc10 {
 				}
 			}
 		}
-		this.settings.logCallback(`Log [${this.position}]: `, ...out)
+		this.settings.logCallback.call(this, `Log [${this.position}]: `, ...out)
 	}
 	
 	__debug(p: string, iArguments: string[]) {
 		if (this.settings.debug) {
-			this.settings.debugCallback(...arguments)
+			this.settings.debugCallback.call(this, ...arguments)
 		}
 	}
 }
