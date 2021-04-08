@@ -447,6 +447,9 @@ class InterpreterIc10 {
             this.init(code);
         }
     }
+    setSettings(settings = {}) {
+        this.settings = Object.assign(this.settings, settings);
+    }
     init(text) {
         this.lines = text.split("\r");
         var commands = this.lines

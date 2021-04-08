@@ -22,6 +22,7 @@ export declare class InterpreterIc10 {
     private constants;
     private settings;
     constructor(code?: string, settings?: {});
+    setSettings(settings?: object): void;
     init(text: any): this;
     stop(): void;
     run(): this;

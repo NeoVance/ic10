@@ -557,6 +557,10 @@ export class InterpreterIc10 {
 		}
 	}
 	
+	setSettings(settings: object = {}): void {
+		this.settings = Object.assign(this.settings, settings)
+	}
+	
 	init(text) {
 		this.lines = text.split("\r")
 		var commands = this.lines
