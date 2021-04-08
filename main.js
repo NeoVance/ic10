@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.InterpreterIc10 = void 0;
+exports.InterpreterIc10 = exports.ic10Error = void 0;
 const caller_id_1 = __importDefault(require("caller-id"));
 const chalk_1 = __importDefault(require("chalk"));
 const regexes = {
@@ -31,6 +31,7 @@ class ic10Error {
         return this.message;
     }
 }
+exports.ic10Error = ic10Error;
 var Execution = {
     error(code, message, obj = null) {
         var caller = caller_id_1.default.getData();

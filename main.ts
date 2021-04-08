@@ -11,7 +11,7 @@ const regexes = {
   'strEnd': new RegExp(".+\"$"),
 }
 
-class ic10Error {
+export class ic10Error {
   public message: string;
   public code: number;
   public functionName: string;

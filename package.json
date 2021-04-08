@@ -1,5 +1,6 @@
 {
   "name": "ic10",
+  "type": "commonjs",
   "version": "1.0.7",
   "description": "ic10 interpreter",
   "main": "main.js",
