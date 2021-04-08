@@ -1,114 +1,13 @@
-declare class Environ {
-    #private;
-    d0: Device;
-    d1: Device;
-    d2: Device;
-    d3: Device;
-    d4: Device;
-    d5: Device;
-    db: Chip;
-    constructor(scope: InterpreterIc10);
-    randomize(): void;
-}
-declare class Memory {
-    #private;
-    get scope(): InterpreterIc10;
-    cells: Array<MemoryCell>;
-    environ: Environ;
-    aliases: Object;
-    constructor(scope: any);
-    cell(cell: string | number, op1?: any, op2?: any): any;
-    getCell(cell: any): any;
-    alias(name: any, link: string | number): this;
-    define(name: any, value: string | number): void;
-}
-declare class MemoryCell {
-    #private;
-    value: any;
-    constructor(scope: any);
-    get(): any;
-    set(value: any): this;
-}
-declare class Device {
-    #private;
-    get scope(): InterpreterIc10;
-    slots: Slot[];
-    On: number;
-    Power: number;
-    Error: number;
-    Activate: number;
-    ClearMemory: number;
-    Lock: number;
-    Setting: any;
-    RecipeHash: number;
-    RequiredPower: number;
-    Flour: number;
-    Fenoxitone: number;
-    Milk: number;
-    Egg: number;
-    Iron: number;
-    Gold: number;
-    Carbon: number;
-    Uranium: number;
-    Copper: number;
-    Steel: number;
-    Hydrocarbon: number;
-    Silver: number;
-    Nickel: number;
-    Lead: number;
-    Electrum: number;
-    Invar: number;
-    Constantan: number;
-    Solder: number;
-    Plastic: number;
-    Silicon: number;
-    Salicylic: number;
-    Alcohol: number;
-    Oil: number;
-    Potato: number;
-    Tomato: number;
-    Rice: number;
-    Pumpkin: number;
-    Yellow: number;
-    Red: number;
-    Orange: number;
-    Green: number;
-    Blue: number;
-    constructor(scope: InterpreterIc10);
-    randomize(): void;
-    get(variable: any): any;
-    set(variable: any, value: any): this;
-    getSlot(op1: any, op2: any): any;
-}
-declare class Chip extends Device {
-    constructor(scope: any);
-}
-declare class Slot {
-    #private;
-    get scope(): InterpreterIc10;
-    Occupied: number;
-    OccupantHash: number;
-    Quantity: number;
-    Damage: number;
-    Class: number;
-    MaxQuantity: number;
-    PrefabHash: number;
-    constructor(scope: InterpreterIc10);
-    get(op1: any): any;
-}
 export declare class InterpreterIc10 {
-    code: string;
-    commands: {
-        args: string[];
-        command: string;
-    }[];
-    lines: string[];
-    memory: Memory;
+    private code;
+    private commands;
+    private lines;
+    private memory;
     position: number;
-    interval: any;
-    tickTime: number;
-    labels: {};
-    constants: {};
+    private interval;
+    private tickTime;
+    private labels;
+    private constants;
     private settings;
     constructor(code?: string, settings?: {});
     init(text: any): void;
@@ -238,4 +137,3 @@ export declare class InterpreterIc10 {
     _log(): void;
     __debug(p: string, iArguments: string[]): void;
 }
-export {};

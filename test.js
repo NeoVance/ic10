@@ -1,5 +1,5 @@
-const fs = require('fs')
-const {InterpreterIc10} = require('./main')
-const text = fs.readFileSync(".ic10", "utf8")
-let interpreterIc10 = new InterpreterIc10(text)
-interpreterIc10.run()
+var fs = require('fs');
+var { InterpreterIc10 } = require('./main');
+var text = fs.readFileSync(".ic10", "utf8");
+new InterpreterIc10(text).run();
+//# sourceMappingURL=test.js.map

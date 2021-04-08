@@ -517,15 +517,15 @@ class Slot {
 }
 
 export class InterpreterIc10 {
-  public code: string
-  public commands: { args: string[]; command: string }[]
-  public lines: string[]
-  public memory: Memory
+  private code: string
+  private commands: { args: string[]; command: string }[]
+  private lines: string[]
+  private memory: Memory
   public position: number
-  public interval: any
-  public tickTime: number
-  public labels: {}
-  public constants: {}
+  private interval: any
+  private tickTime: number
+  private labels: {}
+  private constants: {}
   private settings: {
     debug: boolean;
     debugCallback: Function;
@@ -542,13 +542,13 @@ export class InterpreterIc10 {
     this.settings = Object.assign({
       debug: true,
       debugCallback: () => {
-        console.log(...arguments)
+       console.log(...arguments)
       },
       logCallback: () => {
-        console.log(...arguments)
+       console.log(...arguments)
       },
       executionCallback: (e: ic10Error) => {
-        Execution.display(e)
+       Execution.display(e)
       },
     }, settings)
     if (code) {

@@ -439,6 +439,7 @@ class InterpreterIc10 {
                 console.log(...arguments);
             },
             executionCallback: (e) => {
+                Execution.display(e);
             },
         }, settings);
         if (code) {
@@ -500,7 +501,6 @@ class InterpreterIc10 {
             }
         }
         this.position = 0;
-        console.log(this.labels);
         this.interval = setInterval(() => {
             if (!this.prepareLine()) {
                 clearInterval(this.interval);
@@ -534,7 +534,6 @@ class InterpreterIc10 {
             }
             catch (e) {
                 this.settings.executionCallback(e);
-                Execution.display(e);
             }
         }
         if (command === "hcf")
