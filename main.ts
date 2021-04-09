@@ -82,13 +82,13 @@ export class Environ {
 	
 	constructor(scope: InterpreterIc10) {
 		this.#scope = scope;
-		this.d0 = new Device(scope)
-		this.d1 = new Device(scope)
-		this.d2 = new Device(scope)
-		this.d3 = new Device(scope)
-		this.d4 = new Device(scope)
-		this.d5 = new Device(scope)
-		this.db = new Chip(scope)
+		this.d0 = new Device(scope, 'd0')
+		this.d1 = new Device(scope, 'd1')
+		this.d2 = new Device(scope, 'd2')
+		this.d3 = new Device(scope, 'd3')
+		this.d4 = new Device(scope, 'd4')
+		this.d5 = new Device(scope, 'd5')
+		this.db = new Chip(scope, 'db')
 	}
 	
 	randomize() {
@@ -119,9 +119,9 @@ export class Memory {
 		
 		for (let i = 0; i < 18; i++) {
 			if (i === 16) {
-				this.cells[i] = new MemoryStack(scope)
+				this.cells[i] = new MemoryStack(scope, 'r' + i)
 			} else {
-				this.cells[i] = new MemoryCell(scope)
+				this.cells[i] = new MemoryCell(scope, 'r' + i)
 			}
 		}
 	}
@@ -231,6 +231,9 @@ export class Memory {
 	
 	alias(name, link: string | number) {
 		this.aliases[name] = this.getCell(link)
+		if (this.aliases[name] instanceof MemoryCell) {
+			this.aliases[name].alias = name;
+		}
 		return this
 	}
 	
@@ -242,17 +245,25 @@ export class Memory {
 export class MemoryCell {
 	public value: any
 	#scope: InterpreterIc10;
+	public name: string;
+	public alias: null;
 	
-	constructor(scope) {
+	constructor(scope, name: string) {
 		this.#scope = scope;
+		this.name = name;
+		this.alias = null;
 		this.value = null
 	}
 	
-	get(): number {
+	getName() {
+		return this.alias || this.name;
+	}
+	
+	get(_: any = null): number {
 		return this.value
 	}
 	
-	set(value: any): MemoryCell {
+	set(value: any, _: any = null): MemoryCell {
 		this.value = value
 		return this;
 	}
@@ -262,8 +273,8 @@ export class MemoryStack extends MemoryCell {
 	public value: any
 	#scope: InterpreterIc10;
 	
-	constructor(scope) {
-		super(scope)
+	constructor(scope, name: string) {
+		super(scope, name)
 		this.value = []
 	}
 	
@@ -304,7 +315,7 @@ export class ConstantCell {
 	}
 }
 
-export class Device {
+export class Device extends MemoryCell {
 	get scope(): InterpreterIc10 {
 		return null;
 	}
@@ -351,10 +362,11 @@ export class Device {
 	public Orange: number
 	public Green: number
 	public Blue: number
-	#scope: InterpreterIc10;
+	#scope: InterpreterIc10
 	
-	constructor(scope: InterpreterIc10) {
-		this.#scope = scope;
+	constructor(scope: InterpreterIc10, name: string) {
+		super(scope, name);
+		this.#scope = scope
 		this.On = 0
 		this.Power = 0
 		this.Error = 0
@@ -449,7 +461,10 @@ export class Device {
 		this.Blue = Math.abs(Math.round(Math.random() * 100))
 	}
 	
-	get(variable) {
+	get(variable = null) {
+		if (!variable) {
+			return this
+		}
 		if (variable in this) {
 			return this[variable]
 		} else {
@@ -477,8 +492,11 @@ export class Device {
 
 export class Chip extends Device {
 	//-128473777
-	constructor(scope) {
-		super(scope)
+	#scope: InterpreterIc10
+	
+	constructor(scope, name: string) {
+		super(scope, name)
+		this.#scope = scope
 		this.slots[1].OccupantHash = -744098481
 	}
 }
@@ -564,7 +582,7 @@ export class InterpreterIc10 {
 	}
 	
 	init(text): InterpreterIc10 {
-		this.lines = text.split("\r")
+		this.lines = text.split(/\r?\n/);
 		var commands = this.lines
 			.map((line: string) => {
 				const args = line.trim().split(/ +/)
@@ -605,15 +623,6 @@ export class InterpreterIc10 {
 			}
 		}
 		this.commands = commands
-		return this
-	}
-	
-	stop(): InterpreterIc10 {
-		clearInterval(this.interval)
-		return this;
-	}
-	
-	run() {
 		this.position = 0
 		while (this.position < this.commands.length) {
 			let {command, args} = this.commands[this.position]
@@ -623,6 +632,15 @@ export class InterpreterIc10 {
 			}
 		}
 		this.position = 0
+		return this
+	}
+	
+	stop(): InterpreterIc10 {
+		clearInterval(this.interval)
+		return this;
+	}
+	
+	run() {
 		this.interval = setInterval(() => {
 			if (!this.prepareLine()) {
 				clearInterval(this.interval)
@@ -633,10 +651,13 @@ export class InterpreterIc10 {
 	
 	prepareLine() {
 		this.memory.environ.randomize()
+		if (!(this.position in this.commands)) {
+			return false;
+		}
 		let {command, args} = this.commands[this.position]
 		this.position++
 		let isComment = true
-		if (command != '') {
+		if (command != '' && !command.trim().endsWith(":")) {
 			isComment = command.startsWith("#")
 			for (const argsKey in args) {
 				let a = parseFloat(args[argsKey])

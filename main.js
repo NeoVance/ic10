@@ -65,13 +65,13 @@ var Execution = {
 class Environ {
     constructor(scope) {
         this.#scope = scope;
-        this.d0 = new Device(scope);
-        this.d1 = new Device(scope);
-        this.d2 = new Device(scope);
-        this.d3 = new Device(scope);
-        this.d4 = new Device(scope);
-        this.d5 = new Device(scope);
-        this.db = new Chip(scope);
+        this.d0 = new Device(scope, 'd0');
+        this.d1 = new Device(scope, 'd1');
+        this.d2 = new Device(scope, 'd2');
+        this.d3 = new Device(scope, 'd3');
+        this.d4 = new Device(scope, 'd4');
+        this.d5 = new Device(scope, 'd5');
+        this.db = new Chip(scope, 'db');
     }
     #scope;
     randomize() {
@@ -91,10 +91,10 @@ class Memory {
         this.aliases = new Object();
         for (let i = 0; i < 18; i++) {
             if (i === 16) {
-                this.cells[i] = new MemoryStack(scope);
+                this.cells[i] = new MemoryStack(scope, 'r' + i);
             }
             else {
-                this.cells[i] = new MemoryCell(scope);
+                this.cells[i] = new MemoryCell(scope, 'r' + i);
             }
         }
     }
@@ -220,6 +220,9 @@ class Memory {
     }
     alias(name, link) {
         this.aliases[name] = this.getCell(link);
+        if (this.aliases[name] instanceof MemoryCell) {
+            this.aliases[name].alias = name;
+        }
         return this;
     }
     define(name, value) {
@@ -228,23 +231,28 @@ class Memory {
 }
 exports.Memory = Memory;
 class MemoryCell {
-    constructor(scope) {
+    constructor(scope, name) {
         this.#scope = scope;
+        this.name = name;
+        this.alias = null;
         this.value = null;
     }
     #scope;
-    get() {
+    getName() {
+        return this.alias || this.name;
+    }
+    get(_ = null) {
         return this.value;
     }
-    set(value) {
+    set(value, _ = null) {
         this.value = value;
         return this;
     }
 }
 exports.MemoryCell = MemoryCell;
 class MemoryStack extends MemoryCell {
-    constructor(scope) {
-        super(scope);
+    constructor(scope, name) {
+        super(scope, name);
         this.value = [];
     }
     #scope;
@@ -278,8 +286,9 @@ class ConstantCell {
     }
 }
 exports.ConstantCell = ConstantCell;
-class Device {
-    constructor(scope) {
+class Device extends MemoryCell {
+    constructor(scope, name) {
+        super(scope, name);
         this.#scope = scope;
         this.On = 0;
         this.Power = 0;
@@ -376,7 +385,10 @@ class Device {
         this.Green = Math.abs(Math.round(Math.random() * 100));
         this.Blue = Math.abs(Math.round(Math.random() * 100));
     }
-    get(variable) {
+    get(variable = null) {
+        if (!variable) {
+            return this;
+        }
         if (variable in this) {
             return this[variable];
         }
@@ -404,10 +416,12 @@ class Device {
 }
 exports.Device = Device;
 class Chip extends Device {
-    constructor(scope) {
-        super(scope);
+    constructor(scope, name) {
+        super(scope, name);
+        this.#scope = scope;
         this.slots[1].OccupantHash = -744098481;
     }
+    #scope;
 }
 exports.Chip = Chip;
 class Slot {
@@ -464,7 +478,7 @@ class InterpreterIc10 {
         return this;
     }
     init(text) {
-        this.lines = text.split("\r");
+        this.lines = text.split(/\r?\n/);
         var commands = this.lines
             .map((line) => {
             const args = line.trim().split(/ +/);
@@ -507,13 +521,6 @@ class InterpreterIc10 {
             }
         }
         this.commands = commands;
-        return this;
-    }
-    stop() {
-        clearInterval(this.interval);
-        return this;
-    }
-    run() {
         this.position = 0;
         while (this.position < this.commands.length) {
             let { command, args } = this.commands[this.position];
@@ -523,6 +530,13 @@ class InterpreterIc10 {
             }
         }
         this.position = 0;
+        return this;
+    }
+    stop() {
+        clearInterval(this.interval);
+        return this;
+    }
+    run() {
         this.interval = setInterval(() => {
             if (!this.prepareLine()) {
                 clearInterval(this.interval);
@@ -532,10 +546,13 @@ class InterpreterIc10 {
     }
     prepareLine() {
         this.memory.environ.randomize();
+        if (!(this.position in this.commands)) {
+            return false;
+        }
         let { command, args } = this.commands[this.position];
         this.position++;
         let isComment = true;
-        if (command != '') {
+        if (command != '' && !command.trim().endsWith(":")) {
             isComment = command.startsWith("#");
             for (const argsKey in args) {
                 let a = parseFloat(args[argsKey]);

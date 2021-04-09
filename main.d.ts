@@ -37,14 +37,17 @@ export declare class Memory {
 export declare class MemoryCell {
     #private;
     value: any;
-    constructor(scope: any);
-    get(): number;
-    set(value: any): MemoryCell;
+    name: string;
+    alias: null;
+    constructor(scope: any, name: string);
+    getName(): string;
+    get(_?: any): number;
+    set(value: any, _?: any): MemoryCell;
 }
 export declare class MemoryStack extends MemoryCell {
     #private;
     value: any;
-    constructor(scope: any);
+    constructor(scope: any, name: string);
     push(value: any): MemoryStack;
     pop(): number;
     peek(): number;
@@ -56,7 +59,7 @@ export declare class ConstantCell {
     constructor(value: any);
     get(): any;
 }
-export declare class Device {
+export declare class Device extends MemoryCell {
     #private;
     get scope(): InterpreterIc10;
     slots: Slot[];
@@ -101,14 +104,15 @@ export declare class Device {
     Orange: number;
     Green: number;
     Blue: number;
-    constructor(scope: InterpreterIc10);
+    constructor(scope: InterpreterIc10, name: string);
     randomize(): void;
-    get(variable: any): any;
+    get(variable?: any): any;
     set(variable: any, value: any): this;
     getSlot(op1: any, op2: any): any;
 }
 export declare class Chip extends Device {
-    constructor(scope: any);
+    #private;
+    constructor(scope: any, name: string);
 }
 export declare class Slot {
     #private;
