@@ -10,7 +10,7 @@ export declare class ic10Error {
     getCode(): number;
     getMessage(): string;
 }
-declare class Environ {
+export declare class Environ {
     #private;
     d0: Device;
     d1: Device;
@@ -22,7 +22,7 @@ declare class Environ {
     constructor(scope: InterpreterIc10);
     randomize(): void;
 }
-declare class Memory {
+export declare class Memory {
     #private;
     get scope(): InterpreterIc10;
     cells: Array<MemoryCell>;
@@ -34,14 +34,29 @@ declare class Memory {
     alias(name: any, link: string | number): this;
     define(name: any, value: string | number): void;
 }
-declare class MemoryCell {
+export declare class MemoryCell {
     #private;
     value: any;
     constructor(scope: any);
     get(): number;
     set(value: any): MemoryCell;
 }
-declare class Device {
+export declare class MemoryStack extends MemoryCell {
+    #private;
+    value: any;
+    constructor(scope: any);
+    push(value: any): MemoryStack;
+    pop(): number;
+    peek(): number;
+    get(): any;
+    set(value?: any): this;
+}
+export declare class ConstantCell {
+    private value;
+    constructor(value: any);
+    get(): any;
+}
+export declare class Device {
     #private;
     get scope(): InterpreterIc10;
     slots: Slot[];
@@ -92,10 +107,10 @@ declare class Device {
     set(variable: any, value: any): this;
     getSlot(op1: any, op2: any): any;
 }
-declare class Chip extends Device {
+export declare class Chip extends Device {
     constructor(scope: any);
 }
-declare class Slot {
+export declare class Slot {
     #private;
     get scope(): InterpreterIc10;
     Occupied: number;
@@ -257,4 +272,3 @@ export declare class InterpreterIc10 {
     _log(): void;
     __debug(p: string, iArguments: string[]): void;
 }
-export {};

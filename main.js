@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.InterpreterIc10 = exports.ic10Error = void 0;
+exports.InterpreterIc10 = exports.Slot = exports.Chip = exports.Device = exports.ConstantCell = exports.MemoryStack = exports.MemoryCell = exports.Memory = exports.Environ = exports.ic10Error = void 0;
 const caller_id_1 = __importDefault(require("caller-id"));
 const chalk_1 = __importDefault(require("chalk"));
 const regexes = {
@@ -82,6 +82,7 @@ class Environ {
         }
     }
 }
+exports.Environ = Environ;
 class Memory {
     constructor(scope) {
         this.#scope = scope;
@@ -225,6 +226,7 @@ class Memory {
         this.aliases[name] = new ConstantCell(value);
     }
 }
+exports.Memory = Memory;
 class MemoryCell {
     constructor(scope) {
         this.#scope = scope;
@@ -239,6 +241,7 @@ class MemoryCell {
         return this;
     }
 }
+exports.MemoryCell = MemoryCell;
 class MemoryStack extends MemoryCell {
     constructor(scope) {
         super(scope);
@@ -265,6 +268,7 @@ class MemoryStack extends MemoryCell {
         return this;
     }
 }
+exports.MemoryStack = MemoryStack;
 class ConstantCell {
     constructor(value) {
         this.value = value;
@@ -273,6 +277,7 @@ class ConstantCell {
         return this.value;
     }
 }
+exports.ConstantCell = ConstantCell;
 class Device {
     constructor(scope) {
         this.#scope = scope;
@@ -397,12 +402,14 @@ class Device {
         }
     }
 }
+exports.Device = Device;
 class Chip extends Device {
     constructor(scope) {
         super(scope);
         this.slots[1].OccupantHash = -744098481;
     }
 }
+exports.Chip = Chip;
 class Slot {
     constructor(scope) {
         this.#scope = scope;
@@ -427,6 +434,7 @@ class Slot {
         }
     }
 }
+exports.Slot = Slot;
 class InterpreterIc10 {
     constructor(code = '', settings = {}) {
         this.code = code;
@@ -446,6 +454,7 @@ class InterpreterIc10 {
                 Execution.display(e);
             },
         }, settings);
+        this.memory.environ.randomize();
         if (code) {
             this.init(code);
         }
