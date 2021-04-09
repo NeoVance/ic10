@@ -247,6 +247,7 @@ class MemoryStack extends MemoryCell {
     #scope;
     push(value) {
         this.value.push(value);
+        return this;
     }
     pop() {
         return this.value.pop();
@@ -255,10 +256,12 @@ class MemoryStack extends MemoryCell {
         return this.value[this.value.length - 1];
     }
     get() {
-        throw Execution.error(this.#scope.position, 'Can`t "get" on Stack');
+        return this.value;
     }
-    set() {
-        throw Execution.error(this.#scope.position, 'Can`t "set" on Stack');
+    set(value = null) {
+        if (value) {
+            this.push(value);
+        }
         return this;
     }
 }

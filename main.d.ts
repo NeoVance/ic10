@@ -38,8 +38,8 @@ declare class MemoryCell {
     #private;
     value: any;
     constructor(scope: any);
-    get(): any;
-    set(value: any): this;
+    get(): number;
+    set(value: any): MemoryCell;
 }
 declare class Device {
     #private;
