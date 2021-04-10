@@ -61,10 +61,12 @@ var Execution = {
 				default:
 					console.log('LOG ' + string, e.obj)
 					break;
-					return null
+				
 			}
+			return string
 		} else {
 			console.log(e)
+			return e;
 		}
 		
 	}
@@ -362,6 +364,70 @@ export class Device extends MemoryCell {
 	public Orange: number
 	public Green: number
 	public Blue: number
+	public AirRelease: number
+	public Charge: number
+	public Color: number
+	public CompletionRatio: number
+	public ElevatorLevel: number
+	public ElevatorSpeed: number
+	public ExportCount: number
+	public Filtration: number
+	public Harvest: number
+	public Horizontal: number
+	public HorizontalRatio: number
+	public Idle: number
+	public ImportCount: number
+	public Maximum: number
+	public Mode: number
+	public Open: number
+	public Output: number
+	public Plant: number
+	public PositionX: number
+	public PositionY: number
+	public PositionZ: number
+	public PowerActual: number
+	public PowerGeneration: number
+	public PowerPotential: number
+	public PowerRequired: number
+	public Pressure: number
+	public PressureExternal: number
+	public PressureInteral: number
+	public PressureSetting: number
+	public Quantity: number
+	public Ratio: number
+	public RatioCarbonDioxide: number
+	public RatioNitrogen: number
+	public RatioOxygen: number
+	public RatioPollutant: number
+	public RatioVolatiles: number
+	public RatioWater: number
+	public Reagents: number
+	public RequestHash: number
+	public SolarAngle: number
+	public Temperature: number
+	public TemperatureExternal: number
+	public TemperatureSettings: number
+	public TotalMoles: number
+	public VelocityMagnitude: number
+	public VelocityRelativeX: number
+	public VelocityRelativeY: number
+	public VelocityRelativeZ: number
+	public Vertical: number
+	public VerticalRatio: number
+	public Volume: number
+	public Occupied: number
+	public OccupantHash: number
+	public Damage: number
+	public Efficiency: number
+	public Health: number
+	public Growth: number
+	public ChargeRatio: number
+	public Class: number
+	public PressureWaste: number
+	public PressureAir: number
+	public MaxQuantity: number
+	public Mature: number
+	public ForceWrite: number
 	#scope: InterpreterIc10
 	
 	constructor(scope: InterpreterIc10, name: string) {
@@ -410,6 +476,70 @@ export class Device extends MemoryCell {
 		this.Orange = 0
 		this.Green = 0
 		this.Blue = 0
+		this.AirRelease = 0
+		this.Charge = 0
+		this.Color = 0
+		this.CompletionRatio = 0
+		this.ElevatorLevel = 0
+		this.ElevatorSpeed = 0
+		this.ExportCount = 0
+		this.Filtration = 0
+		this.Harvest = 0
+		this.Horizontal = 0
+		this.HorizontalRatio = 0
+		this.Idle = 0
+		this.ImportCount = 0
+		this.Maximum = 0
+		this.Mode = 0
+		this.Open = 0
+		this.Output = 0
+		this.Plant = 0
+		this.PositionX = 0
+		this.PositionY = 0
+		this.PositionZ = 0
+		this.PowerActual = 0
+		this.PowerGeneration = 0
+		this.PowerPotential = 0
+		this.PowerRequired = 0
+		this.Pressure = 0
+		this.PressureExternal = 0
+		this.PressureInteral = 0
+		this.PressureSetting = 0
+		this.Quantity = 0
+		this.Ratio = 0
+		this.RatioCarbonDioxide = 0
+		this.RatioNitrogen = 0
+		this.RatioOxygen = 0
+		this.RatioPollutant = 0
+		this.RatioVolatiles = 0
+		this.RatioWater = 0
+		this.Reagents = 0
+		this.RequestHash = 0
+		this.SolarAngle = 0
+		this.Temperature = 0
+		this.TemperatureExternal = 0
+		this.TemperatureSettings = 0
+		this.TotalMoles = 0
+		this.VelocityMagnitude = 0
+		this.VelocityRelativeX = 0
+		this.VelocityRelativeY = 0
+		this.VelocityRelativeZ = 0
+		this.Vertical = 0
+		this.VerticalRatio = 0
+		this.Volume = 0
+		this.Occupied = 0
+		this.OccupantHash = 0
+		this.Damage = 0
+		this.Efficiency = 0
+		this.Health = 0
+		this.Growth = 0
+		this.ChargeRatio = 0
+		this.Class = 0
+		this.PressureWaste = 0
+		this.PressureAir = 0
+		this.MaxQuantity = 0
+		this.Mature = 0
+		this.ForceWrite = 0
 		this.randomize()
 		for (let i = 0; i < 5; i++) {
 			if (i === 16) {
@@ -544,6 +674,11 @@ export class InterpreterIc10 {
 	public interval: any
 	public labels: {}
 	public constants: {}
+	public output: {
+		debug: string,
+		log: string,
+		error: string,
+	}
 	public settings: {
 		debug: boolean;
 		debugCallback: Function;
@@ -560,19 +695,26 @@ export class InterpreterIc10 {
 		this.settings = Object.assign({
 			debug: true,
 			tickTime: 100,
-			debugCallback: () => {
+			debugCallback: (a, b) => {
 				console.log(...arguments)
+				this.output.debug = a + ' ' + JSON.stringify(b)
 			},
-			logCallback: () => {
+			logCallback: (a, b) => {
 				console.log(...arguments)
+				this.output.log = a + ' ' + b
 			},
 			executionCallback: (e: ic10Error) => {
-				Execution.display(e)
+				this.output.error = Execution.display(e)
 			},
 		}, settings)
 		this.memory.environ.randomize()
 		if (code) {
 			this.init(code)
+		}
+		this.output = {
+			debug: '',
+			log: '',
+			error: '',
 		}
 	}
 	
