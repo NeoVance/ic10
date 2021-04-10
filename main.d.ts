@@ -151,7 +151,7 @@ export declare class InterpreterIc10 {
     init(text: any): InterpreterIc10;
     stop(): InterpreterIc10;
     run(): this;
-    prepareLine(): any;
+    prepareLine(line?: number): any;
     __issetLabel(x: string): boolean;
     define(op1: any, op2: any, op3: any, op4: any): void;
     alias(op1: any, op2: any, op3: any, op4: any): void;

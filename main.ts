@@ -642,17 +642,22 @@ export class InterpreterIc10 {
 	
 	run() {
 		this.interval = setInterval(() => {
-			if (!this.prepareLine()) {
+			var why = this.prepareLine()
+			if (why !== true) {
+				this.settings.debugCallback.call(this, why, [])
 				clearInterval(this.interval)
 			}
 		}, this.settings.tickTime)
 		return this
 	}
 	
-	prepareLine() {
+	prepareLine(line = -1) {
+		if (line > 0) {
+			this.position = line;
+		}
 		this.memory.environ.randomize()
 		if (!(this.position in this.commands)) {
-			return false;
+			return 'end';
 		}
 		let {command, args} = this.commands[this.position]
 		this.position++
@@ -667,7 +672,7 @@ export class InterpreterIc10 {
 				}
 			}
 			try {
-				if (command === "#die") return false
+				if (command === "#die") return 'die'
 				command = command.replace("#", "_")
 				if (command in this) {
 					this[command](...args)
@@ -680,10 +685,10 @@ export class InterpreterIc10 {
 				this.settings.executionCallback.call(this, e)
 			}
 		}
-		if (command === "hcf") return false
+		if (command === "hcf") return 'hcf'
 		return isComment && this.position < this.commands.length
 			? this.prepareLine()
-			: this.position < this.commands.length
+			: this.position < this.commands.length ? true : 'end'
 	}
 	
 	__issetLabel(x: string) {
@@ -831,14 +836,14 @@ export class InterpreterIc10 {
 	
 	j(op1) {
 		if (this.__issetLabel(op1)) {
-			this.position = this.labels[op1] - 1
+			this.position = this.labels[op1] + 1
 		} else {
 			throw Execution.error(this.position, ' Undefined label', op1)
 		}
 	}
 	
 	jr(op1) {
-		this.position += op1 - 1
+		this.position += op1 + 1
 	}
 	
 	jal(op1: number) {

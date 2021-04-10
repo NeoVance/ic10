@@ -4,4 +4,5 @@ alias c r2
 move a 5
 move b 2
 add c a b
+#die
 #log c
