@@ -1,3 +1,11 @@
+export declare const regexes: {
+    rr1: RegExp;
+    r1: RegExp;
+    d1: RegExp;
+    rr: RegExp;
+    strStart: RegExp;
+    strEnd: RegExp;
+};
 export declare class ic10Error {
     message: string;
     code: number;
@@ -10,6 +18,10 @@ export declare class ic10Error {
     getCode(): number;
     getMessage(): string;
 }
+export declare var Execution: {
+    error(code: number, message: string, obj?: any): ic10Error;
+    display: (e: any) => any;
+};
 export declare class Environ {
     #private;
     d0: Device;
@@ -39,7 +51,7 @@ export declare class MemoryCell {
     value: any;
     name: string;
     alias: null;
-    constructor(scope: any, name: string);
+    constructor(scope: InterpreterIc10, name: string);
     getName(): string;
     get(_?: any): number;
     set(value: any, _?: any): MemoryCell;
@@ -54,14 +66,14 @@ export declare class MemoryStack extends MemoryCell {
     get(): any;
     set(value?: any): this;
 }
-export declare class ConstantCell {
-    private value;
-    constructor(value: any);
-    get(): any;
-}
-export declare class Device extends MemoryCell {
+export declare class ConstantCell extends MemoryCell {
     #private;
-    get scope(): InterpreterIc10;
+    value: any;
+    constructor(value: any, scope: any, name: string);
+    get(): any;
+    set(value: any, _?: any): this;
+}
+export declare class DeviceProperties {
     slots: Slot[];
     On: number;
     Power: number;
@@ -168,33 +180,43 @@ export declare class Device extends MemoryCell {
     MaxQuantity: number;
     Mature: number;
     ForceWrite: number;
-    constructor(scope: InterpreterIc10, name: string);
+    constructor(scope: any);
     randomize(): void;
+}
+export declare class Device extends MemoryCell {
+    #private;
+    number: number;
+    get scope(): InterpreterIc10;
+    properties: DeviceProperties;
+    constructor(scope: InterpreterIc10, name: string, number: number);
     get(variable?: any): any;
     set(variable: any, value: any): this;
     getSlot(op1: any, op2: any): any;
 }
 export declare class Chip extends Device {
     #private;
-    constructor(scope: any, name: string);
+    constructor(scope: any, name: string, number: number);
 }
 export declare class Slot {
     #private;
+    number: number;
     get scope(): InterpreterIc10;
-    Occupied: number;
-    OccupantHash: number;
-    Quantity: number;
-    Damage: number;
-    Class: number;
-    MaxQuantity: number;
-    PrefabHash: number;
-    constructor(scope: InterpreterIc10);
+    properties: {
+        Occupied: number;
+        OccupantHash: number;
+        Quantity: number;
+        Damage: number;
+        Class: number;
+        MaxQuantity: number;
+        PrefabHash: number;
+    };
+    constructor(scope: InterpreterIc10, number: number);
     get(op1: any): any;
 }
 export declare class InterpreterIc10 {
     code: string;
     commands: {
-        args: string[];
+        args: any[];
         command: string;
     }[];
     lines: string[];
@@ -265,8 +287,8 @@ export declare class InterpreterIc10 {
     __ne(op1?: number, op2?: number): number;
     __ap(op1?: number, op2?: number, op3?: number, op4?: number): number;
     __na(x?: number, y?: number, d?: number, op4?: number): number;
-    __dse(op1?: number, op2?: number, op3?: number, op4?: number): number;
-    __dns(op1?: number, op2?: number, op3?: number, op4?: number): number;
+    __dse(op1?: number, op2?: number, op3?: number, op4?: number): 0 | 1;
+    __dns(op1?: number, op2?: number, op3?: number, op4?: number): 0 | 1;
     seq(op1: any, op2: any, op3: any, op4: any): void;
     seqz(op1: any, op2: any, op3: any, op4: any): void;
     sge(op1: any, op2: any, op3: any, op4: any): void;
@@ -342,6 +364,9 @@ export declare class InterpreterIc10 {
     push(op1: any, op2: any, op3: any, op4: any): void;
     pop(op1: any, op2: any, op3: any, op4: any): void;
     peek(op1: any, op2: any, op3: any, op4: any): void;
+    lb(): void;
+    lr(): void;
+    sb(): void;
     _log(): void;
     __debug(p: string, iArguments: string[]): void;
 }

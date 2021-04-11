@@ -3,10 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.InterpreterIc10 = exports.Slot = exports.Chip = exports.Device = exports.ConstantCell = exports.MemoryStack = exports.MemoryCell = exports.Memory = exports.Environ = exports.ic10Error = void 0;
+exports.InterpreterIc10 = exports.Slot = exports.Chip = exports.Device = exports.DeviceProperties = exports.ConstantCell = exports.MemoryStack = exports.MemoryCell = exports.Memory = exports.Environ = exports.Execution = exports.ic10Error = exports.regexes = void 0;
 const caller_id_1 = __importDefault(require("caller-id"));
 const chalk_1 = __importDefault(require("chalk"));
-const regexes = {
+exports.regexes = {
     'rr1': new RegExp("[rd]{1,}(r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a))$"),
     'r1': new RegExp("^r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a)$"),
     'd1': new RegExp("^d(0|1|2|3|4|5|b)$"),
@@ -32,7 +32,7 @@ class ic10Error {
     }
 }
 exports.ic10Error = ic10Error;
-var Execution = {
+exports.Execution = {
     error(code, message, obj = null) {
         var caller = caller_id_1.default.getData();
         return new ic10Error(caller, code, message, obj, 0);
@@ -66,19 +66,20 @@ var Execution = {
 class Environ {
     constructor(scope) {
         this.#scope = scope;
-        this.d0 = new Device(scope, 'd0');
-        this.d1 = new Device(scope, 'd1');
-        this.d2 = new Device(scope, 'd2');
-        this.d3 = new Device(scope, 'd3');
-        this.d4 = new Device(scope, 'd4');
-        this.d5 = new Device(scope, 'd5');
-        this.db = new Chip(scope, 'db');
+        this.d0 = new Device(scope, 'd0', 1);
+        this.d1 = new Device(scope, 'd1', 2);
+        this.d2 = new Device(scope, 'd2', 3);
+        this.d3 = new Device(scope, 'd3', 4);
+        this.d4 = new Device(scope, 'd4', 5);
+        this.d5 = new Device(scope, 'd5', 6);
+        this.db = new Chip(scope, 'db', 7);
     }
     #scope;
     randomize() {
         for (const x in this) {
-            if (this[x] instanceof Device) {
-                this[x].randomize();
+            let d = this[x];
+            if (d instanceof Device) {
+                d.properties.randomize();
             }
         }
     }
@@ -109,16 +110,16 @@ class Memory {
                 cell = 'r16';
             if (cell == 'ra')
                 cell = 'r17';
-            if (regexes.rr1.test(cell)) {
-                let m = regexes.rr1.exec(cell);
+            if (exports.regexes.rr1.test(cell)) {
+                let m = exports.regexes.rr1.exec(cell);
                 let m1 = this.cell(cell.replace(m[1], this.cell(m[1])), op1, op2) ?? false;
                 if (m1 !== false) {
                     return m1;
                 }
-                throw Execution.error(this.#scope.position, 'Unknown cell', m1);
+                throw exports.Execution.error(this.#scope.position, 'Unknown cell', m1);
             }
-            if (regexes.r1.test(cell)) {
-                let m = regexes.r1.exec(cell);
+            if (exports.regexes.r1.test(cell)) {
+                let m = exports.regexes.r1.exec(cell);
                 if (m[1] in this.cells) {
                     if (op1 === null) {
                         return this.cells[m[1]].get();
@@ -128,13 +129,13 @@ class Memory {
                     }
                 }
                 else {
-                    throw Execution.error(this.#scope.position, 'Unknown cell', cell);
+                    throw exports.Execution.error(this.#scope.position, 'Unknown cell', cell);
                 }
             }
-            if (regexes.d1.test(cell)) {
+            if (exports.regexes.d1.test(cell)) {
                 if (cell in this.environ) {
                     if (op1 === null) {
-                        throw Execution.error(this.#scope.position, 'Have not `Port`', cell);
+                        throw exports.Execution.error(this.#scope.position, 'Have not `Port`', cell);
                     }
                     else {
                         if (op1 !== null) {
@@ -144,11 +145,11 @@ class Memory {
                     }
                 }
                 else {
-                    throw Execution.error(this.#scope.position, 'Unknown cell', cell);
+                    throw exports.Execution.error(this.#scope.position, 'Unknown cell', cell);
                 }
             }
             if (cell in this.aliases) {
-                if (this.aliases[cell] instanceof MemoryCell) {
+                if (this.aliases[cell].constructor.name === 'MemoryCell') {
                     if (op1 === null) {
                         return this.aliases[cell].get();
                     }
@@ -158,7 +159,7 @@ class Memory {
                 }
                 else if (this.aliases[cell] instanceof Device) {
                     if (op1 === null) {
-                        throw Execution.error(this.#scope.position, 'Have not `Port`', cell);
+                        throw exports.Execution.error(this.#scope.position, 'Have not `Port`', cell);
                     }
                     else {
                         if (op2 !== null) {
@@ -171,10 +172,10 @@ class Memory {
                     return this.aliases[cell].get();
                 }
                 else {
-                    throw Execution.error(this.#scope.position, 'Unknown cell', cell);
+                    throw exports.Execution.error(this.#scope.position, 'Unknown cell', cell);
                 }
             }
-            throw Execution.error(this.#scope.position, 'Unknown cell', cell);
+            throw exports.Execution.error(this.#scope.position, 'Unknown cell', cell);
         }
         if (typeof cell === "number") {
             return cell;
@@ -186,36 +187,36 @@ class Memory {
                 cell = 'r16';
             if (cell == 'ra')
                 cell = 'r17';
-            if (regexes.rr1.test(cell)) {
-                let m = regexes.rr1.exec(cell);
+            if (exports.regexes.rr1.test(cell)) {
+                let m = exports.regexes.rr1.exec(cell);
                 let m1 = this.getCell(cell.replace(m[1], this.cell(m[1]))) ?? false;
                 if (m1 !== false) {
                     return m1;
                 }
-                throw Execution.error(this.#scope.position, 'Unknown cell', m1);
+                throw exports.Execution.error(this.#scope.position, 'Unknown cell', m1);
             }
-            if (regexes.r1.test(cell)) {
-                let m = regexes.r1.exec(cell);
+            if (exports.regexes.r1.test(cell)) {
+                let m = exports.regexes.r1.exec(cell);
                 if (m[1] in this.cells) {
                     return this.cells[m[1]];
                 }
             }
-            if (regexes.d1.test(cell)) {
+            if (exports.regexes.d1.test(cell)) {
                 if (cell in this.environ) {
                     return this.environ[cell];
                 }
                 else {
-                    throw Execution.error(this.#scope.position, 'Unknown cell', cell);
+                    throw exports.Execution.error(this.#scope.position, 'Unknown cell', cell);
                 }
             }
             if (cell in this.aliases) {
                 return this.aliases[cell];
             }
-            throw Execution.error(this.#scope.position, 'Unknown cell', cell);
+            throw exports.Execution.error(this.#scope.position, 'Unknown cell', cell);
         }
         if (typeof cell === "number") {
             if (cell >= 18)
-                throw Execution.error(this.#scope.position, 'Unknown cell', cell);
+                throw exports.Execution.error(this.#scope.position, 'Unknown cell', cell);
             return this.cells[cell];
         }
     }
@@ -227,7 +228,7 @@ class Memory {
         return this;
     }
     define(name, value) {
-        this.aliases[name] = new ConstantCell(value);
+        this.aliases[name] = new ConstantCell(value, this.#scope, name);
     }
 }
 exports.Memory = Memory;
@@ -278,19 +279,23 @@ class MemoryStack extends MemoryCell {
     }
 }
 exports.MemoryStack = MemoryStack;
-class ConstantCell {
-    constructor(value) {
+class ConstantCell extends MemoryCell {
+    constructor(value, scope, name) {
+        super(scope, name);
         this.value = value;
     }
+    #scope;
     get() {
         return this.value;
     }
+    set(value, _ = null) {
+        throw exports.Execution.error(this.#scope.position, 'Can`t change constant');
+        return this;
+    }
 }
 exports.ConstantCell = ConstantCell;
-class Device extends MemoryCell {
-    constructor(scope, name) {
-        super(scope, name);
-        this.#scope = scope;
+class DeviceProperties {
+    constructor(scope) {
         this.On = 0;
         this.Power = 0;
         this.Error = 0;
@@ -399,18 +404,9 @@ class Device extends MemoryCell {
         this.ForceWrite = 0;
         this.randomize();
         for (let i = 0; i < 5; i++) {
-            if (i === 16) {
-                this.slots[i] = new Slot(scope);
-            }
-            else {
-                this.slots[i] = new Slot(scope);
-            }
+            this.slots[i] = new Slot(scope, i);
         }
     }
-    get scope() {
-        return null;
-    }
-    #scope;
     randomize() {
         this.On = Math.round(Math.random());
         this.Power = Math.round(Math.random());
@@ -450,66 +446,81 @@ class Device extends MemoryCell {
         this.Green = Math.abs(Math.round(Math.random() * 100));
         this.Blue = Math.abs(Math.round(Math.random() * 100));
     }
+}
+exports.DeviceProperties = DeviceProperties;
+class Device extends MemoryCell {
+    constructor(scope, name, number) {
+        super(scope, name);
+        this.#scope = scope;
+        this.number = number;
+        this.properties = new DeviceProperties(scope);
+    }
+    get scope() {
+        return null;
+    }
+    #scope;
     get(variable = null) {
         if (!variable) {
             return this;
         }
-        if (variable in this) {
-            return this[variable];
+        if (variable in this.properties) {
+            return this.properties[variable];
         }
         else {
-            throw Execution.error(this.#scope.position, 'Unknown variable', variable);
+            throw exports.Execution.error(this.#scope.position, 'Unknown variable', variable);
         }
     }
     set(variable, value) {
-        if (variable in this) {
-            this[variable] = value;
+        if (variable in this.properties) {
+            this.properties[variable] = value;
         }
         else {
-            throw Execution.error(this.#scope.position, 'Unknown variable', variable);
+            throw exports.Execution.error(this.#scope.position, 'Unknown variable', variable);
         }
         return this;
     }
     getSlot(op1, op2) {
-        if (op1 in this.slots) {
-            return this.slots[op1].get(op2);
+        if (op1 in this.properties.slots) {
+            return this.properties.slots[op1].get(op2);
         }
         else {
-            throw Execution.error(this.#scope.position, 'Unknown Slot', op1);
+            throw exports.Execution.error(this.#scope.position, 'Unknown Slot', op1);
         }
     }
 }
 exports.Device = Device;
 class Chip extends Device {
-    constructor(scope, name) {
-        super(scope, name);
+    constructor(scope, name, number) {
+        super(scope, name, number);
         this.#scope = scope;
-        this.slots[1].OccupantHash = -744098481;
+        this.properties.slots[1].properties.OccupantHash = -744098481;
     }
     #scope;
 }
 exports.Chip = Chip;
 class Slot {
-    constructor(scope) {
+    constructor(scope, number) {
         this.#scope = scope;
-        this.Occupied = 1;
-        this.OccupantHash = 0;
-        this.Quantity = 0;
-        this.Damage = 0;
-        this.Class = 0;
-        this.MaxQuantity = 1;
-        this.PrefabHash = 0;
+        this.number = number;
+        this.properties = {};
+        this.properties.Occupied = 1;
+        this.properties.OccupantHash = 0;
+        this.properties.Quantity = 0;
+        this.properties.Damage = 0;
+        this.properties.Class = 0;
+        this.properties.MaxQuantity = 1;
+        this.properties.PrefabHash = 0;
     }
     get scope() {
         return null;
     }
     #scope;
     get(op1) {
-        if (op1 in this) {
-            return this[op1];
+        if (op1 in this.properties) {
+            return this.properties[op1];
         }
         else {
-            throw Execution.error(this.#scope.position, 'Unknown parameter', op1);
+            throw exports.Execution.error(this.#scope.position, 'Unknown parameter', op1);
         }
     }
 }
@@ -532,7 +543,7 @@ class InterpreterIc10 {
                 this.output.log = a + ' ' + b;
             },
             executionCallback: (e) => {
-                this.output.error = Execution.display(e);
+                this.output.error = exports.Execution.display(e);
             },
         }, settings);
         this.memory.environ.randomize();
@@ -572,7 +583,7 @@ class InterpreterIc10 {
                         if (mode === 0) {
                             argNumber++;
                         }
-                        if (regexes.strStart.test(arg)) {
+                        if (exports.regexes.strStart.test(arg)) {
                             mode = 1;
                         }
                         if (argNumber in newArgs) {
@@ -581,7 +592,7 @@ class InterpreterIc10 {
                         else {
                             newArgs[argNumber] = arg;
                         }
-                        if (regexes.strEnd.test(arg)) {
+                        if (exports.regexes.strEnd.test(arg)) {
                             mode = 0;
                         }
                     }
@@ -622,7 +633,6 @@ class InterpreterIc10 {
         if (line > 0) {
             this.position = line;
         }
-        this.memory.environ.randomize();
         if (!(this.position in this.commands)) {
             return 'end';
         }
@@ -646,7 +656,7 @@ class InterpreterIc10 {
                     this.__debug(command, args);
                 }
                 else if (!isComment) {
-                    throw Execution.error(this.position, 'Undefined function', command);
+                    throw exports.Execution.error(this.position, 'Undefined function', command);
                 }
             }
             catch (e) {
@@ -677,7 +687,7 @@ class InterpreterIc10 {
             this.memory.cell(op1, d.getSlot(this.memory.cell(op3), op4));
         }
         else {
-            throw Execution.error(this.position, 'Unknown Device', op2);
+            throw exports.Execution.error(this.position, 'Unknown Device', op2);
         }
     }
     s(op1, op2, op3, op4) {
@@ -774,14 +784,14 @@ class InterpreterIc10 {
     }
     j(op1) {
         if (this.__issetLabel(op1)) {
-            this.position = this.labels[op1] + 1;
+            this.position = this.labels[op1];
         }
         else {
-            throw Execution.error(this.position, ' Undefined label', op1);
+            throw exports.Execution.error(this.position, 'Undefined label', [op1, this.labels]);
         }
     }
     jr(op1) {
-        this.position += op1 + 1;
+        this.position += op1;
     }
     jal(op1) {
         this.j(op1);
@@ -815,10 +825,22 @@ class InterpreterIc10 {
         return Number(Math.abs(x - y) > d * Math.max(Math.abs(x), Math.abs(y)));
     }
     __dse(op1 = 0, op2 = 0, op3 = 0, op4 = 0) {
-        return 1;
+        try {
+            this.memory.getCell(op1);
+            return 1;
+        }
+        catch (e) {
+            return 0;
+        }
     }
     __dns(op1 = 0, op2 = 0, op3 = 0, op4 = 0) {
-        return 0;
+        try {
+            this.memory.getCell(op1);
+            return 0;
+        }
+        catch (e) {
+            return 1;
+        }
     }
     seq(op1, op2, op3, op4) {
         this.memory.cell(op1, this.__eq(this.memory.cell(op2), this.memory.cell(op3)));
@@ -869,10 +891,10 @@ class InterpreterIc10 {
         this.memory.cell(op1, this.__na(this.memory.cell(op2), 0, this.memory.cell(op3)));
     }
     sdse(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__dse(this.memory.cell(op2), this.memory.cell(op3)));
+        this.memory.cell(op1, this.__dse(op2));
     }
     sdns(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__dns(this.memory.cell(op2), this.memory.cell(op3)));
+        this.memory.cell(op1, this.__dns(op2));
     }
     beq(op1, op2, op3, op4) {
         if (this.__eq(this.memory.cell(op1), this.memory.cell(op2))) {
@@ -881,7 +903,7 @@ class InterpreterIc10 {
     }
     beqz(op1, op2, op3, op4) {
         if (this.__eq(this.memory.cell(op1), 0)) {
-            this.j(op3);
+            this.j(op2);
         }
     }
     bge(op1, op2, op3, op4) {
@@ -891,7 +913,7 @@ class InterpreterIc10 {
     }
     bgez(op1, op2, op3, op4) {
         if (this.__ge(this.memory.cell(op1), 0)) {
-            this.j(op3);
+            this.j(op2);
         }
     }
     bgt(op1, op2, op3, op4) {
@@ -901,7 +923,7 @@ class InterpreterIc10 {
     }
     bgtz(op1, op2, op3, op4) {
         if (this.__gt(this.memory.cell(op1), 0)) {
-            this.j(op3);
+            this.j(op2);
         }
     }
     ble(op1, op2, op3, op4) {
@@ -911,7 +933,7 @@ class InterpreterIc10 {
     }
     blez(op1, op2, op3, op4) {
         if (this.__le(this.memory.cell(op1), 0)) {
-            this.j(op3);
+            this.j(op2);
         }
     }
     blt(op1, op2, op3, op4) {
@@ -921,7 +943,7 @@ class InterpreterIc10 {
     }
     bltz(op1, op2, op3, op4) {
         if (this.__lt(this.memory.cell(op1), 0)) {
-            this.j(op3);
+            this.j(op2);
         }
     }
     bne(op1, op2, op3, op4) {
@@ -931,7 +953,7 @@ class InterpreterIc10 {
     }
     bnez(op1, op2, op3, op4) {
         if (this.__ne(this.memory.cell(op1), 0)) {
-            this.j(op3);
+            this.j(op2);
         }
     }
     bap(op1, op2, op3, op4) {
@@ -955,12 +977,12 @@ class InterpreterIc10 {
         }
     }
     bdse(op1, op2, op3, op4) {
-        if (this.__dse(this.memory.cell(op1), this.memory.cell(op2))) {
+        if (this.__dse(op2)) {
             this.j(op3);
         }
     }
     bdns(op1, op2, op3, op4) {
-        if (this.__dns(this.memory.cell(op1), this.memory.cell(op2))) {
+        if (this.__dns(op2)) {
             this.j(op3);
         }
     }
@@ -1045,12 +1067,12 @@ class InterpreterIc10 {
         }
     }
     brdse(op1, op2, op3, op4) {
-        if (this.__dse(this.memory.cell(op1), this.memory.cell(op2))) {
+        if (this.__dse(op2)) {
             this.jr(op3);
         }
     }
     brdns(op1, op2, op3, op4) {
-        if (this.__dns(this.memory.cell(op1), this.memory.cell(op2))) {
+        if (this.__dns(op2)) {
             this.jr(op3);
         }
     }
@@ -1135,12 +1157,12 @@ class InterpreterIc10 {
         }
     }
     bdseal(op1, op2, op3, op4) {
-        if (this.__dse(this.memory.cell(op1), this.memory.cell(op2))) {
+        if (this.__dse(op2)) {
             this.jal(op3);
         }
     }
     bdnsal(op1, op2, op3, op4) {
-        if (this.__dns(this.memory.cell(op1), this.memory.cell(op2))) {
+        if (this.__dns(op2)) {
             this.jal(op3);
         }
     }
@@ -1152,6 +1174,15 @@ class InterpreterIc10 {
     }
     peek(op1, op2, op3, op4) {
         this.memory.cell(op1, this.memory.getCell('r16').peek());
+    }
+    lb() {
+        throw exports.Execution.error(this.position, ' Not support on this place. Sorry :)');
+    }
+    lr() {
+        throw exports.Execution.error(this.position, ' Not support on this place. Sorry :)');
+    }
+    sb() {
+        throw exports.Execution.error(this.position, ' Not support on this place. Sorry :)');
     }
     _log() {
         var out = [];

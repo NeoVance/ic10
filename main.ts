@@ -2,7 +2,7 @@ import callerId from "caller-id";
 
 import chalk from "chalk";
 
-const regexes = {
+export const regexes = {
 	'rr1': new RegExp("[rd]{1,}(r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a))$"),
 	'r1': new RegExp("^r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a)$"),
 	'd1': new RegExp("^d(0|1|2|3|4|5|b)$"),
@@ -39,7 +39,7 @@ export class ic10Error {
 	}
 }
 
-var Execution = {
+export var Execution = {
 	error(code: number, message: string, obj: any = null) {
 		var caller = callerId.getData();
 		return new ic10Error(caller, code, message, obj, 0)
@@ -84,20 +84,20 @@ export class Environ {
 	
 	constructor(scope: InterpreterIc10) {
 		this.#scope = scope;
-		this.d0 = new Device(scope, 'd0')
-		this.d1 = new Device(scope, 'd1')
-		this.d2 = new Device(scope, 'd2')
-		this.d3 = new Device(scope, 'd3')
-		this.d4 = new Device(scope, 'd4')
-		this.d5 = new Device(scope, 'd5')
-		this.db = new Chip(scope, 'db')
+		this.d0 = new Device(scope, 'd0', 1)
+		this.d1 = new Device(scope, 'd1', 2)
+		this.d2 = new Device(scope, 'd2', 3)
+		this.d3 = new Device(scope, 'd3', 4)
+		this.d4 = new Device(scope, 'd4', 5)
+		this.d5 = new Device(scope, 'd5', 6)
+		this.db = new Chip(scope, 'db', 7)
 	}
 	
 	randomize() {
 		for (const x in this) {
-			if (this[x] instanceof Device) {
-				// @ts-ignore
-				this[x].randomize()
+			let d = this[x]
+			if (d instanceof Device) {
+				d.properties.randomize()
 			}
 		}
 	}
@@ -167,7 +167,7 @@ export class Memory {
 				}
 			}
 			if (cell in this.aliases) {
-				if (this.aliases[cell] instanceof MemoryCell) {
+				if (this.aliases[cell].constructor.name === 'MemoryCell') {
 					if (op1 === null) {
 						return this.aliases[cell].get()
 					} else {
@@ -240,7 +240,7 @@ export class Memory {
 	}
 	
 	define(name, value: string | number) {
-		this.aliases[name] = new ConstantCell(value)
+		this.aliases[name] = new ConstantCell(value, this.#scope, name)
 	}
 }
 
@@ -250,7 +250,7 @@ export class MemoryCell {
 	public name: string;
 	public alias: null;
 	
-	constructor(scope, name: string) {
+	constructor(scope: InterpreterIc10, name: string) {
 		this.#scope = scope;
 		this.name = name;
 		this.alias = null;
@@ -305,23 +305,26 @@ export class MemoryStack extends MemoryCell {
 	}
 }
 
-export class ConstantCell {
-	private value: any
+export class ConstantCell extends MemoryCell {
+	public value: any
+	#scope: InterpreterIc10;
 	
-	constructor(value) {
+	constructor(value, scope, name: string) {
+		super(scope, name)
 		this.value = value
 	}
 	
 	get() {
 		return this.value
 	}
+	
+	set(value: any, _: any = null) {
+		throw Execution.error(this.#scope.position, 'Can`t change constant')
+		return this
+	}
 }
 
-export class Device extends MemoryCell {
-	get scope(): InterpreterIc10 {
-		return null;
-	}
-	
+export class DeviceProperties {
 	public slots: Slot[]
 	public On: number
 	public Power: number
@@ -428,11 +431,8 @@ export class Device extends MemoryCell {
 	public MaxQuantity: number
 	public Mature: number
 	public ForceWrite: number
-	#scope: InterpreterIc10
 	
-	constructor(scope: InterpreterIc10, name: string) {
-		super(scope, name);
-		this.#scope = scope
+	constructor(scope) {
 		this.On = 0
 		this.Power = 0
 		this.Error = 0
@@ -542,11 +542,7 @@ export class Device extends MemoryCell {
 		this.ForceWrite = 0
 		this.randomize()
 		for (let i = 0; i < 5; i++) {
-			if (i === 16) {
-				this.slots[i] = new Slot(scope)
-			} else {
-				this.slots[i] = new Slot(scope)
-			}
+			this.slots[i] = new Slot(scope, i)
 		}
 	}
 	
@@ -590,21 +586,40 @@ export class Device extends MemoryCell {
 		this.Green = Math.abs(Math.round(Math.random() * 100))
 		this.Blue = Math.abs(Math.round(Math.random() * 100))
 	}
+}
+
+export class Device extends MemoryCell {
+	public number: number;
+	
+	get scope(): InterpreterIc10 {
+		return null;
+	}
+	
+	public properties: DeviceProperties
+	
+	#scope: InterpreterIc10
+	
+	constructor(scope: InterpreterIc10, name: string, number: number) {
+		super(scope, name);
+		this.#scope = scope
+		this.number = number
+		this.properties = new DeviceProperties(scope)
+	}
 	
 	get(variable = null) {
 		if (!variable) {
 			return this
 		}
-		if (variable in this) {
-			return this[variable]
+		if (variable in this.properties) {
+			return this.properties[variable]
 		} else {
 			throw Execution.error(this.#scope.position, 'Unknown variable', variable)
 		}
 	}
 	
 	set(variable, value) {
-		if (variable in this) {
-			this[variable] = value
+		if (variable in this.properties) {
+			this.properties[variable] = value
 		} else {
 			throw Execution.error(this.#scope.position, 'Unknown variable', variable)
 		}
@@ -612,8 +627,8 @@ export class Device extends MemoryCell {
 	}
 	
 	getSlot(op1, op2) {
-		if (op1 in this.slots) {
-			return this.slots[op1].get(op2)
+		if (op1 in this.properties.slots) {
+			return this.properties.slots[op1].get(op2)
 		} else {
 			throw Execution.error(this.#scope.position, 'Unknown Slot', op1)
 		}
@@ -624,41 +639,48 @@ export class Chip extends Device {
 	//-128473777
 	#scope: InterpreterIc10
 	
-	constructor(scope, name: string) {
-		super(scope, name)
+	constructor(scope, name: string, number: number) {
+		super(scope, name, number)
 		this.#scope = scope
-		this.slots[1].OccupantHash = -744098481
+		this.properties.slots[1].properties.OccupantHash = -744098481
 	}
 }
 
 export class Slot {
+	number: number;
+	
 	get scope(): InterpreterIc10 {
 		return null;
 	}
 	
-	public Occupied: number // - 0 - слот свободен, 1 - занят
-	public OccupantHash: number // - хэш объекта в слоте
-	public Quantity: number // // - количество предметов в слоте
-	public Damage: number // - уровень повреждения объекта
-	public Class: number // - класс объекта в слоте
-	public MaxQuantity: number // - максимальное количество предметов в слоте
-	public PrefabHash: number // - хэш префаба объекта в слоте
+	public properties: {
+		Occupied: number // - 0 - слот свободен, 1 - занят
+		OccupantHash: number // - хэш объекта в слоте
+		Quantity: number // // - количество предметов в слоте
+		Damage: number // - уровень повреждения объекта
+		Class: number // - класс объекта в слоте
+		MaxQuantity: number // - максимальное количество предметов в слоте
+		PrefabHash: number // - хэш префаба объекта в слоте
+	}
 	#scope: InterpreterIc10;
 	
-	constructor(scope: InterpreterIc10) {
+	constructor(scope: InterpreterIc10, number: number) {
 		this.#scope = scope;
-		this.Occupied = 1
-		this.OccupantHash = 0
-		this.Quantity = 0
-		this.Damage = 0
-		this.Class = 0
-		this.MaxQuantity = 1
-		this.PrefabHash = 0
+		this.number = number;
+		// @ts-ignore
+		this.properties = {}
+		this.properties.Occupied = 1
+		this.properties.OccupantHash = 0
+		this.properties.Quantity = 0
+		this.properties.Damage = 0
+		this.properties.Class = 0
+		this.properties.MaxQuantity = 1
+		this.properties.PrefabHash = 0
 	}
 	
 	get(op1) {
-		if (op1 in this) {
-			return this[op1]
+		if (op1 in this.properties) {
+			return this.properties[op1]
 		} else {
 			throw Execution.error(this.#scope.position, 'Unknown parameter', op1)
 		}
@@ -667,7 +689,7 @@ export class Slot {
 
 export class InterpreterIc10 {
 	public code: string
-	public commands: { args: string[]; command: string }[]
+	public commands: { args: any[]; command: string }[]
 	public lines: string[]
 	public memory: Memory
 	public position: number
@@ -797,7 +819,7 @@ export class InterpreterIc10 {
 		if (line > 0) {
 			this.position = line;
 		}
-		this.memory.environ.randomize()
+		// this.memory.environ.randomize()
 		if (!(this.position in this.commands)) {
 			return 'end';
 		}
@@ -809,7 +831,6 @@ export class InterpreterIc10 {
 			for (const argsKey in args) {
 				let a = parseFloat(args[argsKey])
 				if (!isNaN(a)) {
-					// @ts-ignore
 					args[argsKey] = a
 				}
 			}
@@ -823,7 +844,6 @@ export class InterpreterIc10 {
 					throw Execution.error(this.position, 'Undefined function', command)
 				}
 			} catch (e) {
-				// @ts-ignore
 				this.settings.executionCallback.call(this, e)
 			}
 		}
@@ -978,14 +998,14 @@ export class InterpreterIc10 {
 	
 	j(op1) {
 		if (this.__issetLabel(op1)) {
-			this.position = this.labels[op1] + 1
+			this.position = this.labels[op1]
 		} else {
-			throw Execution.error(this.position, ' Undefined label', op1)
+			throw Execution.error(this.position, 'Undefined label', [op1, this.labels])
 		}
 	}
 	
 	jr(op1) {
-		this.position += op1 + 1
+		this.position += op1
 	}
 	
 	jal(op1: number) {
@@ -1029,11 +1049,21 @@ export class InterpreterIc10 {
 	}
 	
 	__dse(op1 = 0, op2 = 0, op3 = 0, op4 = 0) {
-		return 1
+		try {
+			this.memory.getCell(op1)
+			return 1
+		} catch (e) {
+			return 0
+		}
 	}
 	
 	__dns(op1 = 0, op2 = 0, op3 = 0, op4 = 0) {
-		return 0
+		try {
+			this.memory.getCell(op1)
+			return 0
+		} catch (e) {
+			return 1
+		}
 	}
 	
 	
@@ -1102,11 +1132,11 @@ export class InterpreterIc10 {
 	}
 	
 	sdse(op1, op2, op3, op4) {
-		this.memory.cell(op1, this.__dse(this.memory.cell(op2), this.memory.cell(op3)))
+		this.memory.cell(op1, this.__dse(op2))
 	}
 	
 	sdns(op1, op2, op3, op4) {
-		this.memory.cell(op1, this.__dns(this.memory.cell(op2), this.memory.cell(op3)))
+		this.memory.cell(op1, this.__dns(op2))
 	}
 	
 	beq(op1, op2, op3, op4) {
@@ -1117,7 +1147,7 @@ export class InterpreterIc10 {
 	
 	beqz(op1, op2, op3, op4) {
 		if (this.__eq(this.memory.cell(op1), 0)) {
-			this.j(op3)
+			this.j(op2)
 		}
 	}
 	
@@ -1129,7 +1159,7 @@ export class InterpreterIc10 {
 	
 	bgez(op1, op2, op3, op4) {
 		if (this.__ge(this.memory.cell(op1), 0)) {
-			this.j(op3)
+			this.j(op2)
 		}
 	}
 	
@@ -1141,7 +1171,7 @@ export class InterpreterIc10 {
 	
 	bgtz(op1, op2, op3, op4) {
 		if (this.__gt(this.memory.cell(op1), 0)) {
-			this.j(op3)
+			this.j(op2)
 		}
 	}
 	
@@ -1153,7 +1183,7 @@ export class InterpreterIc10 {
 	
 	blez(op1, op2, op3, op4) {
 		if (this.__le(this.memory.cell(op1), 0)) {
-			this.j(op3)
+			this.j(op2)
 		}
 	}
 	
@@ -1165,7 +1195,7 @@ export class InterpreterIc10 {
 	
 	bltz(op1, op2, op3, op4) {
 		if (this.__lt(this.memory.cell(op1), 0)) {
-			this.j(op3)
+			this.j(op2)
 		}
 	}
 	
@@ -1177,7 +1207,7 @@ export class InterpreterIc10 {
 	
 	bnez(op1, op2, op3, op4) {
 		if (this.__ne(this.memory.cell(op1), 0)) {
-			this.j(op3)
+			this.j(op2)
 		}
 	}
 	
@@ -1206,13 +1236,13 @@ export class InterpreterIc10 {
 	}
 	
 	bdse(op1, op2, op3, op4) {
-		if (this.__dse(this.memory.cell(op1), this.memory.cell(op2))) {
+		if (this.__dse(op2)) {
 			this.j(op3)
 		}
 	}
 	
 	bdns(op1, op2, op3, op4) {
-		if (this.__dns(this.memory.cell(op1), this.memory.cell(op2))) {
+		if (this.__dns(op2)) {
 			this.j(op3)
 		}
 	}
@@ -1314,13 +1344,13 @@ export class InterpreterIc10 {
 	}
 	
 	brdse(op1, op2, op3, op4) {
-		if (this.__dse(this.memory.cell(op1), this.memory.cell(op2))) {
+		if (this.__dse(op2)) {
 			this.jr(op3)
 		}
 	}
 	
 	brdns(op1, op2, op3, op4) {
-		if (this.__dns(this.memory.cell(op1), this.memory.cell(op2))) {
+		if (this.__dns(op2)) {
 			this.jr(op3)
 		}
 	}
@@ -1422,13 +1452,13 @@ export class InterpreterIc10 {
 	}
 	
 	bdseal(op1, op2, op3, op4) {
-		if (this.__dse(this.memory.cell(op1), this.memory.cell(op2))) {
+		if (this.__dse(op2)) {
 			this.jal(op3)
 		}
 	}
 	
 	bdnsal(op1, op2, op3, op4) {
-		if (this.__dns(this.memory.cell(op1), this.memory.cell(op2))) {
+		if (this.__dns(op2)) {
 			this.jal(op3)
 		}
 	}
@@ -1444,9 +1474,19 @@ export class InterpreterIc10 {
 	peek(op1, op2, op3, op4) {
 		this.memory.cell(op1, this.memory.getCell('r16').peek())
 	}
-
-
-// @ts-ignore
+	
+	lb() {
+		throw Execution.error(this.position, ' Not support on this place. Sorry :)')
+	}
+	
+	lr() {
+		throw Execution.error(this.position, ' Not support on this place. Sorry :)')
+	}
+	
+	sb() {
+		throw Execution.error(this.position, ' Not support on this place. Sorry :)')
+	}
+	
 	_log() {
 		var out = []
 		for (const argumentsKey in arguments) {
