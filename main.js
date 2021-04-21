@@ -370,6 +370,7 @@ class DeviceProperties {
         this.Quantity = 0;
         this.Ratio = 0;
         this.RatioCarbonDioxide = 0;
+        this.RatioNitrousOxide = 0;
         this.RatioNitrogen = 0;
         this.RatioOxygen = 0;
         this.RatioPollutant = 0;

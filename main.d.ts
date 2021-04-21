@@ -180,6 +180,7 @@ export declare class DeviceProperties {
     MaxQuantity: number;
     Mature: number;
     ForceWrite: number;
+    RatioNitrousOxide: number;
     constructor(scope: any);
     randomize(): void;
 }
