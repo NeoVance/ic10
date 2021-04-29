@@ -306,82 +306,78 @@ class DeviceProperties {
         this.Lock = 0;
         this.slots = new Array(5);
         this.RecipeHash = -128473777;
-        this.Flour = 0;
-        this.Fenoxitone = 0;
-        this.Milk = 0;
-        this.Egg = 0;
-        this.Iron = 0;
-        this.Gold = 0;
-        this.Carbon = 0;
-        this.Uranium = 0;
-        this.Copper = 0;
-        this.Steel = 0;
-        this.Hydrocarbon = 0;
-        this.Silver = 0;
-        this.Nickel = 0;
-        this.Lead = 0;
-        this.Electrum = 0;
-        this.Invar = 0;
-        this.Constantan = 0;
-        this.Solder = 0;
-        this.Plastic = 0;
-        this.Silicon = 0;
-        this.Salicylic = 0;
-        this.Alcohol = 0;
-        this.Oil = 0;
-        this.Potato = 0;
-        this.Tomato = 0;
-        this.Rice = 0;
-        this.Pumpkin = 0;
-        this.Yellow = 0;
-        this.Red = 0;
-        this.Orange = 0;
-        this.Green = 0;
-        this.Blue = 0;
+        this.Activate = 0;
         this.AirRelease = 0;
+        this.Bpm = 0;
         this.Charge = 0;
+        this.ClearMemory = 0;
+        this.CollectableGoods = 0;
         this.Color = 0;
+        this.Combustion = 0;
         this.CompletionRatio = 0;
+        this.CurrentResearchPodType = 0;
         this.ElevatorLevel = 0;
         this.ElevatorSpeed = 0;
+        this.Error = 0;
         this.ExportCount = 0;
         this.Filtration = 0;
+        this.ForceWrite = 0;
+        this.Fuel = 0;
         this.Harvest = 0;
         this.Horizontal = 0;
         this.HorizontalRatio = 0;
         this.Idle = 0;
         this.ImportCount = 0;
+        this.Lock = 0;
+        this.ManualResearchRequiredPod = 0;
         this.Maximum = 0;
+        this.MineablesInQueue = 0;
+        this.MineablesInVicinity = 0;
         this.Mode = 0;
+        this.NextWeatherEventTime = 0;
+        this.On = 0;
         this.Open = 0;
         this.Output = 0;
         this.Plant = 0;
         this.PositionX = 0;
         this.PositionY = 0;
         this.PositionZ = 0;
+        this.Power = 0;
         this.PowerActual = 0;
         this.PowerGeneration = 0;
         this.PowerPotential = 0;
         this.PowerRequired = 0;
+        this.PrefabHash = 0;
         this.Pressure = 0;
         this.PressureExternal = 0;
-        this.PressureInteral = 0;
         this.PressureSetting = 0;
         this.Quantity = 0;
         this.Ratio = 0;
         this.RatioCarbonDioxide = 0;
-        this.RatioNitrousOxide = 0;
         this.RatioNitrogen = 0;
+        this.RatioNitrousOxide = 0;
         this.RatioOxygen = 0;
         this.RatioPollutant = 0;
         this.RatioVolatiles = 0;
         this.RatioWater = 0;
         this.Reagents = 0;
+        this.RecipeHash = 0;
         this.RequestHash = 0;
+        this.RequiredPower = 0;
+        this.ReturnFuelCost = 0;
+        this.Setting = 0;
+        this.SettingInput = 0;
+        this.SettingOutput = 0;
+        this.SignalID = 0;
+        this.SignalStrength = 0;
         this.SolarAngle = 0;
+        this.TargetX = 0;
+        this.TargetY = 0;
+        this.TargetZ = 0;
         this.Temperature = 0;
         this.TemperatureExternal = 0;
-        this.TemperatureSettings = 0;
+        this.TemperatureSetting = 0;
+        this.Time = 0;
         this.TotalMoles = 0;
         this.VelocityMagnitude = 0;
         this.VelocityRelativeX = 0;
@@ -390,62 +386,13 @@ class DeviceProperties {
         this.Vertical = 0;
         this.VerticalRatio = 0;
         this.Volume = 0;
-        this.Occupied = 0;
-        this.OccupantHash = 0;
-        this.Damage = 0;
-        this.Efficiency = 0;
-        this.Health = 0;
-        this.Growth = 0;
-        this.ChargeRatio = 0;
-        this.Class = 0;
-        this.PressureWaste = 0;
-        this.PressureAir = 0;
-        this.MaxQuantity = 0;
-        this.Mature = 0;
-        this.ForceWrite = 0;
         this.randomize();
         for (let i = 0; i < 5; i++) {
             this.slots[i] = new Slot(scope, i);
         }
     }
     randomize() {
-        this.On = Math.round(Math.random());
-        this.Power = Math.round(Math.random());
-        this.Error = Math.round(Math.random());
-        this.Activate = Math.round(Math.random());
         this.ClearMemory = 0;
-        this.Flour = Math.abs(Math.round(Math.random() * 100));
-        this.Fenoxitone = Math.abs(Math.round(Math.random() * 100));
-        this.Milk = Math.abs(Math.round(Math.random() * 100));
-        this.Egg = Math.abs(Math.round(Math.random() * 100));
-        this.Iron = Math.abs(Math.round(Math.random() * 100));
-        this.Gold = Math.abs(Math.round(Math.random() * 100));
-        this.Carbon = Math.abs(Math.round(Math.random() * 100));
-        this.Uranium = Math.abs(Math.round(Math.random() * 100));
-        this.Copper = Math.abs(Math.round(Math.random() * 100));
-        this.Steel = Math.abs(Math.round(Math.random() * 100));
-        this.Hydrocarbon = Math.abs(Math.round(Math.random() * 100));
-        this.Silver = Math.abs(Math.round(Math.random() * 100));
-        this.Nickel = Math.abs(Math.round(Math.random() * 100));
-        this.Lead = Math.abs(Math.round(Math.random() * 100));
-        this.Electrum = Math.abs(Math.round(Math.random() * 100));
-        this.Invar = Math.abs(Math.round(Math.random() * 100));
-        this.Constantan = Math.abs(Math.round(Math.random() * 100));
-        this.Solder = Math.abs(Math.round(Math.random() * 100));
-        this.Plastic = Math.abs(Math.round(Math.random() * 100));
-        this.Silicon = Math.abs(Math.round(Math.random() * 100));
-        this.Salicylic = Math.abs(Math.round(Math.random() * 100));
-        this.Alcohol = Math.abs(Math.round(Math.random() * 100));
-        this.Oil = Math.abs(Math.round(Math.random() * 100));
-        this.Potato = Math.abs(Math.round(Math.random() * 100));
-        this.Tomato = Math.abs(Math.round(Math.random() * 100));
-        this.Rice = Math.abs(Math.round(Math.random() * 100));
-        this.Pumpkin = Math.abs(Math.round(Math.random() * 100));
-        this.Yellow = Math.abs(Math.round(Math.random() * 100));
-        this.Red = Math.abs(Math.round(Math.random() * 100));
-        this.Orange = Math.abs(Math.round(Math.random() * 100));
-        this.Green = Math.abs(Math.round(Math.random() * 100));
-        this.Blue = Math.abs(Math.round(Math.random() * 100));
     }
 }
 exports.DeviceProperties = DeviceProperties;
@@ -504,13 +451,23 @@ class Slot {
         this.#scope = scope;
         this.number = number;
         this.properties = {};
-        this.properties.Occupied = 1;
-        this.properties.OccupantHash = 0;
-        this.properties.Quantity = 0;
-        this.properties.Damage = 0;
+        this.properties.Charge = 0;
+        this.properties.ChargeRatio = 0;
         this.properties.Class = 0;
-        this.properties.MaxQuantity = 1;
+        this.properties.Damage = 0;
+        this.properties.Efficiency = 0;
+        this.properties.Growth = 0;
+        this.properties.Health = 0;
+        this.properties.Mature = 0;
+        this.properties.MaxQuantity = 0;
+        this.properties.OccupantHash = 0;
+        this.properties.Occupied = 0;
         this.properties.PrefabHash = 0;
+        this.properties.Pressure = 0;
+        this.properties.PressureAir = 0;
+        this.properties.PressureWaste = 0;
+        this.properties.Quantity = 0;
+        this.properties.Temperature = 0;
     }
     get scope() {
         return null;
@@ -1176,13 +1133,68 @@ class InterpreterIc10 {
     peek(op1, op2, op3, op4) {
         this.memory.cell(op1, this.memory.getCell('r16').peek());
     }
-    lb() {
-        throw exports.Execution.error(this.position, ' Not support on this place. Sorry :)');
+    lb(op1, op2, op3, op4) {
+        var values = [];
+        values.push(this.memory.cell('d0', op3));
+        values.push(this.memory.cell('d1', op3));
+        values.push(this.memory.cell('d2', op3));
+        values.push(this.memory.cell('d3', op3));
+        values.push(this.memory.cell('d4', op3));
+        values.push(this.memory.cell('d5', op3));
+        var result = 0;
+        switch (op4) {
+            case 0:
+            case 'Average':
+                result = values.reduce((partial_sum, a) => partial_sum + a, 0) / values.length;
+                break;
+            case 1:
+            case 'Sum':
+                result = values.reduce((partial_sum, a) => partial_sum + a, 0);
+                break;
+            case 2:
+            case 'Minimum':
+                result = Math.min.apply(null, values);
+                break;
+            case 3:
+            case 'Maximum':
+                result = Math.max.apply(null, values);
+                break;
+        }
+        this.memory.cell(op1, result);
     }
-    lr() {
-        throw exports.Execution.error(this.position, ' Not support on this place. Sorry :)');
+    lr(op1, op2, op3, op4) {
+        var values = [];
+        var d = this.memory.getCell(op2);
+        if (d instanceof Device) {
+            for (const slotsKey in d.properties.slots) {
+                if (d.properties.slots[slotsKey] instanceof Slot) {
+                    var slot = d.properties.slots[slotsKey];
+                    values.push(slot.get(op4));
+                }
+            }
+        }
+        var result = 0;
+        switch (op3) {
+            case 0:
+            case 'Average':
+                result = values.reduce((partial_sum, a) => partial_sum + a, 0) / values.length;
+                break;
+            case 1:
+            case 'Sum':
+                result = values.reduce((partial_sum, a) => partial_sum + a, 0);
+                break;
+            case 2:
+            case 'Minimum':
+                result = Math.min.apply(null, values);
+                break;
+            case 3:
+            case 'Maximum':
+                result = Math.max.apply(null, values);
+                break;
+        }
+        this.memory.cell(op1, result);
     }
-    sb() {
+    sb(op1, op2, op3, op4) {
         throw exports.Execution.error(this.position, ' Not support on this place. Sorry :)');
     }
     _log() {
