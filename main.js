@@ -399,6 +399,7 @@ exports.DeviceProperties = DeviceProperties;
 class Device extends MemoryCell {
     constructor(scope, name, number) {
         super(scope, name);
+        this.hash = 100000000;
         this.#scope = scope;
         this.number = number;
         this.properties = new DeviceProperties(scope);
@@ -440,6 +441,7 @@ exports.Device = Device;
 class Chip extends Device {
     constructor(scope, name, number) {
         super(scope, name, number);
+        this.hash = -128473777;
         this.#scope = scope;
         this.properties.slots[1].properties.OccupantHash = -744098481;
     }
@@ -1135,12 +1137,12 @@ class InterpreterIc10 {
     }
     lb(op1, op2, op3, op4) {
         var values = [];
-        values.push(this.memory.cell('d0', op3));
-        values.push(this.memory.cell('d1', op3));
-        values.push(this.memory.cell('d2', op3));
-        values.push(this.memory.cell('d3', op3));
-        values.push(this.memory.cell('d4', op3));
-        values.push(this.memory.cell('d5', op3));
+        for (var i = 0; i < 5; i++) {
+            var d = this.memory.getCell('d' + i);
+            if (d.hash == op2) {
+                values.push(this.memory.cell('d0', op3));
+            }
+        }
         var result = 0;
         switch (op4) {
             case 0:
@@ -1195,7 +1197,12 @@ class InterpreterIc10 {
         this.memory.cell(op1, result);
     }
     sb(op1, op2, op3, op4) {
-        throw exports.Execution.error(this.position, ' Not support on this place. Sorry :)');
+        for (var i = 0; i < 5; i++) {
+            var d = this.memory.getCell('d' + i);
+            if (d.hash == op1) {
+                this.memory.cell('d' + i, op2, op3);
+            }
+        }
     }
     _log() {
         var out = [];
@@ -1213,6 +1220,30 @@ class InterpreterIc10 {
             }
         }
         this.settings.logCallback.call(this, `Log [${this.position}]: `, ...out);
+    }
+    _d0(op1) {
+        var d0 = this.memory.getCell('d0');
+        d0.hash = op1;
+    }
+    _d1(op1) {
+        var d1 = this.memory.getCell('d1');
+        d1.hash = op1;
+    }
+    _d2(op1) {
+        var d2 = this.memory.getCell('d2');
+        d2.hash = op1;
+    }
+    _d3(op1) {
+        var d3 = this.memory.getCell('d3');
+        d3.hash = op1;
+    }
+    _d4(op1) {
+        var d4 = this.memory.getCell('d4');
+        d4.hash = op1;
+    }
+    _d5(op1) {
+        var d5 = this.memory.getCell('d5');
+        d5.hash = op1;
     }
     __debug(p, iArguments) {
         if (this.settings.debug) {

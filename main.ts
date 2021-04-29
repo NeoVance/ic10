@@ -326,86 +326,86 @@ export class ConstantCell extends MemoryCell {
 
 export class DeviceProperties {
 	public slots: Slot[]
-	public Activate:number
-	public AirRelease:number
-	public Bpm:number
-	public Charge:number
-	public ClearMemory:number
-	public CollectableGoods:number
-	public Color:number
-	public Combustion:number
-	public CompletionRatio:number
-	public CurrentResearchPodType:number
-	public ElevatorLevel:number
-	public ElevatorSpeed:number
-	public Error:number
-	public ExportCount:number
-	public Filtration:number
-	public ForceWrite:number
-	public Fuel:number
-	public Harvest:number
-	public Horizontal:number
-	public HorizontalRatio:number
-	public Idle:number
-	public ImportCount:number
-	public Lock:number
-	public ManualResearchRequiredPod:number
-	public Maximum:number
-	public MineablesInQueue:number
-	public MineablesInVicinity:number
-	public Mode:number
-	public NextWeatherEventTime:number
-	public On:number
-	public Open:number
-	public Output:number
-	public Plant:number
-	public PositionX:number
-	public PositionY:number
-	public PositionZ:number
-	public Power:number
-	public PowerActual:number
-	public PowerGeneration:number
-	public PowerPotential:number
-	public PowerRequired:number
-	public PrefabHash:number
-	public Pressure:number
-	public PressureExternal:number
-	public PressureSetting:number
-	public Quantity:number
-	public Ratio:number
-	public RatioCarbonDioxide:number
-	public RatioNitrogen:number
-	public RatioNitrousOxide:number
-	public RatioOxygen:number
-	public RatioPollutant:number
-	public RatioVolatiles:number
-	public RatioWater:number
-	public Reagents:number
-	public RecipeHash:number
-	public RequestHash:number
-	public RequiredPower:number
-	public ReturnFuelCost:number
-	public Setting:number
-	public SettingInput:number
-	public SettingOutput:number
-	public SignalID:number
-	public SignalStrength:number
-	public SolarAngle:number
-	public TargetX:number
-	public TargetY:number
-	public TargetZ:number
-	public Temperature:number
-	public TemperatureExternal:number
-	public TemperatureSetting:number
-	public Time:number
-	public TotalMoles:number
-	public VelocityMagnitude:number
-	public VelocityRelativeX:number
-	public VelocityRelativeY:number
-	public VelocityRelativeZ:number
-	public Vertical:number
-	public VerticalRatio:number
-	public Volume:number
+	public Activate: number
+	public AirRelease: number
+	public Bpm: number
+	public Charge: number
+	public ClearMemory: number
+	public CollectableGoods: number
+	public Color: number
+	public Combustion: number
+	public CompletionRatio: number
+	public CurrentResearchPodType: number
+	public ElevatorLevel: number
+	public ElevatorSpeed: number
+	public Error: number
+	public ExportCount: number
+	public Filtration: number
+	public ForceWrite: number
+	public Fuel: number
+	public Harvest: number
+	public Horizontal: number
+	public HorizontalRatio: number
+	public Idle: number
+	public ImportCount: number
+	public Lock: number
+	public ManualResearchRequiredPod: number
+	public Maximum: number
+	public MineablesInQueue: number
+	public MineablesInVicinity: number
+	public Mode: number
+	public NextWeatherEventTime: number
+	public On: number
+	public Open: number
+	public Output: number
+	public Plant: number
+	public PositionX: number
+	public PositionY: number
+	public PositionZ: number
+	public Power: number
+	public PowerActual: number
+	public PowerGeneration: number
+	public PowerPotential: number
+	public PowerRequired: number
+	public PrefabHash: number
+	public Pressure: number
+	public PressureExternal: number
+	public PressureSetting: number
+	public Quantity: number
+	public Ratio: number
+	public RatioCarbonDioxide: number
+	public RatioNitrogen: number
+	public RatioNitrousOxide: number
+	public RatioOxygen: number
+	public RatioPollutant: number
+	public RatioVolatiles: number
+	public RatioWater: number
+	public Reagents: number
+	public RecipeHash: number
+	public RequestHash: number
+	public RequiredPower: number
+	public ReturnFuelCost: number
+	public Setting: number
+	public SettingInput: number
+	public SettingOutput: number
+	public SignalID: number
+	public SignalStrength: number
+	public SolarAngle: number
+	public TargetX: number
+	public TargetY: number
+	public TargetZ: number
+	public Temperature: number
+	public TemperatureExternal: number
+	public TemperatureSetting: number
+	public Time: number
+	public TotalMoles: number
+	public VelocityMagnitude: number
+	public VelocityRelativeX: number
+	public VelocityRelativeY: number
+	public VelocityRelativeZ: number
+	public Vertical: number
+	public VerticalRatio: number
+	public Volume: number
 	
 	constructor(scope) {
 		this.On = 0
@@ -512,6 +512,7 @@ export class DeviceProperties {
 
 export class Device extends MemoryCell {
 	public number: number;
+	public hash: number;
 	
 	get scope(): InterpreterIc10 {
 		return null;
@@ -523,6 +524,7 @@ export class Device extends MemoryCell {
 	
 	constructor(scope: InterpreterIc10, name: string, number: number) {
 		super(scope, name);
+		this.hash = 100000000
 		this.#scope = scope
 		this.number = number
 		this.properties = new DeviceProperties(scope)
@@ -563,6 +565,7 @@ export class Chip extends Device {
 	
 	constructor(scope, name: string, number: number) {
 		super(scope, name, number)
+		this.hash = -128473777
 		this.#scope = scope
 		this.properties.slots[1].properties.OccupantHash = -744098481
 	}
@@ -576,23 +579,23 @@ export class Slot {
 	}
 	
 	public properties: {
-		Charge:number
-		ChargeRatio:number
-		Class:number
-		Damage:number
-		Efficiency:number
-		Growth:number
-		Health:number
-		Mature:number
-		MaxQuantity:number
-		OccupantHash:number
-		Occupied:number
-		PrefabHash:number
-		Pressure:number
-		PressureAir:number
-		PressureWaste:number
-		Quantity:number
-		Temperature:number
+		Charge: number
+		ChargeRatio: number
+		Class: number
+		Damage: number
+		Efficiency: number
+		Growth: number
+		Health: number
+		Mature: number
+		MaxQuantity: number
+		OccupantHash: number
+		Occupied: number
+		PrefabHash: number
+		Pressure: number
+		PressureAir: number
+		PressureWaste: number
+		Quantity: number
+		Temperature: number
 	}
 	#scope: InterpreterIc10;
 	
@@ -1419,12 +1422,12 @@ export class InterpreterIc10 {
 	
 	lb(op1, op2, op3, op4) {
 		var values = []
-		values.push(this.memory.cell('d0', op3))
-		values.push(this.memory.cell('d1', op3))
-		values.push(this.memory.cell('d2', op3))
-		values.push(this.memory.cell('d3', op3))
-		values.push(this.memory.cell('d4', op3))
-		values.push(this.memory.cell('d5', op3))
+		for (var i = 0; i < 5; i++) {
+			var d = this.memory.getCell('d' + i)
+			if (d.hash == op2) {
+				values.push(this.memory.cell('d0', op3))
+			}
+		}
 		var result = 0
 		switch (op4) {
 			case 0:
@@ -1483,7 +1486,12 @@ export class InterpreterIc10 {
 	}
 	
 	sb(op1, op2, op3, op4) {
-		throw Execution.error(this.position, ' Not support on this place. Sorry :)')
+		for (var i = 0; i < 5; i++) {
+			var d = this.memory.getCell('d' + i)
+			if (d.hash == op1) {
+				this.memory.cell('d' + i, op2, op3)
+			}
+		}
 	}
 	
 	_log() {
@@ -1500,6 +1508,36 @@ export class InterpreterIc10 {
 			}
 		}
 		this.settings.logCallback.call(this, `Log [${this.position}]: `, ...out)
+	}
+	
+	_d0(op1) {
+		var d0 = this.memory.getCell('d0');
+		d0.hash = op1
+	}
+	
+	_d1(op1) {
+		var d1 = this.memory.getCell('d1');
+		d1.hash = op1
+	}
+	
+	_d2(op1) {
+		var d2 = this.memory.getCell('d2');
+		d2.hash = op1
+	}
+	
+	_d3(op1) {
+		var d3 = this.memory.getCell('d3');
+		d3.hash = op1
+	}
+	
+	_d4(op1) {
+		var d4 = this.memory.getCell('d4');
+		d4.hash = op1
+	}
+	
+	_d5(op1) {
+		var d5 = this.memory.getCell('d5');
+		d5.hash = op1
 	}
 	
 	__debug(p: string, iArguments: string[]) {

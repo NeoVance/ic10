@@ -161,6 +161,7 @@ export declare class DeviceProperties {
 export declare class Device extends MemoryCell {
     #private;
     number: number;
+    hash: number;
     get scope(): InterpreterIc10;
     properties: DeviceProperties;
     constructor(scope: InterpreterIc10, name: string, number: number);
@@ -353,5 +354,11 @@ export declare class InterpreterIc10 {
     lr(op1: any, op2: any, op3: any, op4: any): void;
     sb(op1: any, op2: any, op3: any, op4: any): void;
     _log(): void;
+    _d0(op1: any): void;
+    _d1(op1: any): void;
+    _d2(op1: any): void;
+    _d3(op1: any): void;
+    _d4(op1: any): void;
+    _d5(op1: any): void;
     __debug(p: string, iArguments: string[]): void;
 }
