@@ -1,7 +1,11 @@
+#d0 4584556
+#d1 4584556
+#d3 4584556
 loop:
-lr r0 d0 Sum Iron
-s db Setting r0
+sb 4584556 Activate 5
+l r0 d2 On
 #log r0
+#log d2
 yield
 yield
 yield

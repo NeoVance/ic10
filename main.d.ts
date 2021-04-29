@@ -41,8 +41,8 @@ export declare class Memory {
     environ: Environ;
     aliases: Object;
     constructor(scope: any);
-    cell(cell: string | number, op1?: any, op2?: any): any;
-    getCell(cell: any): any;
+    cell(cell: string | number, op1?: any, op2?: any): MemoryCell | any;
+    getCell(cell: any): Device | MemoryStack | ConstantCell | any;
     alias(name: any, link: string | number): this;
     define(name: any, value: string | number): void;
 }

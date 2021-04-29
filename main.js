@@ -138,7 +138,7 @@ class Memory {
                         throw exports.Execution.error(this.#scope.position, 'Have not `Port`', cell);
                     }
                     else {
-                        if (op1 !== null) {
+                        if (op2 !== null) {
                             return this.environ[cell].set(op1, this.cell(op2));
                         }
                         return this.environ[cell].get(op1);
@@ -306,7 +306,6 @@ class DeviceProperties {
         this.Lock = 0;
         this.slots = new Array(5);
         this.RecipeHash = -128473777;
-        this.Activate = 0;
         this.AirRelease = 0;
         this.Bpm = 0;
         this.Charge = 0;
@@ -1140,7 +1139,7 @@ class InterpreterIc10 {
         for (var i = 0; i < 5; i++) {
             var d = this.memory.getCell('d' + i);
             if (d.hash == op2) {
-                values.push(this.memory.cell('d0', op3));
+                values.push(d.get(op3));
             }
         }
         var result = 0;
@@ -1200,7 +1199,7 @@ class InterpreterIc10 {
         for (var i = 0; i < 5; i++) {
             var d = this.memory.getCell('d' + i);
             if (d.hash == op1) {
-                this.memory.cell('d' + i, op2, op3);
+                d.set(op2, op3);
             }
         }
     }

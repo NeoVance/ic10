@@ -128,7 +128,7 @@ export class Memory {
 		}
 	}
 	
-	cell(cell: string | number, op1: any = null, op2: any = null) {
+	cell(cell: string | number, op1: any = null, op2: any = null): MemoryCell | any {
 		if (typeof cell === "string") {
 			if (cell == 'sp') cell = 'r16'
 			if (cell == 'ra') cell = 'r17'
@@ -157,7 +157,7 @@ export class Memory {
 					if (op1 === null) {
 						throw Execution.error(this.#scope.position, 'Have not `Port`', cell)
 					} else {
-						if (op1 !== null) {
+						if (op2 !== null) {
 							return this.environ[cell].set(op1, this.cell(op2))
 						}
 						return this.environ[cell].get(op1)
@@ -195,7 +195,7 @@ export class Memory {
 		}
 	}
 	
-	getCell(cell) {
+	getCell(cell): Device | MemoryStack | ConstantCell | any {
 		if (typeof cell === "string") {
 			if (cell == 'sp') cell = 'r16'
 			if (cell == 'ra') cell = 'r17'
@@ -419,7 +419,6 @@ export class DeviceProperties {
 		this.slots = new Array<Slot>(5)
 		this.RecipeHash = -128473777
 		//------
-		this.Activate = 0
 		this.AirRelease = 0
 		this.Bpm = 0
 		this.Charge = 0
@@ -1423,9 +1422,9 @@ export class InterpreterIc10 {
 	lb(op1, op2, op3, op4) {
 		var values = []
 		for (var i = 0; i < 5; i++) {
-			var d = this.memory.getCell('d' + i)
+			var d: Device = this.memory.getCell('d' + i)
 			if (d.hash == op2) {
-				values.push(this.memory.cell('d0', op3))
+				values.push(d.get(op3))
 			}
 		}
 		var result = 0
@@ -1487,9 +1486,9 @@ export class InterpreterIc10 {
 	
 	sb(op1, op2, op3, op4) {
 		for (var i = 0; i < 5; i++) {
-			var d = this.memory.getCell('d' + i)
+			var d: Device = this.memory.getCell('d' + i)
 			if (d.hash == op1) {
-				this.memory.cell('d' + i, op2, op3)
+				d.set(op2, op3)
 			}
 		}
 	}
