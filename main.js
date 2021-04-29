@@ -640,6 +640,9 @@ class InterpreterIc10 {
     l(op1, op2, op3, op4) {
         this.memory.cell(op1, this.memory.cell(op2, op3));
     }
+    __l(op1, op2, op3, op4) {
+        this.l(op1, op2, op3, op4);
+    }
     ls(op1, op2, op3, op4) {
         var d = this.memory.getCell(op2);
         if (d instanceof Device) {
@@ -652,8 +655,14 @@ class InterpreterIc10 {
     s(op1, op2, op3, op4) {
         this.memory.cell(op1, op2, op3);
     }
+    __s(op1, op2, op3, op4) {
+        this.s(op1, op2, op3, op4);
+    }
     move(op1, op2, op3, op4) {
         this.memory.cell(op1, this.memory.cell(op2));
+    }
+    __move(op1, op2, op3, op4) {
+        this.move(op1, op2, op3, op4);
     }
     add(op1, op2, op3, op4) {
         this.memory.cell(op1, this.memory.cell(op2) + this.memory.cell(op3));
@@ -665,7 +674,8 @@ class InterpreterIc10 {
         this.memory.cell(op1, this.memory.cell(op2) * this.memory.cell(op3));
     }
     div(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.memory.cell(op2) / this.memory.cell(op3));
+        var div = this.memory.cell(op2) / this.memory.cell(op3);
+        this.memory.cell(op1, Number(div) || 0);
     }
     mod(op1, op2, op3, op4) {
         this.memory.cell(op1, Math.abs(this.memory.cell(op2) % this.memory.cell(op3)));
@@ -1136,11 +1146,15 @@ class InterpreterIc10 {
     }
     lb(op1, op2, op3, op4) {
         var values = [];
+        var hash = this.memory.cell(op2);
         for (var i = 0; i < 5; i++) {
             var d = this.memory.getCell('d' + i);
-            if (d.hash == op2) {
+            if (d.hash == hash) {
                 values.push(d.get(op3));
             }
+        }
+        if (values.length === 0) {
+            throw exports.Execution.error(this.position, 'Can`t find Device wich hash:', hash);
         }
         var result = 0;
         switch (op4) {
@@ -1161,7 +1175,7 @@ class InterpreterIc10 {
                 result = Math.max.apply(null, values);
                 break;
         }
-        this.memory.cell(op1, result);
+        this.memory.cell(op1, Number(result));
     }
     lr(op1, op2, op3, op4) {
         var values = [];
@@ -1196,9 +1210,10 @@ class InterpreterIc10 {
         this.memory.cell(op1, result);
     }
     sb(op1, op2, op3, op4) {
+        var hash = this.memory.cell(op1);
         for (var i = 0; i < 5; i++) {
             var d = this.memory.getCell('d' + i);
-            if (d.hash == op1) {
+            if (d.hash == hash) {
                 d.set(op2, op3);
             }
         }

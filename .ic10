@@ -1,13 +1,27 @@
-#d0 4584556
-#d1 4584556
-#d3 4584556
-loop:
-sb 4584556 Activate 5
-l r0 d2 On
-#log r0
-#log d2
-yield
-yield
-yield
-j loop
-
+#d1 -1924492105 # set hash to virtual Device
+# Solar Panel Control
+# Sensor: port see south
+# Solar Panel: port see west
+alias Sensor d0
+alias SolarPanel d1
+alias DisplayHealth d3
+alias DisplayWatt d4
+s Sensor Mode 0
+s DisplayHealth Mode 1
+s DisplayWatt Mode 0
+start:
+l r0 Sensor Horizontal
+l r1 Sensor Vertical
+l r2 SolarPanel PrefabHash
+#_move r2 -1924492105
+l r3 SolarPanel Maximum
+lb r4 r2 Charge 0 # read average power
+lb r5 r2 Charge 1 # read sum power
+sub r1 75 r1
+div r1 r1 1.5
+div r4 r4 r3
+sb r2 Horizontal r0 # r2 hash of Solar Panel
+sb r2 Vertical r1 # r2 hash of Solar Panel
+s DisplayHealth Setting r4
+s DisplayWatt Setting r5
+j start

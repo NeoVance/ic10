@@ -233,9 +233,12 @@ export declare class InterpreterIc10 {
     define(op1: any, op2: any, op3: any, op4: any): void;
     alias(op1: any, op2: any, op3: any, op4: any): void;
     l(op1: any, op2: any, op3: any, op4: any): void;
+    __l(op1: any, op2: any, op3: any, op4: any): void;
     ls(op1: any, op2: any, op3: any, op4: any): void;
     s(op1: any, op2: any, op3: any, op4: any): void;
+    __s(op1: any, op2: any, op3: any, op4: any): void;
     move(op1: any, op2: any, op3: any, op4: any): void;
+    __move(op1: any, op2: any, op3: any, op4: any): void;
     add(op1: any, op2: any, op3: any, op4: any): void;
     sub(op1: any, op2: any, op3: any, op4: any): void;
     mul(op1: any, op2: any, op3: any, op4: any): void;
