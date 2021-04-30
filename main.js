@@ -756,7 +756,13 @@ class InterpreterIc10 {
             this.position = this.labels[op1];
         }
         else {
-            throw exports.Execution.error(this.position, 'Undefined label', [op1, this.labels]);
+            var line = this.memory.cell(op1);
+            if (!isNaN(line)) {
+                this.position = line;
+            }
+            else {
+                throw exports.Execution.error(this.position, 'Undefined label', [op1, this.labels]);
+            }
         }
     }
     jr(op1) {
