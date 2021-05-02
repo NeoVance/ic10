@@ -490,6 +490,7 @@ class InterpreterIc10 {
         this.memory = new Memory(this);
         this.constants = {};
         this.labels = {};
+        this.ignoreLine = [];
         this.settings = Object.assign({
             debug: true,
             tickTime: 100,
@@ -588,7 +589,7 @@ class InterpreterIc10 {
         }, this.settings.tickTime);
         return this;
     }
-    prepareLine(line = -1) {
+    prepareLine(line = -1, isDebugger = false) {
         if (line > 0) {
             this.position = line;
         }
@@ -624,9 +625,17 @@ class InterpreterIc10 {
         }
         if (command === "hcf")
             return 'hcf';
-        return isComment && this.position < this.commands.length
-            ? this.prepareLine()
-            : this.position < this.commands.length ? true : 'end';
+        if (isComment) {
+            this.ignoreLine.push(this.position);
+        }
+        if (!isDebugger) {
+            return isComment && this.position < this.commands.length
+                ? this.prepareLine()
+                : this.position < this.commands.length ? true : 'end';
+        }
+        else {
+            return this.position < this.commands.length ? true : 'end';
+        }
     }
     __issetLabel(x) {
         return x in this.labels;
@@ -766,6 +775,9 @@ class InterpreterIc10 {
         }
     }
     jr(op1) {
+        if (op1 < 0) {
+            op1 -= 1;
+        }
         this.position += op1;
     }
     jal(op1) {
@@ -1222,6 +1234,46 @@ class InterpreterIc10 {
             if (d.hash == hash) {
                 d.set(op2, op3);
             }
+        }
+    }
+    and(op1, op2, op3, op4) {
+        op2 = this.memory.cell(op2);
+        op3 = this.memory.cell(op3);
+        if (op2 && op3) {
+            this.memory.cell(op1, 1);
+        }
+        else {
+            this.memory.cell(op1, 0);
+        }
+    }
+    or(op1, op2, op3, op4) {
+        op2 = this.memory.cell(op2);
+        op3 = this.memory.cell(op3);
+        if (op2 || op3) {
+            this.memory.cell(op1, 1);
+        }
+        else {
+            this.memory.cell(op1, 0);
+        }
+    }
+    xor(op1, op2, op3, op4) {
+        op2 = Boolean(this.memory.cell(op2));
+        op3 = Boolean(this.memory.cell(op3));
+        if ((op2 && !op3) || (!op2 && op3)) {
+            this.memory.cell(op1, 1);
+        }
+        else {
+            this.memory.cell(op1, 0);
+        }
+    }
+    nor(op1, op2, op3, op4) {
+        op2 = Boolean(this.memory.cell(op2));
+        op3 = Boolean(this.memory.cell(op3));
+        if (!op2 && !op3) {
+            this.memory.cell(op1, 1);
+        }
+        else {
+            this.memory.cell(op1, 0);
         }
     }
     _log() {

@@ -223,12 +223,13 @@ export declare class InterpreterIc10 {
         executionCallback: Function;
         tickTime: number;
     };
+    ignoreLine: Array<number>;
     constructor(code?: string, settings?: {});
     setSettings(settings?: object): InterpreterIc10;
     init(text: any): InterpreterIc10;
     stop(): InterpreterIc10;
     run(): this;
-    prepareLine(line?: number): any;
+    prepareLine(line?: number, isDebugger?: boolean): any;
     __issetLabel(x: string): boolean;
     define(op1: any, op2: any, op3: any, op4: any): void;
     alias(op1: any, op2: any, op3: any, op4: any): void;
@@ -356,6 +357,10 @@ export declare class InterpreterIc10 {
     lb(op1: any, op2: any, op3: any, op4: any): void;
     lr(op1: any, op2: any, op3: any, op4: any): void;
     sb(op1: any, op2: any, op3: any, op4: any): void;
+    and(op1: any, op2: any, op3: any, op4: any): void;
+    or(op1: any, op2: any, op3: any, op4: any): void;
+    xor(op1: any, op2: any, op3: any, op4: any): void;
+    nor(op1: any, op2: any, op3: any, op4: any): void;
     _log(): void;
     _d0(op1: any): void;
     _d1(op1: any): void;
