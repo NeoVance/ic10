@@ -499,7 +499,7 @@ export class DeviceProperties {
 		this.VerticalRatio = 0
 		this.Volume = 0
 		this.randomize()
-		for (let i = 0; i < 5; i++) {
+		for (let i = 0; i <= 5; i++) {
 			this.slots[i] = new Slot(scope, i)
 		}
 	}
@@ -1452,7 +1452,7 @@ export class InterpreterIc10 {
 	lb(op1, op2, op3, op4) {
 		var values = []
 		var hash = this.memory.cell(op2)
-		for (var i = 0; i < 5; i++) {
+		for (var i = 0; i <= 5; i++) {
 			var d: Device = this.memory.getCell('d' + i)
 			if (d.hash == hash) {
 				values.push(d.get(op3))
@@ -1520,7 +1520,7 @@ export class InterpreterIc10 {
 	
 	sb(op1, op2, op3, op4) {
 		var hash = this.memory.cell(op1)
-		for (var i = 0; i < 5; i++) {
+		for (var i = 0; i <= 5; i++) {
 			var d: Device = this.memory.getCell('d' + i)
 			if (d.hash == hash) {
 				d.set(op2, op3)
