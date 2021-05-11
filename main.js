@@ -386,7 +386,7 @@ class DeviceProperties {
         this.VerticalRatio = 0;
         this.Volume = 0;
         this.randomize();
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i <= 5; i++) {
             this.slots[i] = new Slot(scope, i);
         }
     }
@@ -781,7 +781,7 @@ class InterpreterIc10 {
         this.position += op1;
     }
     jal(op1) {
-        this.memory.cell('r17', this.position + 1);
+        this.memory.cell('r17', this.position);
         this.j(op1);
     }
     __eq(op1 = 0, op2 = 0) {
@@ -1165,7 +1165,7 @@ class InterpreterIc10 {
     lb(op1, op2, op3, op4) {
         var values = [];
         var hash = this.memory.cell(op2);
-        for (var i = 0; i < 5; i++) {
+        for (var i = 0; i <= 5; i++) {
             var d = this.memory.getCell('d' + i);
             if (d.hash == hash) {
                 values.push(d.get(op3));
@@ -1229,7 +1229,7 @@ class InterpreterIc10 {
     }
     sb(op1, op2, op3, op4) {
         var hash = this.memory.cell(op1);
-        for (var i = 0; i < 5; i++) {
+        for (var i = 0; i <= 5; i++) {
             var d = this.memory.getCell('d' + i);
             if (d.hash == hash) {
                 d.set(op2, op3);

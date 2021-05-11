@@ -983,7 +983,7 @@ export class InterpreterIc10 {
 	}
 	
 	jal(op1: number) {
-		this.memory.cell('r17', this.position + 1)
+		this.memory.cell('r17', this.position)
 		this.j(op1)
 	}
 	
