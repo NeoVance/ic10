@@ -255,11 +255,12 @@ exports.MemoryCell = MemoryCell;
 class MemoryStack extends MemoryCell {
     constructor(scope, name) {
         super(scope, name);
+        this.#scope = scope;
         this.value = [];
     }
     #scope;
     push(value) {
-        this.value.push(value);
+        this.value.push(this.#scope.memory.cell(value));
         return this;
     }
     pop() {
@@ -442,7 +443,7 @@ class Chip extends Device {
         super(scope, name, number);
         this.hash = -128473777;
         this.#scope = scope;
-        this.properties.slots[1].properties.OccupantHash = -744098481;
+        this.properties.slots[0].properties.OccupantHash = -744098481;
     }
     #scope;
 }

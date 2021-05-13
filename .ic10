@@ -1,5 +1,5 @@
-jal checkHydroMixer
-#log 'test'
-
-checkHydroMixer:
-j ra
+loop:
+	add r0 r0 1
+	push r0
+	#log sp
+j loop
