@@ -1,13 +1,14 @@
 {
   "name": "ic10",
   "type": "commonjs",
-  "version": "1.0.46",
+  "version": "1.0.47",
   "description": "ic10 interpreter",
   "main": "main.js",
   "types": "main.d.ts",
   "scripts": {
     "watch": "tsc -w",
-    "test": "node test.js"
+    "test": "node test.js",
+    "publish": "npm publish"
   },
   "repository": {
     "type": "git",

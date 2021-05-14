@@ -46,7 +46,8 @@ export var Execution = {
 	},
 	display: function (e) {
 		if (e instanceof ic10Error) {
-			var string = `[${e.functionName}:${e.line}] (${e.code}) - ${e.message}:`
+			// var string = `[${e.functionName}:${e.line}] (${e.code}) - ${e.message}:`
+			var string = `(${e.code}) - ${e.message}:`
 			switch (e.lvl) {
 				case 0:
 					console.error(chalk.red('ERROR ' + string), e.obj)
@@ -282,6 +283,9 @@ export class MemoryStack extends MemoryCell {
 	}
 	
 	push(value: any): MemoryStack {
+		if(this.value.length >= 512){
+			throw Execution.error(this.#scope.position, 'Stack Overflow !!!')
+		}
 		this.value.push(this.#scope.memory.cell(value))
 		return this
 	}
