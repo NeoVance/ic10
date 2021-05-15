@@ -1,7 +1,3 @@
-import callerId from "caller-id";
-
-import chalk from "chalk";
-
 export const regexes = {
 	'rr1': new RegExp("[rd]{1,}(r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a))$"),
 	'r1': new RegExp("^r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a)$"),
@@ -41,8 +37,7 @@ export class ic10Error {
 
 export var Execution = {
 	error(code: number, message: string, obj: any = null) {
-		var caller = callerId.getData();
-		return new ic10Error(caller, code, message, obj, 0)
+		return new ic10Error('--', code, message, obj, 0)
 	},
 	display: function (e) {
 		if (e instanceof ic10Error) {
@@ -50,13 +45,13 @@ export var Execution = {
 			var string = `(${e.code}) - ${e.message}:`
 			switch (e.lvl) {
 				case 0:
-					console.error(chalk.red('ERROR ' + string), e.obj)
+					console.error('ERROR ' + string, e.obj)
 					break;
 				case 1:
-					console.warn(chalk.yellow('WARN ' + string), e.obj)
+					console.warn('WARN ' + string, e.obj)
 					break;
 				case 2:
-					console.info(chalk.blue('INFO ' + string), e.obj)
+					console.info('INFO ' + string, e.obj)
 					break;
 				case 3:
 				default:
@@ -283,7 +278,7 @@ export class MemoryStack extends MemoryCell {
 	}
 	
 	push(value: any): MemoryStack {
-		if(this.value.length >= 512){
+		if (this.value.length >= 512) {
 			throw Execution.error(this.#scope.position, 'Stack Overflow !!!')
 		}
 		this.value.push(this.#scope.memory.cell(value))
@@ -964,7 +959,7 @@ export class InterpreterIc10 {
 	}
 	
 	hcf(op1, op2, op3, op4) {
-		console.log(chalk.red("Die Mother Fucker Die Mother Fucker Die !!!!!"))
+		console.log("Die Mother Fucker Die Mother Fucker Die !!!!!")
 	}
 	
 	j(op1) {

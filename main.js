@@ -1,11 +1,6 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InterpreterIc10 = exports.Slot = exports.Chip = exports.Device = exports.DeviceProperties = exports.ConstantCell = exports.MemoryStack = exports.MemoryCell = exports.Memory = exports.Environ = exports.Execution = exports.ic10Error = exports.regexes = void 0;
-const caller_id_1 = __importDefault(require("caller-id"));
-const chalk_1 = __importDefault(require("chalk"));
 exports.regexes = {
     'rr1': new RegExp("[rd]{1,}(r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a))$"),
     'r1': new RegExp("^r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a)$"),
@@ -34,21 +29,20 @@ class ic10Error {
 exports.ic10Error = ic10Error;
 exports.Execution = {
     error(code, message, obj = null) {
-        var caller = caller_id_1.default.getData();
-        return new ic10Error(caller, code, message, obj, 0);
+        return new ic10Error('--', code, message, obj, 0);
     },
     display: function (e) {
         if (e instanceof ic10Error) {
             var string = `(${e.code}) - ${e.message}:`;
             switch (e.lvl) {
                 case 0:
-                    console.error(chalk_1.default.red('ERROR ' + string), e.obj);
+                    console.error('ERROR ' + string, e.obj);
                     break;
                 case 1:
-                    console.warn(chalk_1.default.yellow('WARN ' + string), e.obj);
+                    console.warn('WARN ' + string, e.obj);
                     break;
                 case 2:
-                    console.info(chalk_1.default.blue('INFO ' + string), e.obj);
+                    console.info('INFO ' + string, e.obj);
                     break;
                 case 3:
                 default:
@@ -762,7 +756,7 @@ class InterpreterIc10 {
         this.memory.cell(op1, this.memory.cell(op2 ? op3 : op4));
     }
     hcf(op1, op2, op3, op4) {
-        console.log(chalk_1.default.red("Die Mother Fucker Die Mother Fucker Die !!!!!"));
+        console.log("Die Mother Fucker Die Mother Fucker Die !!!!!");
     }
     j(op1) {
         if (this.__issetLabel(op1)) {

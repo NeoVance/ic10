@@ -1,7 +1,7 @@
 {
   "name": "ic10",
   "type": "commonjs",
-  "version": "1.0.47",
+  "version": "1.0.48",
   "description": "ic10 interpreter",
   "main": "main.js",
   "types": "main.d.ts",
@@ -33,10 +33,6 @@
     ".ic10"
   ],
   "homepage": "https://github.com/Traineratwot/ic10#readme",
-  "dependencies": {
-    "caller-id": "^0.1.0",
-    "chalk": "^4.1.0"
-  },
   "devDependencies": {
     "@types/node": "^14.14.37",
     "typescript": "^4.2.4"
