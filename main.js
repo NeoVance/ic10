@@ -753,7 +753,7 @@ class InterpreterIc10 {
     sleep(op1, op2, op3, op4) {
     }
     select(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.memory.cell(op2 ? op3 : op4));
+        this.memory.cell(op1, this.memory.cell(this.memory.cell(op2) ? op3 : op4));
     }
     hcf(op1, op2, op3, op4) {
         console.log("Die Mother Fucker Die Mother Fucker Die !!!!!");

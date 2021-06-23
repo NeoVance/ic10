@@ -1,5 +1,12 @@
-loop:
-	add r0 r0 1
-	push r0
-	#log sp
-j loop
+move r0 -1
+move r1 0
+select r0 r1 35 20
+yield
+yield
+#log r0
+move r0 -1
+move r1 1
+select r0 r1 35 20
+yield
+yield
+#log r0
