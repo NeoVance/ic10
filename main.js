@@ -276,7 +276,12 @@ class MemoryStack extends MemoryCell {
         return this;
     }
     pop() {
-        return this.value.slice(this.index, ++this.index)[0] ?? 0;
+        var o = this.value.slice(this.index - 1, this.index)[0] ?? 0;
+        this.index--;
+        if (this.index < 0) {
+            this.index = 0;
+        }
+        return o;
     }
     peek() {
         return this.value.slice(this.index, this.index + 1)[0] ?? 0;

@@ -104,7 +104,7 @@ export class Memory {
 		return null;
 	}
 
-	public cells: Array<MemoryCell|MemoryStack>
+	public cells: Array<MemoryCell | MemoryStack>
 	public environ: Environ
 	public aliases: Object
 	#scope: InterpreterIc10;
@@ -239,13 +239,13 @@ export class Memory {
 		this.aliases[name] = new ConstantCell(value, this.#scope, name)
 	}
 
-	toLog(){
+	toLog() {
 		var out = {}
 		for (let i = 0; i < 18; i++) {
 			if (i === 16) {
-				out['r'+i] = this.cells[i].get()
+				out['r' + i] = this.cells[i].get()
 			} else {
-				out['r'+i] = this.cells[i].get()
+				out['r' + i] = this.cells[i].get()
 				out['stack'] = this.cells[i].value
 			}
 		}
@@ -302,14 +302,19 @@ export class MemoryStack extends MemoryCell {
 	}
 
 	pop(): number {
-		return this.value.slice(this.index, ++this.index)[0] ?? 0
+		var o = this.value.slice(this.index - 1, this.index)[0] ?? 0
+		this.index--
+		if (this.index < 0) {
+			this.index = 0
+		}
+		return o
 	}
 
 	peek(): number {
 		return this.value.slice(this.index, this.index + 1)[0] ?? 0
 	}
 
-	getStack(){
+	getStack() {
 		return this.value
 	}
 
