@@ -1,12 +1,3 @@
-move r0 -1
-move r1 0
-select r0 r1 35 20
-yield
-yield
-#log r0
-move r0 -1
-move r1 1
-select r0 r1 35 20
-yield
-yield
-#log r0
+move sp 1
+add sp sp 1
+move r1 sp

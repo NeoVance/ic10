@@ -1,6 +1,6 @@
 export const regexes = {
   'rr1': new RegExp("[rd]{1,}(r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a))$"),
-  'r1': new RegExp("(^r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a)$)|(sp)"),
+  'r1': new RegExp("^r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a)$"),
   'd1': new RegExp("^d(0|1|2|3|4|5|b)$"),
   'rr': new RegExp("^d(0|1|2|3|4|5|b)$"),
   'strStart': new RegExp("^\".+$"),
@@ -193,7 +193,7 @@ export class Memory {
 
   getCell(cell): Device | MemoryStack | ConstantCell | any {
     if (typeof cell === "string") {
-      if (cell == 'sp') cell = 'r16'
+      if (cell == 'sp') return this.cells[16]
       if (cell == 'ra') cell = 'r17'
       if (regexes.rr1.test(cell)) {
         let m = regexes.rr1.exec(cell)
