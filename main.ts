@@ -999,9 +999,7 @@ export class InterpreterIc10 {
 	}
 
 	jr(op1) {
-		if (op1 < 0) {
-			op1 -= 1
-		}
+		op1 -= 1
 		this.position += op1
 	}
 

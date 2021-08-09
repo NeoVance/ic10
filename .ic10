@@ -1,14 +1,13 @@
 move r0 0
-push 342423
-push 432423
-push 54534
-push 6567
-move sp 0
-while0:
-	pop r0
-	seq r15 r0 6567
-	beqz r15 if0exit
-	move r1 5
-	if0exit:
-	breqz sp 1
-j while0
+start:
+move r0 -4
+move r0 -3 # Must jump here
+move r0 -2 # Not here
+move r0 -1 # Not here
+jr 2
+move r0 1
+move r0 2 # Must jump here
+move r0 3 # Not here
+move r0 4 # Not here
+
+
