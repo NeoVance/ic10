@@ -20,3 +20,4 @@ var interpreterIc10 = new InterpreterIc10(code, settings)
 interpreterIc10.init(code)
 
 interpreterIc10.run()
+

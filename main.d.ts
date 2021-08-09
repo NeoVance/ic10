@@ -45,6 +45,7 @@ export declare class Memory {
     getCell(cell: any): Device | MemoryStack | ConstantCell | any;
     alias(name: any, link: string | number): this;
     define(name: any, value: string | number): void;
+    toLog(): {};
 }
 export declare class MemoryCell {
     #private;
@@ -58,13 +59,15 @@ export declare class MemoryCell {
 }
 export declare class MemoryStack extends MemoryCell {
     #private;
-    value: any;
+    value: number[];
+    index: number;
     constructor(scope: any, name: string);
-    push(value: any): MemoryStack;
+    push(value: number): MemoryStack;
     pop(): number;
     peek(): number;
-    get(): any;
-    set(value?: any): this;
+    getStack(): number[];
+    get(): number;
+    set(value?: number): this;
 }
 export declare class ConstantCell extends MemoryCell {
     #private;

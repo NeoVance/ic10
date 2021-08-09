@@ -224,6 +224,19 @@ class Memory {
     define(name, value) {
         this.aliases[name] = new ConstantCell(value, this.#scope, name);
     }
+    toLog() {
+        var out = {};
+        for (let i = 0; i < 18; i++) {
+            if (i === 16) {
+                out['r' + i] = this.cells[i].get();
+            }
+            else {
+                out['r' + i] = this.cells[i].get();
+                out['stack'] = this.cells[i].value;
+            }
+        }
+        return out;
+    }
 }
 exports.Memory = Memory;
 class MemoryCell {
@@ -251,28 +264,31 @@ class MemoryStack extends MemoryCell {
         super(scope, name);
         this.#scope = scope;
         this.value = [];
+        this.index = 0;
     }
     #scope;
     push(value) {
         if (this.value.length >= 512) {
             throw exports.Execution.error(this.#scope.position, 'Stack Overflow !!!');
         }
-        this.value.push(this.#scope.memory.cell(value));
+        this.value[this.index] = this.#scope.memory.cell(value);
+        this.index++;
         return this;
     }
     pop() {
-        return this.value.pop();
+        return this.value.slice(this.index, ++this.index)[0] ?? 0;
     }
     peek() {
-        return this.value[this.value.length - 1];
+        return this.value.slice(this.index, this.index + 1)[0] ?? 0;
     }
-    get() {
+    getStack() {
         return this.value;
     }
+    get() {
+        return this.index;
+    }
     set(value = null) {
-        if (value) {
-            this.push(value);
-        }
+        this.index = value;
         return this;
     }
 }
