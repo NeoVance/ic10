@@ -37,7 +37,7 @@ export declare class Environ {
 export declare class Memory {
     #private;
     get scope(): InterpreterIc10;
-    cells: Array<MemoryCell>;
+    cells: Array<MemoryCell | MemoryStack>;
     environ: Environ;
     aliases: Object;
     constructor(scope: any);

@@ -104,7 +104,7 @@ export class Memory {
 		return null;
 	}
 
-	public cells: Array<MemoryCell>
+	public cells: Array<MemoryCell|MemoryStack>
 	public environ: Environ
 	public aliases: Object
 	#scope: InterpreterIc10;
