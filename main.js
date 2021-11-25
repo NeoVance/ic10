@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InterpreterIc10 = exports.Slot = exports.Chip = exports.Device = exports.DeviceProperties = exports.ConstantCell = exports.MemoryStack = exports.MemoryCell = exports.Memory = exports.Environ = exports.Execution = exports.ic10Error = exports.regexes = void 0;
 exports.regexes = {
-    'rr1': new RegExp("[rd]{1,}(r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a))$"),
+    'rr1': new RegExp("[rd]+(r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a))$"),
     'r1': new RegExp("^r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a)$"),
     'd1': new RegExp("^d(0|1|2|3|4|5|b)$"),
     'rr': new RegExp("^d(0|1|2|3|4|5|b)$"),
@@ -588,7 +588,9 @@ class InterpreterIc10 {
             let { command, args } = this.commands[this.position];
             this.position++;
             if (command.match(/^\w+:$/)) {
+                let label = command.replace(":", "");
                 this.labels[command.replace(":", "")] = this.position;
+                this.memory.define(label, this.position);
             }
         }
         this.position = 0;
