@@ -687,12 +687,13 @@ export class InterpreterIc10 {
 			debug: true,
 			tickTime: 100,
 			debugCallback: (a, b) => {
-				console.log(...arguments)
 				this.output.debug = a + ' ' + JSON.stringify(b)
+				console.log(this.output.debug)
 			},
 			logCallback: (a, b) => {
-				console.log(...arguments)
-				this.output.log = a + ' ' + b
+
+				this.output.log = a + ' ' + b.join('')
+				console.log(this.output.log)
 			},
 			executionCallback: (e: ic10Error) => {
 				this.output.error = Execution.display(e)
@@ -1593,18 +1594,47 @@ export class InterpreterIc10 {
 
 	_log() {
 		var out = []
-		for (const argumentsKey in arguments) {
-			try {
-				out.push(this.memory.cell(arguments[argumentsKey]))
-			} catch (e) {
-				try {
-					out.push(this.memory.getCell(arguments[argumentsKey]))
-				} catch (e) {
-					out.push(arguments[argumentsKey])
+		try {
+			for (const argumentsKey in arguments) {
+				if (arguments.hasOwnProperty(argumentsKey)) {
+					let key = arguments[argumentsKey];
+					if (typeof key == 'string') {
+						let keys = key.split('.');
+						try {
+							let cells   = Object.keys(this.memory.cells);
+							let environ = Object.keys(this.memory.environ);
+							let aliases = Object.keys(this.memory.aliases);
+							if (environ.indexOf(keys[0]) >= 0) {
+								if (keys[0] == key) {
+									out.push(key + ' = ' + JSON.stringify(this.memory.environ[key].properties) + '; ')
+								} else {
+									out.push(key + ' = ' + this.memory.environ[keys[0]].get(keys[1]) + '; ')
+								}
+								continue
+							}
+							try {
+								if (this.memory.getCell(keys[0]) instanceof MemoryCell) {
+									out.push(key + ' = ' + this.memory.getCell(arguments[argumentsKey]).value + '; ')
+									continue
+								}
+							} catch (e) {
+							}
+							out.push(key + '; ')
+						} catch (e) {
+							out.push(key + '; ')
+						}
+					} else {
+						try {
+							out.push(key + '; ')
+						} catch (e) {
+						}
+					}
 				}
 			}
+			this.settings.logCallback.call(this, `Log[${this.position}]: `, out)
+		} catch (e) {
+			console.debug(e)
 		}
-		this.settings.logCallback.call(this, `Log [${this.position}]: `, ...out)
 	}
 
 	_d0(op1) {

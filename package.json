@@ -1,7 +1,7 @@
 {
   "name": "ic10",
   "type": "commonjs",
-  "version": "1.2.0",
+  "version": "1.2.4",
   "description": "ic10 interpreter",
   "main": "main.js",
   "types": "main.d.ts",
