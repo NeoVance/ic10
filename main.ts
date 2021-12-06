@@ -1001,9 +1001,8 @@ export class InterpreterIc10 {
 		}
 	}
 
-	jr(op1) {
-		op1 -= 1
-		this.position += op1
+	jr(op1: number) {
+		this.position += (op1 - 1);
 	}
 
 	jal(op1: number) {
@@ -1601,7 +1600,7 @@ export class InterpreterIc10 {
 					if (typeof key == 'string') {
 						let keys = key.split('.');
 						try {
-							let cells   = Object.keys(this.memory.cells);
+							let cells = Object.keys(this.memory.cells);
 							let environ = Object.keys(this.memory.environ);
 							let aliases = Object.keys(this.memory.aliases);
 							if (environ.indexOf(keys[0]) >= 0) {

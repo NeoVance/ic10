@@ -270,7 +270,7 @@ export declare class InterpreterIc10 {
     select(op1: any, op2: any, op3: any, op4: any): void;
     hcf(op1: any, op2: any, op3: any, op4: any): void;
     j(op1: any): void;
-    jr(op1: any): void;
+    jr(op1: number): void;
     jal(op1: number): void;
     __eq(op1?: number, op2?: number): number;
     __ge(op1?: number, op2?: number): number;

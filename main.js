@@ -10,6 +10,13 @@ exports.regexes = {
     'strEnd': new RegExp(".+\"$"),
 };
 class ic10Error {
+    message;
+    code;
+    functionName;
+    lvl;
+    line;
+    className;
+    obj;
     constructor(caller, code, message, obj, lvl = 0) {
         this.message = message;
         this.code = code;
@@ -58,6 +65,14 @@ exports.Execution = {
     }
 };
 class Environ {
+    d0;
+    d1;
+    d2;
+    d3;
+    d4;
+    d5;
+    db;
+    #scope;
     constructor(scope) {
         this.#scope = scope;
         this.d0 = new Device(scope, 'd0', 1);
@@ -68,7 +83,6 @@ class Environ {
         this.d5 = new Device(scope, 'd5', 6);
         this.db = new Chip(scope, 'db', 7);
     }
-    #scope;
     randomize() {
         for (const x in this) {
             let d = this[x];
@@ -80,6 +94,13 @@ class Environ {
 }
 exports.Environ = Environ;
 class Memory {
+    get scope() {
+        return null;
+    }
+    cells;
+    environ;
+    aliases;
+    #scope;
     constructor(scope) {
         this.#scope = scope;
         this.cells = new Array(15);
@@ -94,10 +115,6 @@ class Memory {
             }
         }
     }
-    get scope() {
-        return null;
-    }
-    #scope;
     cell(cell, op1 = null, op2 = null) {
         if (typeof cell === "string") {
             if (cell == 'sp')
@@ -240,13 +257,16 @@ class Memory {
 }
 exports.Memory = Memory;
 class MemoryCell {
+    value;
+    #scope;
+    name;
+    alias;
     constructor(scope, name) {
         this.#scope = scope;
         this.name = name;
         this.alias = null;
         this.value = null;
     }
-    #scope;
     getName() {
         return this.alias || this.name;
     }
@@ -260,13 +280,13 @@ class MemoryCell {
 }
 exports.MemoryCell = MemoryCell;
 class MemoryStack extends MemoryCell {
+    #scope;
     constructor(scope, name) {
         super(scope, name);
         this.#scope = scope;
         this.value = [];
         this.index = 0;
     }
-    #scope;
     push(value) {
         if (this.value.length >= 512) {
             throw exports.Execution.error(this.#scope.position, 'Stack Overflow !!!');
@@ -299,11 +319,11 @@ class MemoryStack extends MemoryCell {
 }
 exports.MemoryStack = MemoryStack;
 class ConstantCell extends MemoryCell {
+    #scope;
     constructor(value, scope, name) {
         super(scope, name);
         this.value = value;
     }
-    #scope;
     get() {
         return this.value;
     }
@@ -314,6 +334,87 @@ class ConstantCell extends MemoryCell {
 }
 exports.ConstantCell = ConstantCell;
 class DeviceProperties {
+    slots;
+    Activate;
+    AirRelease;
+    Bpm;
+    Charge;
+    ClearMemory;
+    CollectableGoods;
+    Color;
+    Combustion;
+    CompletionRatio;
+    CurrentResearchPodType;
+    ElevatorLevel;
+    ElevatorSpeed;
+    Error;
+    ExportCount;
+    Filtration;
+    ForceWrite;
+    Fuel;
+    Harvest;
+    Horizontal;
+    HorizontalRatio;
+    Idle;
+    ImportCount;
+    Lock;
+    ManualResearchRequiredPod;
+    Maximum;
+    MineablesInQueue;
+    MineablesInVicinity;
+    Mode;
+    NextWeatherEventTime;
+    On;
+    Open;
+    Output;
+    Plant;
+    PositionX;
+    PositionY;
+    PositionZ;
+    Power;
+    PowerActual;
+    PowerGeneration;
+    PowerPotential;
+    PowerRequired;
+    PrefabHash;
+    Pressure;
+    PressureExternal;
+    PressureSetting;
+    Quantity;
+    Ratio;
+    RatioCarbonDioxide;
+    RatioNitrogen;
+    RatioNitrousOxide;
+    RatioOxygen;
+    RatioPollutant;
+    RatioVolatiles;
+    RatioWater;
+    Reagents;
+    RecipeHash;
+    RequestHash;
+    RequiredPower;
+    ReturnFuelCost;
+    Setting;
+    SettingInput;
+    SettingOutput;
+    SignalID;
+    SignalStrength;
+    SolarAngle;
+    TargetX;
+    TargetY;
+    TargetZ;
+    Temperature;
+    TemperatureExternal;
+    TemperatureSetting;
+    Time;
+    TotalMoles;
+    VelocityMagnitude;
+    VelocityRelativeX;
+    VelocityRelativeY;
+    VelocityRelativeZ;
+    Vertical;
+    VerticalRatio;
+    Volume;
     constructor(scope) {
         this.On = 0;
         this.Power = 0;
@@ -415,6 +516,13 @@ class DeviceProperties {
 }
 exports.DeviceProperties = DeviceProperties;
 class Device extends MemoryCell {
+    number;
+    hash;
+    get scope() {
+        return null;
+    }
+    properties;
+    #scope;
     constructor(scope, name, number) {
         super(scope, name);
         this.hash = 100000000;
@@ -422,10 +530,6 @@ class Device extends MemoryCell {
         this.number = number;
         this.properties = new DeviceProperties(scope);
     }
-    get scope() {
-        return null;
-    }
-    #scope;
     get(variable = null) {
         if (!variable) {
             return this;
@@ -457,16 +561,22 @@ class Device extends MemoryCell {
 }
 exports.Device = Device;
 class Chip extends Device {
+    #scope;
     constructor(scope, name, number) {
         super(scope, name, number);
         this.hash = -128473777;
         this.#scope = scope;
         this.properties.slots[0].properties.OccupantHash = -744098481;
     }
-    #scope;
 }
 exports.Chip = Chip;
 class Slot {
+    number;
+    get scope() {
+        return null;
+    }
+    properties;
+    #scope;
     constructor(scope, number) {
         this.#scope = scope;
         this.number = number;
@@ -489,10 +599,6 @@ class Slot {
         this.properties.Quantity = 0;
         this.properties.Temperature = 0;
     }
-    get scope() {
-        return null;
-    }
-    #scope;
     get(op1) {
         if (op1 in this.properties) {
             return this.properties[op1];
@@ -504,6 +610,17 @@ class Slot {
 }
 exports.Slot = Slot;
 class InterpreterIc10 {
+    code;
+    commands;
+    lines;
+    memory;
+    position;
+    interval;
+    labels;
+    constants;
+    output;
+    settings;
+    ignoreLine;
     constructor(code = '', settings = {}) {
         this.code = code;
         this.memory = new Memory(this);
@@ -796,8 +913,7 @@ class InterpreterIc10 {
         }
     }
     jr(op1) {
-        op1 -= 1;
-        this.position += op1;
+        this.position += (op1 - 1);
     }
     jal(op1) {
         this.memory.cell('r17', this.position);
