@@ -18,7 +18,6 @@ var settings = {
         main_1.Execution.display(e);
     },
 };
-console.log(code);
 var interpreterIc10 = new main_1.InterpreterIc10(code, settings);
 interpreterIc10.init(code);
 interpreterIc10.run();

@@ -14,7 +14,7 @@ var settings = {
     Execution.display(e)
   },
 }
-console.log(code)
+// console.log(code)
 var interpreterIc10 = new InterpreterIc10(code, settings)
 // OR
 interpreterIc10.init(code)

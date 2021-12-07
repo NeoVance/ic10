@@ -1,7 +1,8 @@
-move r0 42
-move r1 42
-start:
-breq r0 r1 2
-j start
-move r4 20
-move r4 132
+j 4
+#log -3
+#log -2
+#log -1
+jr 3
+#log 1
+#log 2
+#log 3

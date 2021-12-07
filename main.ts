@@ -1002,7 +1002,14 @@ export class InterpreterIc10 {
 	}
 
 	jr(op1: number) {
-		this.position += (op1 - 1);
+		var jr = 0;
+		if (op1 > 0 || 0 > op1) {
+			jr = op1
+		} else {
+			throw Execution.error(this.position, 'Can`t move on', op1)
+		}
+		this.position += jr;
+		this.position--
 	}
 
 	jal(op1: number) {
