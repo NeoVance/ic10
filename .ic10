@@ -1,8 +1,2 @@
-j 4
-#log -3
-#log -2
-#log -1
-jr 3
-#log 1
-#log 2
-#log 3
+#d0 111111 #set device hash
+#log d0.hash

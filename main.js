@@ -1005,8 +1005,8 @@ class InterpreterIc10 {
         }
     }
     breqz(op1, op2, op3, op4) {
-        if (this.__eq(this.memory.cell(op1), 0)) {
-            this.jr(op3);
+        if (this.__eq(this.memory.cell(op1))) {
+            this.jr(op2);
         }
     }
     brge(op1, op2, op3, op4) {
@@ -1016,7 +1016,7 @@ class InterpreterIc10 {
     }
     brgez(op1, op2, op3, op4) {
         if (this.__ge(this.memory.cell(op1), 0)) {
-            this.jr(op3);
+            this.jr(op2);
         }
     }
     brgt(op1, op2, op3, op4) {
@@ -1026,7 +1026,7 @@ class InterpreterIc10 {
     }
     brgtz(op1, op2, op3, op4) {
         if (this.__gt(this.memory.cell(op1), 0)) {
-            this.jr(op3);
+            this.jr(op2);
         }
     }
     brle(op1, op2, op3, op4) {
@@ -1036,7 +1036,7 @@ class InterpreterIc10 {
     }
     brlez(op1, op2, op3, op4) {
         if (this.__le(this.memory.cell(op1), 0)) {
-            this.jr(op3);
+            this.jr(op2);
         }
     }
     brlt(op1, op2, op3, op4) {
@@ -1046,7 +1046,7 @@ class InterpreterIc10 {
     }
     brltz(op1, op2, op3, op4) {
         if (this.__lt(this.memory.cell(op1), 0)) {
-            this.jr(op3);
+            this.jr(op2);
         }
     }
     brne(op1, op2, op3, op4) {
@@ -1056,7 +1056,7 @@ class InterpreterIc10 {
     }
     brnez(op1, op2, op3, op4) {
         if (this.__ne(this.memory.cell(op1), 0)) {
-            this.jr(op3);
+            this.jr(op2);
         }
     }
     brap(op1, op2, op3, op4) {
@@ -1066,7 +1066,7 @@ class InterpreterIc10 {
     }
     brapz(op1, op2, op3, op4) {
         if (this.__ap(this.memory.cell(op1), 0, this.memory.cell(op2))) {
-            this.jr(op4);
+            this.jr(op3);
         }
     }
     brna(op1, op2, op3, op4) {
@@ -1096,7 +1096,7 @@ class InterpreterIc10 {
     }
     beqzal(op1, op2, op3, op4) {
         if (this.__eq(this.memory.cell(op1), 0)) {
-            this.jal(op3);
+            this.jal(op2);
         }
     }
     bgeal(op1, op2, op3, op4) {
@@ -1106,7 +1106,7 @@ class InterpreterIc10 {
     }
     bgezal(op1, op2, op3, op4) {
         if (this.__ge(this.memory.cell(op1), 0)) {
-            this.jal(op3);
+            this.jal(op2);
         }
     }
     bgtal(op1, op2, op3, op4) {
@@ -1116,7 +1116,7 @@ class InterpreterIc10 {
     }
     bgtzal(op1, op2, op3, op4) {
         if (this.__gt(this.memory.cell(op1), 0)) {
-            this.jal(op3);
+            this.jal(op2);
         }
     }
     bleal(op1, op2, op3, op4) {
@@ -1126,7 +1126,7 @@ class InterpreterIc10 {
     }
     blezal(op1, op2, op3, op4) {
         if (this.__le(this.memory.cell(op1), 0)) {
-            this.jal(op3);
+            this.jal(op2);
         }
     }
     bltal(op1, op2, op3, op4) {
@@ -1136,7 +1136,7 @@ class InterpreterIc10 {
     }
     bltzal(op1, op2, op3, op4) {
         if (this.__lt(this.memory.cell(op1), 0)) {
-            this.jal(op3);
+            this.jal(op2);
         }
     }
     bneal(op1, op2, op3, op4) {
@@ -1146,7 +1146,7 @@ class InterpreterIc10 {
     }
     bnezal(op1, op2, op3, op4) {
         if (this.__ne(this.memory.cell(op1), 0)) {
-            this.jal(op3);
+            this.jal(op2);
         }
     }
     bapal(op1, op2, op3, op4) {
