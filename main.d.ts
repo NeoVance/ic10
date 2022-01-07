@@ -171,6 +171,7 @@ export declare class Device extends MemoryCell {
     get(variable?: any): any;
     set(variable: any, value: any): this;
     getSlot(op1: any, op2?: any): any;
+    setSlot(op1: any, op2: any, value: any): void;
 }
 export declare class Chip extends Device {
     #private;

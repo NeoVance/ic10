@@ -424,7 +424,7 @@ class DeviceProperties {
         this.RequiredPower = 0;
         this.ClearMemory = 0;
         this.Lock = 0;
-        this.slots = new Array(8);
+        this.slots = new Array(10);
         this.RecipeHash = -128473777;
         this.AirRelease = 0;
         this.Bpm = 0;
@@ -506,7 +506,7 @@ class DeviceProperties {
         this.VerticalRatio = 0;
         this.Volume = 0;
         this.randomize();
-        for (let i = 0; i <= 8; i++) {
+        for (let i = 0; i < 10; i++) {
             this.slots[i] = new Slot(scope, i);
         }
     }
@@ -564,6 +564,16 @@ class Device extends MemoryCell {
         }
         else {
             throw exports.Execution.error(this.#scope.position, 'Unknown Slot', op1);
+        }
+    }
+    setSlot(op1, op2, value) {
+        if (op1 in this.properties.slots) {
+            if (op2) {
+                return this.properties.slots[op1].set(op2, value);
+            }
+            else {
+                throw exports.Execution.error(this.#scope.position, 'Unknown Slot', op1);
+            }
         }
     }
 }
@@ -1526,8 +1536,7 @@ class InterpreterIc10 {
                     d.set(args[0], args[1]);
                     break;
                 case 3:
-                    const slot = d.getSlot(args[0]);
-                    slot.set(args[1], args[2]);
+                    d.setSlot(args[0], args[1], args[2]);
             }
         }
         else {

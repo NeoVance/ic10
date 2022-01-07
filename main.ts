@@ -431,26 +431,26 @@ export class DeviceProperties {
 	public Volume: number
 
 	constructor(scope) {
-		this.On                        = 0
-		this.Power                     = 0
-		this.Error                     = 0
-		this.Activate                  = 0
-		this.Setting                   = null
-		this.RequiredPower             = 0
-		this.ClearMemory               = 0
-		this.Lock                      = 0
-		this.slots                     = new Array<Slot>(8)
-		this.RecipeHash                = -128473777
+		this.On                     = 0
+		this.Power                  = 0
+		this.Error                  = 0
+		this.Activate               = 0
+		this.Setting                = null
+		this.RequiredPower          = 0
+		this.ClearMemory            = 0
+		this.Lock                   = 0
+		this.slots                  = new Array<Slot>(10)
+		this.RecipeHash             = -128473777
 		//------
-		this.AirRelease                = 0
-		this.Bpm                       = 0
-		this.Charge                    = 0
-		this.ClearMemory               = 0
-		this.CollectableGoods          = 0
-		this.Color                     = 0
-		this.Combustion                = 0
-		this.CompletionRatio           = 0
-		this.CurrentResearchPodType    = 0
+		this.AirRelease             = 0
+		this.Bpm                    = 0
+		this.Charge                 = 0
+		this.ClearMemory            = 0
+		this.CollectableGoods       = 0
+		this.Color                  = 0
+		this.Combustion             = 0
+		this.CompletionRatio        = 0
+		this.CurrentResearchPodType = 0
 		this.ElevatorLevel             = 0
 		this.ElevatorSpeed             = 0
 		this.Error                     = 0
@@ -522,7 +522,7 @@ export class DeviceProperties {
 		this.VerticalRatio = 0
 		this.Volume = 0
 		this.randomize()
-		for (let i = 0; i <= 8; i++) {
+		for (let i = 0; i < 10; i++) {
 			this.slots[i] = new Slot(scope, i)
 		}
 	}
@@ -584,6 +584,16 @@ export class Device extends MemoryCell {
 			}
 		} else {
 			throw Execution.error(this.#scope.position, 'Unknown Slot', op1)
+		}
+	}
+
+	setSlot(op1, op2, value) {
+		if (op1 in this.properties.slots) {
+			if (op2) {
+				return this.properties.slots[op1].set(op2, value)
+			} else {
+				throw Execution.error(this.#scope.position, 'Unknown Slot', op1)
+			}
 		}
 	}
 }
@@ -1705,8 +1715,7 @@ export class InterpreterIc10 {
 					d.set(args[0], args[1]);
 					break;
 				case 3:
-					const slot: Slot = d.getSlot(args[0]);
-					slot.set(args[1], args[2])
+					d.setSlot(args[0],args[1], args[2]);
 			}
 		} else {
 			throw Execution.error(this.position, 'Unknown device', device);
