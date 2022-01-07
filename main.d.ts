@@ -170,7 +170,7 @@ export declare class Device extends MemoryCell {
     constructor(scope: InterpreterIc10, name: string, number: number);
     get(variable?: any): any;
     set(variable: any, value: any): this;
-    getSlot(op1: any, op2: any): any;
+    getSlot(op1: any, op2?: any): any;
 }
 export declare class Chip extends Device {
     #private;
@@ -201,6 +201,7 @@ export declare class Slot {
     };
     constructor(scope: InterpreterIc10, number: number);
     get(op1: any): any;
+    set(op1: any, value: any): void;
 }
 export declare class InterpreterIc10 {
     code: string;
@@ -371,5 +372,6 @@ export declare class InterpreterIc10 {
     _d3(op1: any): void;
     _d4(op1: any): void;
     _d5(op1: any): void;
+    __d(device: any, args: {}): void;
     __debug(p: string, iArguments: string[]): void;
 }

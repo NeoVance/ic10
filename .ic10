@@ -1,2 +1,7 @@
 #d0 111111 #set device hash
+#d0 Activate 1 #set device parameter
+#d0 0 PrefabHash 22222 #set slot parameter
+
+#log d0.Activate
 #log d0.hash
+#log d0.slot.0.PrefabHash

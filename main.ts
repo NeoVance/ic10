@@ -431,45 +431,45 @@ export class DeviceProperties {
 	public Volume: number
 
 	constructor(scope) {
-		this.On = 0
-		this.Power = 0
-		this.Error = 0
-		this.Activate = 0
-		this.Setting = null
-		this.RequiredPower = 0
-		this.ClearMemory = 0
-		this.Lock = 0
-		this.slots = new Array<Slot>(5)
-		this.RecipeHash = -128473777
+		this.On                        = 0
+		this.Power                     = 0
+		this.Error                     = 0
+		this.Activate                  = 0
+		this.Setting                   = null
+		this.RequiredPower             = 0
+		this.ClearMemory               = 0
+		this.Lock                      = 0
+		this.slots                     = new Array<Slot>(8)
+		this.RecipeHash                = -128473777
 		//------
-		this.AirRelease = 0
-		this.Bpm = 0
-		this.Charge = 0
-		this.ClearMemory = 0
-		this.CollectableGoods = 0
-		this.Color = 0
-		this.Combustion = 0
-		this.CompletionRatio = 0
-		this.CurrentResearchPodType = 0
-		this.ElevatorLevel = 0
-		this.ElevatorSpeed = 0
-		this.Error = 0
-		this.ExportCount = 0
-		this.Filtration = 0
-		this.ForceWrite = 0
-		this.Fuel = 0
-		this.Harvest = 0
-		this.Horizontal = 0
-		this.HorizontalRatio = 0
-		this.Idle = 0
-		this.ImportCount = 0
-		this.Lock = 0
+		this.AirRelease                = 0
+		this.Bpm                       = 0
+		this.Charge                    = 0
+		this.ClearMemory               = 0
+		this.CollectableGoods          = 0
+		this.Color                     = 0
+		this.Combustion                = 0
+		this.CompletionRatio           = 0
+		this.CurrentResearchPodType    = 0
+		this.ElevatorLevel             = 0
+		this.ElevatorSpeed             = 0
+		this.Error                     = 0
+		this.ExportCount               = 0
+		this.Filtration                = 0
+		this.ForceWrite                = 0
+		this.Fuel                      = 0
+		this.Harvest                   = 0
+		this.Horizontal                = 0
+		this.HorizontalRatio           = 0
+		this.Idle                      = 0
+		this.ImportCount               = 0
+		this.Lock                      = 0
 		this.ManualResearchRequiredPod = 0
-		this.Maximum = 0
-		this.MineablesInQueue = 0
-		this.MineablesInVicinity = 0
-		this.Mode = 0
-		this.NextWeatherEventTime = 0
+		this.Maximum                   = 0
+		this.MineablesInQueue          = 0
+		this.MineablesInVicinity       = 0
+		this.Mode                      = 0
+		this.NextWeatherEventTime      = 0
 		this.On = 0
 		this.Open = 0
 		this.Output = 0
@@ -522,7 +522,7 @@ export class DeviceProperties {
 		this.VerticalRatio = 0
 		this.Volume = 0
 		this.randomize()
-		for (let i = 0; i <= 5; i++) {
+		for (let i = 0; i <= 8; i++) {
 			this.slots[i] = new Slot(scope, i)
 		}
 	}
@@ -556,6 +556,9 @@ export class Device extends MemoryCell {
 		if (!variable) {
 			return this
 		}
+		if (variable == 'hash') {
+			return this.hash
+		}
 		if (variable in this.properties) {
 			return this.properties[variable]
 		} else {
@@ -572,9 +575,13 @@ export class Device extends MemoryCell {
 		return this
 	}
 
-	getSlot(op1, op2) {
+	getSlot(op1, op2 = null) {
 		if (op1 in this.properties.slots) {
-			return this.properties.slots[op1].get(op2)
+			if (op2) {
+				return this.properties.slots[op1].get(op2)
+			} else {
+				return this.properties.slots[op1]
+			}
 		} else {
 			throw Execution.error(this.#scope.position, 'Unknown Slot', op1)
 		}
@@ -622,32 +629,40 @@ export class Slot {
 	#scope: InterpreterIc10;
 
 	constructor(scope: InterpreterIc10, number: number) {
-		this.#scope = scope;
-		this.number = number;
+		this.#scope                   = scope;
+		this.number                   = number;
 		// @ts-ignore
-		this.properties = {}
-		this.properties.Charge = 0
-		this.properties.ChargeRatio = 0
-		this.properties.Class = 0
-		this.properties.Damage = 0
-		this.properties.Efficiency = 0
-		this.properties.Growth = 0
-		this.properties.Health = 0
-		this.properties.Mature = 0
-		this.properties.MaxQuantity = 0
-		this.properties.OccupantHash = 0
-		this.properties.Occupied = 0
-		this.properties.PrefabHash = 0
-		this.properties.Pressure = 0
-		this.properties.PressureAir = 0
+		this.properties               = {}
+		this.properties.Charge        = 0
+		this.properties.ChargeRatio   = 0
+		this.properties.Class         = 0
+		this.properties.Damage        = 0
+		this.properties.Efficiency    = 0
+		this.properties.Growth        = 0
+		this.properties.Health        = 0
+		this.properties.Mature        = 0
+		this.properties.MaxQuantity   = 0
+		this.properties.OccupantHash  = 0
+		this.properties.Occupied      = 0
+		this.properties.PrefabHash    = 0
+		this.properties.Pressure      = 0
+		this.properties.PressureAir   = 0
 		this.properties.PressureWaste = 0
-		this.properties.Quantity = 0
-		this.properties.Temperature = 0
+		this.properties.Quantity      = 0
+		this.properties.Temperature   = 0
 	}
 
 	get(op1) {
 		if (op1 in this.properties) {
 			return this.properties[op1]
+		} else {
+			throw Execution.error(this.#scope.position, 'Unknown parameter', op1)
+		}
+	}
+
+	set(op1, value) {
+		if (op1 in this.properties) {
+			this.properties[op1] = value
 		} else {
 			throw Execution.error(this.#scope.position, 'Unknown parameter', op1)
 		}
@@ -691,7 +706,6 @@ export class InterpreterIc10 {
 				console.log(this.output.debug)
 			},
 			logCallback: (a, b) => {
-
 				this.output.log = a + ' ' + b.join('')
 				console.log(this.output.log)
 			},
@@ -1614,7 +1628,18 @@ export class InterpreterIc10 {
 								if (keys[0] == key) {
 									out.push(key + ' = ' + JSON.stringify(this.memory.environ[key].properties) + '; ')
 								} else {
-									out.push(key + ' = ' + this.memory.environ[keys[0]].get(keys[1]) + '; ')
+									switch (keys.length) {
+										case 2:
+											out.push(key + ' = ' + this.memory.environ[keys[0]].get(keys[1]) + '; ')
+											break;
+										case 3:
+											out.push(key + ' = ' + JSON.stringify(this.memory.environ[keys[0]].getSlot(keys[1])) + '; ')
+											break;
+										case 4:
+											out.push(key + ' = ' + this.memory.environ[keys[0]].getSlot(keys[2], keys[3]) + '; ')
+											break;
+									}
+
 								}
 								continue
 							}
@@ -1627,7 +1652,7 @@ export class InterpreterIc10 {
 							}
 							out.push(key + '; ')
 						} catch (e) {
-							out.push(key + '; ')
+							out.push(key + ' ' + e.message + '; ')
 						}
 					} else {
 						try {
@@ -1644,33 +1669,49 @@ export class InterpreterIc10 {
 	}
 
 	_d0(op1) {
-		var d0 = this.memory.getCell('d0');
-		d0.hash = op1
+		this.__d('d0', arguments)
 	}
 
 	_d1(op1) {
-		var d1 = this.memory.getCell('d1');
-		d1.hash = op1
+		this.__d('d1', arguments)
 	}
 
 	_d2(op1) {
-		var d2 = this.memory.getCell('d2');
-		d2.hash = op1
+		this.__d('d2', arguments)
 	}
 
 	_d3(op1) {
-		var d3 = this.memory.getCell('d3');
-		d3.hash = op1
+		this.__d('d3', arguments)
 	}
 
 	_d4(op1) {
-		var d4 = this.memory.getCell('d4');
-		d4.hash = op1
+		this.__d('d4', arguments)
 	}
 
 	_d5(op1) {
-		var d5 = this.memory.getCell('d5');
-		d5.hash = op1
+		this.__d('d5', arguments)
+	}
+
+	__d(device, args: {}) {
+		var d: Device = this.memory.getCell(device);
+		if (d instanceof Device) {
+			switch (Object.keys(args).length) {
+				case 0:
+					throw Execution.error(this.position, 'missing arguments');
+				case 1:
+					d.hash = args[0];
+					break;
+				case 2:
+					d.set(args[0], args[1]);
+					break;
+				case 3:
+					const slot: Slot = d.getSlot(args[0]);
+					slot.set(args[1], args[2])
+			}
+		} else {
+			throw Execution.error(this.position, 'Unknown device', device);
+		}
+
 	}
 
 	__debug(p: string, iArguments: string[]) {
