@@ -1,7 +1,11 @@
-#d0 111111 #set device hash
-#d0 Activate 1 #set device parameter
-#d0 0 PrefabHash 22222 #set slot parameter
-
-#log d0.Activate
-#log d0.hash
-#log d0.slot.0.PrefabHash
+alias velocityRelativeX r0
+alias velocityRelativeZ r1
+alias heading r2
+alias Suit db
+l velocityRelativeX Suit VelocityRelativeX
+l velocityRelativeZ Suit VelocityRelativeZ
+move heading 0
+atan2 heading velocityRelativeX velocityRelativeZ
+div heading heading 3.14
+mul heading heading 180
+#log heading

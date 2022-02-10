@@ -869,20 +869,10 @@ class InterpreterIc10 {
         this.memory.cell(op1, Math.floor(this.memory.cell(op2)));
     }
     max(op1, op2, op3, op4) {
-        if (op3 > op2) {
-            this.memory.cell(op1, this.memory.cell(op3));
-        }
-        else {
-            this.memory.cell(op1, this.memory.cell(op2));
-        }
+        this.memory.cell(op1, Math.max(this.memory.cell(op2), this.memory.cell(op3)));
     }
     min(op1, op2, op3, op4) {
-        if (op2 > op3) {
-            this.memory.cell(op1, this.memory.cell(op3));
-        }
-        else {
-            this.memory.cell(op1, this.memory.cell(op2));
-        }
+        this.memory.cell(op1, Math.min(this.memory.cell(op2), this.memory.cell(op3)));
     }
     abs(op1, op2, op3, op4) {
         this.memory.cell(op1, Math.abs(this.memory.cell(op2)));
@@ -897,29 +887,32 @@ class InterpreterIc10 {
         this.memory.cell(op1, Math.random());
     }
     sin(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.sin(op2));
+        this.memory.cell(op1, Math.sin(this.memory.cell(op2)));
     }
     cos(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.cos(op2));
+        this.memory.cell(op1, Math.cos(this.memory.cell(op2)));
     }
     tan(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.tan(op2));
+        this.memory.cell(op1, Math.tan(this.memory.cell(op2)));
     }
     asin(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.asin(op2));
+        this.memory.cell(op1, Math.asin(this.memory.cell(op2)));
     }
     acos(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.acos(op2));
+        this.memory.cell(op1, Math.acos(this.memory.cell(op2)));
     }
     atan(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.atan(op2));
+        this.memory.cell(op1, Math.atan(this.memory.cell(op2)));
+    }
+    atan2(op1, op2, op3, op4) {
+        this.memory.cell(op1, Math.atan2(this.memory.cell(op2), this.memory.cell(op3)));
     }
     yield(op1, op2, op3, op4) {
     }
     sleep(op1, op2, op3, op4) {
     }
     select(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.memory.cell(this.memory.cell(op2) ? op3 : op4));
+        this.memory.cell(op1, this.memory.cell(this.memory.cell(op2) ? this.memory.cell(op3) : this.memory.cell(op4)));
     }
     hcf(op1, op2, op3, op4) {
         console.log("Die Mother Fucker Die Mother Fucker Die !!!!!");

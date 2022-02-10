@@ -267,6 +267,7 @@ export declare class InterpreterIc10 {
     asin(op1: any, op2: any, op3: any, op4: any): void;
     acos(op1: any, op2: any, op3: any, op4: any): void;
     atan(op1: any, op2: any, op3: any, op4: any): void;
+    atan2(op1: any, op2: any, op3: any, op4: any): void;
     yield(op1: any, op2: any, op3: any, op4: any): void;
     sleep(op1: any, op2: any, op3: any, op4: any): void;
     select(op1: any, op2: any, op3: any, op4: any): void;
