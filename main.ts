@@ -1,8 +1,8 @@
 export const regexes = {
 	'rr1': new RegExp("[rd]+(r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a))$"),
 	'r1': new RegExp("^r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a)$"),
-	'd1': new RegExp("^d(0|1|2|3|4|5|b)$"),
-	'rr': new RegExp("^d(0|1|2|3|4|5|b)$"),
+	'd1': new RegExp("^d([012345b])$"),
+	'rr': new RegExp("^d([012345b])$"),
 	'strStart': new RegExp("^\".+$"),
 	'strEnd': new RegExp(".+\"$"),
 }
@@ -42,7 +42,7 @@ export var Execution = {
 	display: function (e) {
 		if (e instanceof ic10Error) {
 			// var string = `[${e.functionName}:${e.line}] (${e.code}) - ${e.message}:`
-			var string = `(${e.code}) - ${e.message}:`
+			const string = `(${e.code}) - ${e.message}:`;
 			switch (e.lvl) {
 				case 0:
 					console.error('ERROR ' + string, e.obj)
@@ -107,13 +107,13 @@ export class Memory {
 	public cells: Array<MemoryCell | MemoryStack>
 	public environ: Environ
 	public aliases: Object
-	#scope: InterpreterIc10;
+	readonly #scope: InterpreterIc10;
 
 	constructor(scope) {
 		this.#scope = scope;
 		this.cells = new Array<MemoryCell>(15)
 		this.environ = new Environ(scope)
-		this.aliases = new Object()
+		this.aliases = {}
 
 		for (let i = 0; i < 18; i++) {
 			if (i === 16) {
@@ -240,7 +240,7 @@ export class Memory {
 	}
 
 	toLog() {
-		var out = {}
+		const out = {};
 		for (let i = 0; i < 18; i++) {
 			if (i === 16) {
 				out['r' + i] = this.cells[i].get()
@@ -302,7 +302,7 @@ export class MemoryStack extends MemoryCell {
 	}
 
 	pop(): number {
-		var o = this.value.slice(this.index - 1, this.index)[0] ?? 0
+		const o = this.value.slice(this.index - 1, this.index)[0] ?? 0;
 		this.index--
 		if (this.index < 0) {
 			this.index = 0
@@ -679,6 +679,7 @@ export class Slot {
 	}
 }
 
+// noinspection SpellCheckingInspection
 export class InterpreterIc10 {
 	public code: string
 	public commands: { args: any[]; command: string }[]
@@ -741,18 +742,18 @@ export class InterpreterIc10 {
 
 	init(text): InterpreterIc10 {
 		this.lines = text.split(/\r?\n/);
-		var commands = this.lines
-			.map((line: string) => {
-				const args = line.trim().split(/ +/)
-				const command = args.shift()
-				return {command, args}
-			})
+		const commands = this.lines
+							 .map((line: string) => {
+								 const args    = line.trim().split(/ +/)
+								 const command = args.shift()
+								 return {command, args}
+							 });
 		for (const commandsKey in this.lines) {
 			if (commands.hasOwnProperty(commandsKey)) {
-				let command = commands[commandsKey]
-				var newArgs = {}
-				var mode = 0;
-				var argNumber = 0;
+				let command   = commands[commandsKey]
+				const newArgs = {};
+				let mode      = 0;
+				let argNumber = 0;
 				for (let argsKey in command.args) {
 					if (command.args.hasOwnProperty(argsKey)) {
 						let arg = command.args[argsKey]
@@ -802,7 +803,7 @@ export class InterpreterIc10 {
 
 	run() {
 		this.interval = setInterval(() => {
-			var why = this.prepareLine()
+			const why = this.prepareLine();
 			if (why !== true) {
 				this.settings.debugCallback.call(this, why, [])
 				clearInterval(this.interval)
@@ -877,7 +878,7 @@ export class InterpreterIc10 {
 	}
 
 	ls(op1, op2, op3, op4) {
-		var d = this.memory.getCell(op2)
+		const d = this.memory.getCell(op2);
 		if (d instanceof Device) {
 			this.memory.cell(op1, d.getSlot(this.memory.cell(op3), op4))
 		} else {
@@ -914,7 +915,7 @@ export class InterpreterIc10 {
 	}
 
 	div(op1, op2, op3, op4) {
-		var div = this.memory.cell(op2) / this.memory.cell(op3)
+		const div = this.memory.cell(op2) / this.memory.cell(op3);
 		this.memory.cell(op1, Number(div) || 0)
 	}
 
@@ -1012,7 +1013,7 @@ export class InterpreterIc10 {
 		if (this.__issetLabel(op1)) {
 			this.position = this.labels[op1]
 		} else {
-			var line = this.memory.cell(op1)
+			const line = this.memory.cell(op1);
 			if (!isNaN(line)) {
 				this.position = line
 			} else {
@@ -1022,7 +1023,7 @@ export class InterpreterIc10 {
 	}
 
 	jr(op1: number) {
-		var jr = 0;
+		let jr = 0;
 		if (op1 > 0 || 0 > op1) {
 			jr = op1
 		} else {
@@ -1500,10 +1501,10 @@ export class InterpreterIc10 {
 	}
 
 	lb(op1, op2, op3, op4) {
-		var values = []
-		var hash = this.memory.cell(op2)
-		for (var i = 0; i <= 5; i++) {
-			var d: Device = this.memory.getCell('d' + i)
+		const values = [];
+		const hash   = this.memory.cell(op2);
+		for (let i = 0; i <= 5; i++) {
+			const d: Device = this.memory.getCell('d' + i);
 			if (d.hash == hash) {
 				values.push(d.get(op3))
 			}
@@ -1511,7 +1512,7 @@ export class InterpreterIc10 {
 		if (values.length === 0) {
 			throw Execution.error(this.position, 'Can`t find Device wich hash:', hash)
 		}
-		var result = 0
+		let result = 0;
 		switch (op4) {
 			case 0:
 			case 'Average':
@@ -1535,17 +1536,17 @@ export class InterpreterIc10 {
 	}
 
 	lr(op1, op2, op3, op4) {
-		var values = []
-		var d = this.memory.getCell(op2)
+		const values = [];
+		const d      = this.memory.getCell(op2);
 		if (d instanceof Device) {
 			for (const slotsKey in d.properties.slots) {
 				if (d.properties.slots[slotsKey] instanceof Slot) {
-					var slot: Slot = d.properties.slots[slotsKey]
+					const slot: Slot = d.properties.slots[slotsKey];
 					values.push(slot.get(op4))
 				}
 			}
 		}
-		var result = 0
+		let result = 0;
 		switch (op3) {
 			case 0:
 			case 'Average':
@@ -1569,9 +1570,9 @@ export class InterpreterIc10 {
 	}
 
 	sb(op1, op2, op3, op4) {
-		var hash = this.memory.cell(op1)
-		for (var i = 0; i <= 5; i++) {
-			var d: Device = this.memory.getCell('d' + i)
+		const hash = this.memory.cell(op1);
+		for (let i = 0; i <= 5; i++) {
+			const d: Device = this.memory.getCell('d' + i);
 			if (d.hash == hash) {
 				d.set(op2, op3)
 			}
@@ -1619,7 +1620,7 @@ export class InterpreterIc10 {
 	}
 
 	_log() {
-		var out = []
+		const out = [];
 		try {
 			for (const argumentsKey in arguments) {
 				if (arguments.hasOwnProperty(argumentsKey)) {
@@ -1699,7 +1700,7 @@ export class InterpreterIc10 {
 	}
 
 	__d(device, args: {}) {
-		var d: Device = this.memory.getCell(device);
+		const d: Device = this.memory.getCell(device);
 		if (d instanceof Device) {
 			switch (Object.keys(args).length) {
 				case 0:
