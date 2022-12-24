@@ -1,10 +1,9 @@
 {
   "name": "ic10",
   "type": "commonjs",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "ic10 interpreter",
-  "main": "main.js",
-  "types": "main.d.ts",
+  "main": "src/main.js",
   "scripts": {
     "watch": "tsc -w",
     "test": "node test.js",
@@ -20,16 +19,10 @@
   "bugs": {
     "url": "https://github.com/Traineratwot/ic10/issues"
   },
-  "files": [
-    "src/main.ts",
-    "main.d.ts",
-    "main.js",
-    "main.js.map",
-    "test.js"
-  ],
   "exclude": [
     ".idea",
     ".vscode",
+    ".project-manager",
     ".ic10"
   ],
   "homepage": "https://github.com/Traineratwot/ic10#readme",
