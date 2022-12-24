@@ -1,3 +1,5 @@
+import { ic10Error } from "./ic10Error";
+import { Memory } from "./Memory";
 export declare const regexes: {
     rr1: RegExp;
     r1: RegExp;
@@ -6,209 +8,25 @@ export declare const regexes: {
     strStart: RegExp;
     strEnd: RegExp;
 };
-export declare class ic10Error {
-    message: string;
-    code: number;
-    functionName: string;
-    lvl: number;
-    line: number;
-    className: string;
-    obj: any;
-    constructor(caller: any, code: number, message: string, obj: any, lvl?: number);
-    getCode(): number;
-    getMessage(): string;
-}
 export declare var Execution: {
     error(code: number, message: string, obj?: any): ic10Error;
-    display: (e: any) => any;
-};
-export declare class Environ {
-    #private;
-    d0: Device;
-    d1: Device;
-    d2: Device;
-    d3: Device;
-    d4: Device;
-    d5: Device;
-    db: Chip;
-    constructor(scope: InterpreterIc10);
-    randomize(): void;
-}
-export declare class Memory {
-    #private;
-    get scope(): InterpreterIc10;
-    cells: Array<MemoryCell | MemoryStack>;
-    environ: Environ;
-    aliases: Object;
-    constructor(scope: any);
-    cell(cell: string | number, op1?: any, op2?: any): MemoryCell | any;
-    getCell(cell: any): Device | MemoryStack | ConstantCell | any;
-    alias(name: any, link: string | number): this;
-    define(name: any, value: string | number): void;
-    toLog(): {};
-}
-export declare class MemoryCell {
-    #private;
-    value: any;
-    name: string;
-    alias: null;
-    constructor(scope: InterpreterIc10, name: string);
-    getName(): string;
-    get(_?: any): number;
-    set(value: any, _?: any): MemoryCell;
-}
-export declare class MemoryStack extends MemoryCell {
-    #private;
-    value: number[];
-    index: number;
-    constructor(scope: any, name: string);
-    push(value: number): MemoryStack;
-    pop(): number;
-    peek(): number;
-    getStack(): number[];
-    get(): number;
-    set(value?: number): this;
-}
-export declare class ConstantCell extends MemoryCell {
-    #private;
-    value: any;
-    constructor(value: any, scope: any, name: string);
-    get(): any;
-    set(value: any, _?: any): this;
-}
-export declare class DeviceProperties {
-    slots: Slot[];
-    Activate: number;
-    AirRelease: number;
-    Bpm: number;
-    Charge: number;
-    ClearMemory: number;
-    CollectableGoods: number;
-    Color: number;
-    Combustion: number;
-    CompletionRatio: number;
-    CurrentResearchPodType: number;
-    ElevatorLevel: number;
-    ElevatorSpeed: number;
-    Error: number;
-    ExportCount: number;
-    Filtration: number;
-    ForceWrite: number;
-    Fuel: number;
-    Harvest: number;
-    Horizontal: number;
-    HorizontalRatio: number;
-    Idle: number;
-    ImportCount: number;
-    Lock: number;
-    ManualResearchRequiredPod: number;
-    Maximum: number;
-    MineablesInQueue: number;
-    MineablesInVicinity: number;
-    Mode: number;
-    NextWeatherEventTime: number;
-    On: number;
-    Open: number;
-    Output: number;
-    Plant: number;
-    PositionX: number;
-    PositionY: number;
-    PositionZ: number;
-    Power: number;
-    PowerActual: number;
-    PowerGeneration: number;
-    PowerPotential: number;
-    PowerRequired: number;
-    PrefabHash: number;
-    Pressure: number;
-    PressureExternal: number;
-    PressureSetting: number;
-    Quantity: number;
-    Ratio: number;
-    RatioCarbonDioxide: number;
-    RatioNitrogen: number;
-    RatioNitrousOxide: number;
-    RatioOxygen: number;
-    RatioPollutant: number;
-    RatioVolatiles: number;
-    RatioWater: number;
-    Reagents: number;
-    RecipeHash: number;
-    RequestHash: number;
-    RequiredPower: number;
-    ReturnFuelCost: number;
-    Setting: number;
-    SettingInput: number;
-    SettingOutput: number;
-    SignalID: number;
-    SignalStrength: number;
-    SolarAngle: number;
-    TargetX: number;
-    TargetY: number;
-    TargetZ: number;
-    Temperature: number;
-    TemperatureExternal: number;
-    TemperatureSetting: number;
-    Time: number;
-    TotalMoles: number;
-    VelocityMagnitude: number;
-    VelocityRelativeX: number;
-    VelocityRelativeY: number;
-    VelocityRelativeZ: number;
-    Vertical: number;
-    VerticalRatio: number;
-    Volume: number;
-    constructor(scope: any);
-    randomize(): void;
-}
-export declare class Device extends MemoryCell {
-    #private;
-    number: number;
-    hash: number;
-    get scope(): InterpreterIc10;
-    properties: DeviceProperties;
-    constructor(scope: InterpreterIc10, name: string, number: number);
-    get(variable?: any): any;
-    set(variable: any, value: any): this;
-    getSlot(op1: any, op2?: any): any;
-    setSlot(op1: any, op2: any, value: any): void;
-}
-export declare class Chip extends Device {
-    #private;
-    constructor(scope: any, name: string, number: number);
-}
-export declare class Slot {
-    #private;
-    number: number;
-    get scope(): InterpreterIc10;
-    properties: {
-        Charge: number;
-        ChargeRatio: number;
-        Class: number;
-        Damage: number;
-        Efficiency: number;
-        Growth: number;
-        Health: number;
-        Mature: number;
-        MaxQuantity: number;
-        OccupantHash: number;
-        Occupied: number;
-        PrefabHash: number;
-        Pressure: number;
-        PressureAir: number;
-        PressureWaste: number;
-        Quantity: number;
-        Temperature: number;
+    display: (e: {
+        code: any;
+        message: any;
+        lvl: any;
+        obj: any;
+    }) => string | {
+        code: any;
+        message: any;
+        lvl: any;
+        obj: any;
     };
-    constructor(scope: InterpreterIc10, number: number);
-    get(op1: any): any;
-    set(op1: any, value: any): void;
-}
+};
 export declare class InterpreterIc10 {
     code: string;
     commands: {
-        args: any[];
-        command: string;
+        command: string | undefined;
+        args: string[];
     }[];
     lines: string[];
     memory: Memory;
@@ -231,10 +49,10 @@ export declare class InterpreterIc10 {
     ignoreLine: Array<number>;
     constructor(code?: string, settings?: {});
     setSettings(settings?: object): InterpreterIc10;
-    init(text: any): InterpreterIc10;
+    init(text: string): InterpreterIc10;
     stop(): InterpreterIc10;
     run(): this;
-    prepareLine(line?: number, isDebugger?: boolean): any;
+    prepareLine(line?: number, isDebugger?: boolean): string | true;
     __issetLabel(x: string): boolean;
     define(op1: any, op2: any, op3: any, op4: any): void;
     alias(op1: any, op2: any, op3: any, op4: any): void;
@@ -273,8 +91,8 @@ export declare class InterpreterIc10 {
     select(op1: any, op2: any, op3: any, op4: any): void;
     hcf(op1: any, op2: any, op3: any, op4: any): void;
     j(op1: any): void;
-    jr(op1: number): void;
-    jal(op1: number): void;
+    jr(op1: any): void;
+    jal(op1: any): void;
     __eq(op1?: number, op2?: number): number;
     __ge(op1?: number, op2?: number): number;
     __gt(op1?: number, op2?: number): number;
@@ -374,6 +192,7 @@ export declare class InterpreterIc10 {
     _d3(op1: any): void;
     _d4(op1: any): void;
     _d5(op1: any): void;
-    __d(device: any, args: {}): void;
+    __d(device: string, args: any): void;
     __debug(p: string, iArguments: string[]): void;
 }
+export default InterpreterIc10;

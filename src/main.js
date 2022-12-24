@@ -1,46 +1,26 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.InterpreterIc10 = exports.Slot = exports.Chip = exports.Device = exports.DeviceProperties = exports.ConstantCell = exports.MemoryStack = exports.MemoryCell = exports.Memory = exports.Environ = exports.Execution = exports.ic10Error = exports.regexes = void 0;
+exports.InterpreterIc10 = exports.Execution = exports.regexes = void 0;
+const ic10Error_1 = require("./ic10Error");
+const Memory_1 = require("./Memory");
+const Device_1 = require("./Device");
+const Slot_1 = require("./Slot");
+const MemoryCell_1 = require("./MemoryCell");
 exports.regexes = {
     'rr1': new RegExp("[rd]+(r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a))$"),
     'r1': new RegExp("^r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a)$"),
-    'd1': new RegExp("^d(0|1|2|3|4|5|b)$"),
-    'rr': new RegExp("^d(0|1|2|3|4|5|b)$"),
+    'd1': new RegExp("^d([012345b])$"),
+    'rr': new RegExp("^d([012345b])$"),
     'strStart': new RegExp("^\".+$"),
     'strEnd': new RegExp(".+\"$"),
 };
-class ic10Error {
-    message;
-    code;
-    functionName;
-    lvl;
-    line;
-    className;
-    obj;
-    constructor(caller, code, message, obj, lvl = 0) {
-        this.message = message;
-        this.code = code;
-        this.obj = obj;
-        this.lvl = lvl;
-        this.className = caller?.typeName ?? '';
-        this.functionName = caller?.functionName ?? caller?.methodName ?? '';
-        this.line = caller?.lineNumber ?? 0;
-    }
-    getCode() {
-        return this.code;
-    }
-    getMessage() {
-        return this.message;
-    }
-}
-exports.ic10Error = ic10Error;
 exports.Execution = {
     error(code, message, obj = null) {
-        return new ic10Error('--', code, message, obj, 0);
+        return new ic10Error_1.ic10Error('--', code, message, obj, 0);
     },
     display: function (e) {
-        if (e instanceof ic10Error) {
-            var string = `(${e.code}) - ${e.message}:`;
+        if (e instanceof ic10Error_1.ic10Error) {
+            const string = `(${e.code}) - ${e.message}:`;
             switch (e.lvl) {
                 case 0:
                     console.error('ERROR ' + string, e.obj);
@@ -64,583 +44,12 @@ exports.Execution = {
         }
     }
 };
-class Environ {
-    d0;
-    d1;
-    d2;
-    d3;
-    d4;
-    d5;
-    db;
-    #scope;
-    constructor(scope) {
-        this.#scope = scope;
-        this.d0 = new Device(scope, 'd0', 1);
-        this.d1 = new Device(scope, 'd1', 2);
-        this.d2 = new Device(scope, 'd2', 3);
-        this.d3 = new Device(scope, 'd3', 4);
-        this.d4 = new Device(scope, 'd4', 5);
-        this.d5 = new Device(scope, 'd5', 6);
-        this.db = new Chip(scope, 'db', 7);
-    }
-    randomize() {
-        for (const x in this) {
-            let d = this[x];
-            if (d instanceof Device) {
-                d.properties.randomize();
-            }
-        }
-    }
-}
-exports.Environ = Environ;
-class Memory {
-    get scope() {
-        return null;
-    }
-    cells;
-    environ;
-    aliases;
-    #scope;
-    constructor(scope) {
-        this.#scope = scope;
-        this.cells = new Array(15);
-        this.environ = new Environ(scope);
-        this.aliases = new Object();
-        for (let i = 0; i < 18; i++) {
-            if (i === 16) {
-                this.cells[i] = new MemoryStack(scope, 'r' + i);
-            }
-            else {
-                this.cells[i] = new MemoryCell(scope, 'r' + i);
-            }
-        }
-    }
-    cell(cell, op1 = null, op2 = null) {
-        if (typeof cell === "string") {
-            if (cell == 'sp')
-                cell = 'r16';
-            if (cell == 'ra')
-                cell = 'r17';
-            if (exports.regexes.rr1.test(cell)) {
-                let m = exports.regexes.rr1.exec(cell);
-                let m1 = this.cell(cell.replace(m[1], this.cell(m[1])), op1, op2) ?? false;
-                if (m1 !== false) {
-                    return m1;
-                }
-                throw exports.Execution.error(this.#scope.position, 'Unknown cell', m1);
-            }
-            if (exports.regexes.r1.test(cell)) {
-                let m = exports.regexes.r1.exec(cell);
-                if (m[1] in this.cells) {
-                    if (op1 === null) {
-                        return this.cells[m[1]].get();
-                    }
-                    else {
-                        return this.cells[m[1]].set(this.cell(op1));
-                    }
-                }
-                else {
-                    throw exports.Execution.error(this.#scope.position, 'Unknown cell', cell);
-                }
-            }
-            if (exports.regexes.d1.test(cell)) {
-                if (cell in this.environ) {
-                    if (op1 === null) {
-                        throw exports.Execution.error(this.#scope.position, 'Have not `Port`', cell);
-                    }
-                    else {
-                        if (op2 !== null) {
-                            return this.environ[cell].set(op1, this.cell(op2));
-                        }
-                        return this.environ[cell].get(op1);
-                    }
-                }
-                else {
-                    throw exports.Execution.error(this.#scope.position, 'Unknown cell', cell);
-                }
-            }
-            if (cell in this.aliases) {
-                if (this.aliases[cell].constructor.name === 'MemoryCell') {
-                    if (op1 === null) {
-                        return this.aliases[cell].get();
-                    }
-                    else {
-                        return this.aliases[cell].set(this.cell(op1));
-                    }
-                }
-                else if (this.aliases[cell] instanceof Device) {
-                    if (op1 === null) {
-                        throw exports.Execution.error(this.#scope.position, 'Have not `Port`', cell);
-                    }
-                    else {
-                        if (op2 !== null) {
-                            return this.aliases[cell].set(op1, this.cell(op2));
-                        }
-                        return this.aliases[cell].get(op1);
-                    }
-                }
-                else if (this.aliases[cell] instanceof ConstantCell) {
-                    return this.aliases[cell].get();
-                }
-                else {
-                    throw exports.Execution.error(this.#scope.position, 'Unknown cell', cell);
-                }
-            }
-            throw exports.Execution.error(this.#scope.position, 'Unknown cell', cell);
-        }
-        if (typeof cell === "number") {
-            return cell;
-        }
-    }
-    getCell(cell) {
-        if (typeof cell === "string") {
-            if (cell == 'sp')
-                return this.cells[16];
-            if (cell == 'ra')
-                cell = 'r17';
-            if (exports.regexes.rr1.test(cell)) {
-                let m = exports.regexes.rr1.exec(cell);
-                let m1 = this.getCell(cell.replace(m[1], this.cell(m[1]))) ?? false;
-                if (m1 !== false) {
-                    return m1;
-                }
-                throw exports.Execution.error(this.#scope.position, 'Unknown cell', m1);
-            }
-            if (exports.regexes.r1.test(cell)) {
-                let m = exports.regexes.r1.exec(cell);
-                if (m[1] in this.cells) {
-                    return this.cells[m[1]];
-                }
-            }
-            if (exports.regexes.d1.test(cell)) {
-                if (cell in this.environ) {
-                    return this.environ[cell];
-                }
-                else {
-                    throw exports.Execution.error(this.#scope.position, 'Unknown cell', cell);
-                }
-            }
-            if (cell in this.aliases) {
-                return this.aliases[cell];
-            }
-            throw exports.Execution.error(this.#scope.position, 'Unknown cell', cell);
-        }
-        if (typeof cell === "number") {
-            if (cell >= 18)
-                throw exports.Execution.error(this.#scope.position, 'Unknown cell', cell);
-            return this.cells[cell];
-        }
-    }
-    alias(name, link) {
-        this.aliases[name] = this.getCell(link);
-        if (this.aliases[name] instanceof MemoryCell) {
-            this.aliases[name].alias = name;
-        }
-        return this;
-    }
-    define(name, value) {
-        this.aliases[name] = new ConstantCell(value, this.#scope, name);
-    }
-    toLog() {
-        var out = {};
-        for (let i = 0; i < 18; i++) {
-            if (i === 16) {
-                out['r' + i] = this.cells[i].get();
-            }
-            else {
-                out['r' + i] = this.cells[i].get();
-                out['stack'] = this.cells[i].value;
-            }
-        }
-        return out;
-    }
-}
-exports.Memory = Memory;
-class MemoryCell {
-    value;
-    #scope;
-    name;
-    alias;
-    constructor(scope, name) {
-        this.#scope = scope;
-        this.name = name;
-        this.alias = null;
-        this.value = null;
-    }
-    getName() {
-        return this.alias || this.name;
-    }
-    get(_ = null) {
-        return this.value;
-    }
-    set(value, _ = null) {
-        this.value = value;
-        return this;
-    }
-}
-exports.MemoryCell = MemoryCell;
-class MemoryStack extends MemoryCell {
-    #scope;
-    constructor(scope, name) {
-        super(scope, name);
-        this.#scope = scope;
-        this.value = [];
-        this.index = 0;
-    }
-    push(value) {
-        if (this.value.length >= 512) {
-            throw exports.Execution.error(this.#scope.position, 'Stack Overflow !!!');
-        }
-        this.value[this.index] = this.#scope.memory.cell(value);
-        this.index++;
-        return this;
-    }
-    pop() {
-        var o = this.value.slice(this.index - 1, this.index)[0] ?? 0;
-        this.index--;
-        if (this.index < 0) {
-            this.index = 0;
-        }
-        return o;
-    }
-    peek() {
-        return this.value.slice(this.index, this.index + 1)[0] ?? 0;
-    }
-    getStack() {
-        return this.value;
-    }
-    get() {
-        return this.index;
-    }
-    set(value = null) {
-        this.index = value;
-        return this;
-    }
-}
-exports.MemoryStack = MemoryStack;
-class ConstantCell extends MemoryCell {
-    #scope;
-    constructor(value, scope, name) {
-        super(scope, name);
-        this.value = value;
-    }
-    get() {
-        return this.value;
-    }
-    set(value, _ = null) {
-        throw exports.Execution.error(this.#scope.position, 'Can`t change constant');
-        return this;
-    }
-}
-exports.ConstantCell = ConstantCell;
-class DeviceProperties {
-    slots;
-    Activate;
-    AirRelease;
-    Bpm;
-    Charge;
-    ClearMemory;
-    CollectableGoods;
-    Color;
-    Combustion;
-    CompletionRatio;
-    CurrentResearchPodType;
-    ElevatorLevel;
-    ElevatorSpeed;
-    Error;
-    ExportCount;
-    Filtration;
-    ForceWrite;
-    Fuel;
-    Harvest;
-    Horizontal;
-    HorizontalRatio;
-    Idle;
-    ImportCount;
-    Lock;
-    ManualResearchRequiredPod;
-    Maximum;
-    MineablesInQueue;
-    MineablesInVicinity;
-    Mode;
-    NextWeatherEventTime;
-    On;
-    Open;
-    Output;
-    Plant;
-    PositionX;
-    PositionY;
-    PositionZ;
-    Power;
-    PowerActual;
-    PowerGeneration;
-    PowerPotential;
-    PowerRequired;
-    PrefabHash;
-    Pressure;
-    PressureExternal;
-    PressureSetting;
-    Quantity;
-    Ratio;
-    RatioCarbonDioxide;
-    RatioNitrogen;
-    RatioNitrousOxide;
-    RatioOxygen;
-    RatioPollutant;
-    RatioVolatiles;
-    RatioWater;
-    Reagents;
-    RecipeHash;
-    RequestHash;
-    RequiredPower;
-    ReturnFuelCost;
-    Setting;
-    SettingInput;
-    SettingOutput;
-    SignalID;
-    SignalStrength;
-    SolarAngle;
-    TargetX;
-    TargetY;
-    TargetZ;
-    Temperature;
-    TemperatureExternal;
-    TemperatureSetting;
-    Time;
-    TotalMoles;
-    VelocityMagnitude;
-    VelocityRelativeX;
-    VelocityRelativeY;
-    VelocityRelativeZ;
-    Vertical;
-    VerticalRatio;
-    Volume;
-    constructor(scope) {
-        this.On = 0;
-        this.Power = 0;
-        this.Error = 0;
-        this.Activate = 0;
-        this.Setting = null;
-        this.RequiredPower = 0;
-        this.ClearMemory = 0;
-        this.Lock = 0;
-        this.slots = new Array(10);
-        this.RecipeHash = -128473777;
-        this.AirRelease = 0;
-        this.Bpm = 0;
-        this.Charge = 0;
-        this.ClearMemory = 0;
-        this.CollectableGoods = 0;
-        this.Color = 0;
-        this.Combustion = 0;
-        this.CompletionRatio = 0;
-        this.CurrentResearchPodType = 0;
-        this.ElevatorLevel = 0;
-        this.ElevatorSpeed = 0;
-        this.Error = 0;
-        this.ExportCount = 0;
-        this.Filtration = 0;
-        this.ForceWrite = 0;
-        this.Fuel = 0;
-        this.Harvest = 0;
-        this.Horizontal = 0;
-        this.HorizontalRatio = 0;
-        this.Idle = 0;
-        this.ImportCount = 0;
-        this.Lock = 0;
-        this.ManualResearchRequiredPod = 0;
-        this.Maximum = 0;
-        this.MineablesInQueue = 0;
-        this.MineablesInVicinity = 0;
-        this.Mode = 0;
-        this.NextWeatherEventTime = 0;
-        this.On = 0;
-        this.Open = 0;
-        this.Output = 0;
-        this.Plant = 0;
-        this.PositionX = 0;
-        this.PositionY = 0;
-        this.PositionZ = 0;
-        this.Power = 0;
-        this.PowerActual = 0;
-        this.PowerGeneration = 0;
-        this.PowerPotential = 0;
-        this.PowerRequired = 0;
-        this.PrefabHash = 0;
-        this.Pressure = 0;
-        this.PressureExternal = 0;
-        this.PressureSetting = 0;
-        this.Quantity = 0;
-        this.Ratio = 0;
-        this.RatioCarbonDioxide = 0;
-        this.RatioNitrogen = 0;
-        this.RatioNitrousOxide = 0;
-        this.RatioOxygen = 0;
-        this.RatioPollutant = 0;
-        this.RatioVolatiles = 0;
-        this.RatioWater = 0;
-        this.Reagents = 0;
-        this.RecipeHash = 0;
-        this.RequestHash = 0;
-        this.RequiredPower = 0;
-        this.ReturnFuelCost = 0;
-        this.Setting = 0;
-        this.SettingInput = 0;
-        this.SettingOutput = 0;
-        this.SignalID = 0;
-        this.SignalStrength = 0;
-        this.SolarAngle = 0;
-        this.TargetX = 0;
-        this.TargetY = 0;
-        this.TargetZ = 0;
-        this.Temperature = 0;
-        this.TemperatureExternal = 0;
-        this.TemperatureSetting = 0;
-        this.Time = 0;
-        this.TotalMoles = 0;
-        this.VelocityMagnitude = 0;
-        this.VelocityRelativeX = 0;
-        this.VelocityRelativeY = 0;
-        this.VelocityRelativeZ = 0;
-        this.Vertical = 0;
-        this.VerticalRatio = 0;
-        this.Volume = 0;
-        this.randomize();
-        for (let i = 0; i < 10; i++) {
-            this.slots[i] = new Slot(scope, i);
-        }
-    }
-    randomize() {
-        this.ClearMemory = 0;
-    }
-}
-exports.DeviceProperties = DeviceProperties;
-class Device extends MemoryCell {
-    number;
-    hash;
-    get scope() {
-        return null;
-    }
-    properties;
-    #scope;
-    constructor(scope, name, number) {
-        super(scope, name);
-        this.hash = 100000000;
-        this.#scope = scope;
-        this.number = number;
-        this.properties = new DeviceProperties(scope);
-    }
-    get(variable = null) {
-        if (!variable) {
-            return this;
-        }
-        if (variable == 'hash') {
-            return this.hash;
-        }
-        if (variable in this.properties) {
-            return this.properties[variable];
-        }
-        else {
-            throw exports.Execution.error(this.#scope.position, 'Unknown variable', variable);
-        }
-    }
-    set(variable, value) {
-        if (variable in this.properties) {
-            this.properties[variable] = value;
-        }
-        else {
-            throw exports.Execution.error(this.#scope.position, 'Unknown variable', variable);
-        }
-        return this;
-    }
-    getSlot(op1, op2 = null) {
-        if (op1 in this.properties.slots) {
-            if (op2) {
-                return this.properties.slots[op1].get(op2);
-            }
-            else {
-                return this.properties.slots[op1];
-            }
-        }
-        else {
-            throw exports.Execution.error(this.#scope.position, 'Unknown Slot', op1);
-        }
-    }
-    setSlot(op1, op2, value) {
-        if (op1 in this.properties.slots) {
-            if (op2) {
-                return this.properties.slots[op1].set(op2, value);
-            }
-            else {
-                throw exports.Execution.error(this.#scope.position, 'Unknown Slot', op1);
-            }
-        }
-    }
-}
-exports.Device = Device;
-class Chip extends Device {
-    #scope;
-    constructor(scope, name, number) {
-        super(scope, name, number);
-        this.hash = -128473777;
-        this.#scope = scope;
-        this.properties.slots[0].properties.OccupantHash = -744098481;
-    }
-}
-exports.Chip = Chip;
-class Slot {
-    number;
-    get scope() {
-        return null;
-    }
-    properties;
-    #scope;
-    constructor(scope, number) {
-        this.#scope = scope;
-        this.number = number;
-        this.properties = {};
-        this.properties.Charge = 0;
-        this.properties.ChargeRatio = 0;
-        this.properties.Class = 0;
-        this.properties.Damage = 0;
-        this.properties.Efficiency = 0;
-        this.properties.Growth = 0;
-        this.properties.Health = 0;
-        this.properties.Mature = 0;
-        this.properties.MaxQuantity = 0;
-        this.properties.OccupantHash = 0;
-        this.properties.Occupied = 0;
-        this.properties.PrefabHash = 0;
-        this.properties.Pressure = 0;
-        this.properties.PressureAir = 0;
-        this.properties.PressureWaste = 0;
-        this.properties.Quantity = 0;
-        this.properties.Temperature = 0;
-    }
-    get(op1) {
-        if (op1 in this.properties) {
-            return this.properties[op1];
-        }
-        else {
-            throw exports.Execution.error(this.#scope.position, 'Unknown parameter', op1);
-        }
-    }
-    set(op1, value) {
-        if (op1 in this.properties) {
-            this.properties[op1] = value;
-        }
-        else {
-            throw exports.Execution.error(this.#scope.position, 'Unknown parameter', op1);
-        }
-    }
-}
-exports.Slot = Slot;
 class InterpreterIc10 {
     code;
-    commands;
-    lines;
+    commands = [];
+    lines = [];
     memory;
-    position;
+    position = 0;
     interval;
     labels;
     constants;
@@ -649,7 +58,7 @@ class InterpreterIc10 {
     ignoreLine;
     constructor(code = '', settings = {}) {
         this.code = code;
-        this.memory = new Memory(this);
+        this.memory = new Memory_1.Memory(this);
         this.constants = {};
         this.labels = {};
         this.ignoreLine = [];
@@ -658,11 +67,9 @@ class InterpreterIc10 {
             tickTime: 100,
             debugCallback: (a, b) => {
                 this.output.debug = a + ' ' + JSON.stringify(b);
-                console.log(this.output.debug);
             },
             logCallback: (a, b) => {
                 this.output.log = a + ' ' + b.join('');
-                console.log(this.output.log);
             },
             executionCallback: (e) => {
                 this.output.error = exports.Execution.display(e);
@@ -684,7 +91,7 @@ class InterpreterIc10 {
     }
     init(text) {
         this.lines = text.split(/\r?\n/);
-        var commands = this.lines
+        const commands = this.lines
             .map((line) => {
             const args = line.trim().split(/ +/);
             const command = args.shift();
@@ -693,9 +100,9 @@ class InterpreterIc10 {
         for (const commandsKey in this.lines) {
             if (commands.hasOwnProperty(commandsKey)) {
                 let command = commands[commandsKey];
-                var newArgs = {};
-                var mode = 0;
-                var argNumber = 0;
+                const newArgs = {};
+                let mode = 0;
+                let argNumber = 0;
                 for (let argsKey in command.args) {
                     if (command.args.hasOwnProperty(argsKey)) {
                         let arg = command.args[argsKey];
@@ -730,7 +137,7 @@ class InterpreterIc10 {
         while (this.position < this.commands.length) {
             let { command, args } = this.commands[this.position];
             this.position++;
-            if (command.match(/^\w+:$/)) {
+            if (command?.match(/^\w+:$/)) {
                 let label = command.replace(":", "");
                 this.labels[command.replace(":", "")] = this.position;
                 this.memory.define(label, this.position);
@@ -745,7 +152,7 @@ class InterpreterIc10 {
     }
     run() {
         this.interval = setInterval(() => {
-            var why = this.prepareLine();
+            const why = this.prepareLine();
             if (why !== true) {
                 this.settings.debugCallback.call(this, why, []);
                 clearInterval(this.interval);
@@ -763,12 +170,12 @@ class InterpreterIc10 {
         let { command, args } = this.commands[this.position];
         this.position++;
         let isComment = true;
-        if (command != '' && !command.trim().endsWith(":")) {
+        if (command && command != '' && !command.trim().endsWith(":")) {
             isComment = command.startsWith("#");
             for (const argsKey in args) {
                 let a = parseFloat(args[argsKey]);
                 if (!isNaN(a)) {
-                    args[argsKey] = a;
+                    args[argsKey] = String(a);
                 }
             }
             try {
@@ -817,8 +224,8 @@ class InterpreterIc10 {
         this.l(op1, op2, op3, op4);
     }
     ls(op1, op2, op3, op4) {
-        var d = this.memory.getCell(op2);
-        if (d instanceof Device) {
+        const d = this.memory.getCell(op2);
+        if (d instanceof Device_1.Device) {
             this.memory.cell(op1, d.getSlot(this.memory.cell(op3), op4));
         }
         else {
@@ -847,7 +254,7 @@ class InterpreterIc10 {
         this.memory.cell(op1, this.memory.cell(op2) * this.memory.cell(op3));
     }
     div(op1, op2, op3, op4) {
-        var div = this.memory.cell(op2) / this.memory.cell(op3);
+        const div = this.memory.cell(op2) / this.memory.cell(op3);
         this.memory.cell(op1, Number(div) || 0);
     }
     mod(op1, op2, op3, op4) {
@@ -922,7 +329,7 @@ class InterpreterIc10 {
             this.position = this.labels[op1];
         }
         else {
-            var line = this.memory.cell(op1);
+            const line = this.memory.cell(op1);
             if (!isNaN(line)) {
                 this.position = line;
             }
@@ -932,7 +339,7 @@ class InterpreterIc10 {
         }
     }
     jr(op1) {
-        var jr = 0;
+        let jr = 0;
         if (op1 > 0 || 0 > op1) {
             jr = op1;
         }
@@ -1291,7 +698,7 @@ class InterpreterIc10 {
         }
     }
     bapzal(op1, op2, op3, op4) {
-        if (this.__ap(this.memory.cell(op1), 0), this.memory.cell(op2)) {
+        if (this.__ap(this.memory.cell(op1), 0) && this.memory.cell(op2)) {
             this.jal(op3);
         }
     }
@@ -1325,18 +732,20 @@ class InterpreterIc10 {
         this.memory.cell(op1, this.memory.getCell('r16').peek());
     }
     lb(op1, op2, op3, op4) {
-        var values = [];
-        var hash = this.memory.cell(op2);
-        for (var i = 0; i <= 5; i++) {
-            var d = this.memory.getCell('d' + i);
-            if (d.hash == hash) {
-                values.push(d.get(op3));
+        const values = [];
+        const hash = this.memory.cell(op2);
+        for (let i = 0; i <= 5; i++) {
+            const d = this.memory.getCell('d' + i);
+            if (d instanceof Device_1.Device) {
+                if (d.hash == hash) {
+                    values.push(d.get(op3));
+                }
             }
         }
         if (values.length === 0) {
             throw exports.Execution.error(this.position, 'Can`t find Device wich hash:', hash);
         }
-        var result = 0;
+        let result = 0;
         switch (op4) {
             case 0:
             case 'Average':
@@ -1358,17 +767,17 @@ class InterpreterIc10 {
         this.memory.cell(op1, Number(result));
     }
     lr(op1, op2, op3, op4) {
-        var values = [];
-        var d = this.memory.getCell(op2);
-        if (d instanceof Device) {
+        const values = [];
+        const d = this.memory.getCell(op2);
+        if (d instanceof Device_1.Device) {
             for (const slotsKey in d.properties.slots) {
-                if (d.properties.slots[slotsKey] instanceof Slot) {
-                    var slot = d.properties.slots[slotsKey];
+                if (d.properties.slots[slotsKey] instanceof Slot_1.Slot) {
+                    const slot = d.properties.slots[slotsKey];
                     values.push(slot.get(op4));
                 }
             }
         }
-        var result = 0;
+        let result = 0;
         switch (op3) {
             case 0:
             case 'Average':
@@ -1390,11 +799,13 @@ class InterpreterIc10 {
         this.memory.cell(op1, result);
     }
     sb(op1, op2, op3, op4) {
-        var hash = this.memory.cell(op1);
-        for (var i = 0; i <= 5; i++) {
-            var d = this.memory.getCell('d' + i);
-            if (d.hash == hash) {
-                d.set(op2, op3);
+        const hash = this.memory.cell(op1);
+        for (let i = 0; i <= 5; i++) {
+            const d = this.memory.getCell('d' + i);
+            if (d instanceof Device_1.Device) {
+                if (d.hash == hash) {
+                    d.set(op2, op3);
+                }
             }
         }
     }
@@ -1439,7 +850,7 @@ class InterpreterIc10 {
         }
     }
     _log() {
-        var out = [];
+        const out = [];
         try {
             for (const argumentsKey in arguments) {
                 if (arguments.hasOwnProperty(argumentsKey)) {
@@ -1470,8 +881,14 @@ class InterpreterIc10 {
                                 continue;
                             }
                             try {
-                                if (this.memory.getCell(keys[0]) instanceof MemoryCell) {
-                                    out.push(key + ' = ' + this.memory.getCell(arguments[argumentsKey]).value + '; ');
+                                if (this.memory.getCell(keys[0]) instanceof MemoryCell_1.MemoryCell) {
+                                    const cell = this.memory.getCell(arguments[argumentsKey]);
+                                    if (cell instanceof MemoryCell_1.MemoryCell) {
+                                        out.push(key + ' = ' + cell.value + '; ');
+                                    }
+                                    else {
+                                        out.push(key + ' = ' + cell + '; ');
+                                    }
                                     continue;
                                 }
                             }
@@ -1517,23 +934,24 @@ class InterpreterIc10 {
         this.__d('d5', arguments);
     }
     __d(device, args) {
-        var d = this.memory.getCell(device);
-        if (d instanceof Device) {
-            switch (Object.keys(args).length) {
-                case 0:
-                    throw exports.Execution.error(this.position, 'missing arguments');
-                case 1:
+        const d = this.memory.getCell(device);
+        switch (Object.keys(args).length) {
+            case 0:
+                throw exports.Execution.error(this.position, 'missing arguments');
+            case 1:
+                if (d instanceof Device_1.Device) {
                     d.hash = args[0];
-                    break;
-                case 2:
+                }
+                break;
+            case 2:
+                if (d instanceof Device_1.Device) {
                     d.set(args[0], args[1]);
-                    break;
-                case 3:
+                }
+                break;
+            case 3:
+                if (d instanceof Device_1.Device) {
                     d.setSlot(args[0], args[1], args[2]);
-            }
-        }
-        else {
-            throw exports.Execution.error(this.position, 'Unknown device', device);
+                }
         }
     }
     __debug(p, iArguments) {
@@ -1543,4 +961,5 @@ class InterpreterIc10 {
     }
 }
 exports.InterpreterIc10 = InterpreterIc10;
+exports.default = InterpreterIc10;
 //# sourceMappingURL=main.js.map

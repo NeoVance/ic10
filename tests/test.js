@@ -1,0 +1,76 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const main_1 = __importDefault(require("../src/main"));
+const interpreterIc10 = new main_1.default();
+describe('test', () => {
+    test('alias and move', () => {
+        const code = `
+alias heading r2
+move heading 10
+`;
+        interpreterIc10.init(code);
+        for (let i = 0; i < code.split("\n").length; i++) {
+            interpreterIc10.prepareLine();
+        }
+        expect(interpreterIc10.memory.cell('heading')).toBe(10);
+    });
+    test('example code', () => {
+        const code = `
+alias velocityRelativeX r0
+alias velocityRelativeZ r1
+alias heading r2
+alias Suit db
+l velocityRelativeX Suit VelocityRelativeX
+l velocityRelativeZ Suit VelocityRelativeZ
+move heading 0
+atan2 heading velocityRelativeX velocityRelativeZ
+div heading heading 3.14
+mul heading heading 180
+`;
+        interpreterIc10.init(code);
+        for (let i = 0; i < code.split("\n").length; i++) {
+            interpreterIc10.prepareLine();
+        }
+    });
+    test('stack', () => {
+        const code = `
+move r0 1
+move r1 2
+push r0
+push r1
+push 7
+push 32
+push r17
+`;
+        interpreterIc10.init(code);
+        for (let i = 0; i < code.split("\n").length; i++) {
+            interpreterIc10.prepareLine();
+        }
+    });
+    test('rr1', () => {
+        const code = `
+move r0 2
+move r2 4
+move rr0 10
+`;
+        interpreterIc10.init(code);
+        for (let i = 0; i < code.split("\n").length; i++) {
+            interpreterIc10.prepareLine();
+        }
+        expect(interpreterIc10.memory.cell('r2')).toBe(10);
+    });
+    test('write into device', () => {
+        const code = `
+s d0 Setting 1
+`;
+        interpreterIc10.init(code);
+        for (let i = 0; i < code.split("\n").length; i++) {
+            interpreterIc10.prepareLine();
+        }
+        expect(interpreterIc10.memory.getCell('d0').get('Setting')).toBe(1);
+    });
+});
+//# sourceMappingURL=test.js.map

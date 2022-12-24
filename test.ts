@@ -1,21 +1,22 @@
-import {Execution, ic10Error, InterpreterIc10} from "./main";
-import fs from "fs";
+import fs              from "fs";
+import {ic10Error}                  from "./src/ic10Error";
+import InterpreterIc10, {Execution} from "./src/main";
 
-var code = fs.readFileSync(".ic10", "utf8")
-var settings = {
-  debug: true,
-  debugCallback: function () {
+const code     = fs.readFileSync(".ic10", "utf8");
+const settings = {
+  debug            : true,
+  debugCallback    : function () {
     console.log(...arguments)
   },
-  logCallback: function () {
+  logCallback      : function () {
     console.log(...arguments)
   },
   executionCallback: function (e: ic10Error) {
     Execution.display(e)
   },
-}
+};
 // console.log(code)
-var interpreterIc10 = new InterpreterIc10(code, settings)
+const interpreterIc10 = new InterpreterIc10(code, settings);
 // OR
 interpreterIc10.init(code)
 
