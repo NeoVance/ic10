@@ -76,6 +76,40 @@ s d0 Setting 1
 		expect(interpreterIc10.memory.getCell('d0').get('Setting')).toBe(1)
 	});
 
+	test('read from device', () => {
+		const code = `
+s d0 Setting 15
+l r1 d0 Setting
+`
+		interpreterIc10.init(code)
+		for (let i = 0; i < code.split("\n").length; i++) {
+			interpreterIc10.prepareLine()
+		}
+		expect(interpreterIc10.memory.cell('r1')).toBe(15)
+	});
 
+	test('read from device', () => {
+		const code = `
+s d0 Setting 15
+l r1 d0 Setting
+`
+		interpreterIc10.init(code)
+		for (let i = 0; i < code.split("\n").length; i++) {
+			interpreterIc10.prepareLine()
+		}
+		expect(interpreterIc10.memory.cell('r1')).toBe(15)
+	});
 
+	test('float', () => {
+		const code = `
+move r0 0
+move r1 0
+move r2 0.1
+l r3 d0 Activate
+`
+		interpreterIc10.init(code)
+		for (let i = 0; i < code.split("\n").length; i++) {
+			interpreterIc10.prepareLine()
+		}
+	});
 });
