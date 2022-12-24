@@ -64,13 +64,13 @@ move rr0 10
     });
     test('write into device', () => {
         const code = `
-s d0 Setting 1
+s d0 Setting 8
 `;
         interpreterIc10.init(code);
         for (let i = 0; i < code.split("\n").length; i++) {
             interpreterIc10.prepareLine();
         }
-        expect(interpreterIc10.memory.getCell('d0').get('Setting')).toBe(1);
+        expect(interpreterIc10.memory.getCell('d0').get('Setting')).toBe(8);
     });
     test('read from device', () => {
         const code = `
@@ -105,6 +105,37 @@ l r3 d0 Activate
         for (let i = 0; i < code.split("\n").length; i++) {
             interpreterIc10.prepareLine();
         }
+    });
+    test('example2', () => {
+        const code = `
+move r0 5
+slt r15 r0 5
+beqz r15 if0exit
+s d0 Setting 0
+if0exit:
+move r15 80
+move r14 15
+jal update
+move r13 r0
+move r12 0
+jal update2
+jr 13
+update:
+alias b r15
+alias a r14
+s d0 Setting b
+s d0 Vertical a
+j ra
+update2:
+alias b r13
+alias c r12
+s d0 Setting b
+s d0 Vertical a
+j ra
+`;
+        interpreterIc10.init(code);
+        while (interpreterIc10.prepareLine() === true) { }
+        expect(interpreterIc10.memory.environ.d0.properties.Setting).toBe(5);
     });
 });
 //# sourceMappingURL=test.js.map

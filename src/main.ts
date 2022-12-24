@@ -45,6 +45,7 @@ export var Execution = {
 
 	}
 }
+
 // noinspection SpellCheckingInspection
 export class InterpreterIc10 {
 	public code: string
@@ -53,7 +54,7 @@ export class InterpreterIc10 {
 	public memory: Memory
 	public position: number                                            = 0
 	public interval: any
-	public labels: {}
+	public labels: { [key: string]: number }                           = {}
 	public constants: {}
 	public output: {
 		debug: string,
@@ -166,15 +167,17 @@ export class InterpreterIc10 {
 		return this;
 	}
 
-	run() {
-		this.interval = setInterval(() => {
-			const why = this.prepareLine();
-			if (why !== true) {
-				this.settings.debugCallback.call(this, why, [])
-				clearInterval(this.interval)
-			}
-		}, this.settings.tickTime)
-		return this
+	async run() {
+		return new Promise((resolve) => {
+			this.interval = setInterval(() => {
+				const why = this.prepareLine();
+				if (why !== true) {
+					this.settings.debugCallback.call(this, why, [])
+					clearInterval(this.interval)
+				}
+			}, this.settings.tickTime)
+			resolve(this)
+		})
 	}
 
 	prepareLine(line = -1, isDebugger = false): string | true {
@@ -378,7 +381,6 @@ export class InterpreterIc10 {
 
 	j(op1: any) {
 		if (this.__issetLabel(op1)) {
-			// @ts-ignore
 			this.position = this.labels[op1]
 		} else {
 			const line = this.memory.cell(op1);
@@ -1033,9 +1035,9 @@ export class InterpreterIc10 {
 							try {
 								if (this.memory.getCell(keys[0]) instanceof MemoryCell) {
 									const cell = this.memory.getCell(arguments[argumentsKey])
-									if(cell instanceof MemoryCell) {
+									if (cell instanceof MemoryCell) {
 										out.push(key + ' = ' + cell.value + '; ')
-									}else{
+									} else {
 										out.push(key + ' = ' + cell + '; ')
 									}
 									continue

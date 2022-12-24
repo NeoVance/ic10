@@ -32,7 +32,9 @@ export declare class InterpreterIc10 {
     memory: Memory;
     position: number;
     interval: any;
-    labels: {};
+    labels: {
+        [key: string]: number;
+    };
     constants: {};
     output: {
         debug: string;
@@ -51,7 +53,7 @@ export declare class InterpreterIc10 {
     setSettings(settings?: object): InterpreterIc10;
     init(text: string): InterpreterIc10;
     stop(): InterpreterIc10;
-    run(): this;
+    run(): Promise<unknown>;
     prepareLine(line?: number, isDebugger?: boolean): string | true;
     __issetLabel(x: string): boolean;
     define(op1: any, op2: any, op3: any, op4: any): void;

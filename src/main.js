@@ -51,7 +51,7 @@ class InterpreterIc10 {
     memory;
     position = 0;
     interval;
-    labels;
+    labels = {};
     constants;
     output;
     settings;
@@ -150,15 +150,17 @@ class InterpreterIc10 {
         clearInterval(this.interval);
         return this;
     }
-    run() {
-        this.interval = setInterval(() => {
-            const why = this.prepareLine();
-            if (why !== true) {
-                this.settings.debugCallback.call(this, why, []);
-                clearInterval(this.interval);
-            }
-        }, this.settings.tickTime);
-        return this;
+    async run() {
+        return new Promise((resolve) => {
+            this.interval = setInterval(() => {
+                const why = this.prepareLine();
+                if (why !== true) {
+                    this.settings.debugCallback.call(this, why, []);
+                    clearInterval(this.interval);
+                }
+            }, this.settings.tickTime);
+            resolve(this);
+        });
     }
     prepareLine(line = -1, isDebugger = false) {
         if (line > 0) {
