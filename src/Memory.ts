@@ -163,7 +163,7 @@ export class Memory {
 			}
 			return this
 		}
-		throw Execution.error(this.#scope.position, 'Invalid alias value' + __filename)
+		throw Execution.error(this.#scope.position, 'Invalid alias value')
 	}
 
 	define(name: string, value: string | number) {

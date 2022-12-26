@@ -42,7 +42,7 @@ class Memory {
                     if (m1 !== false) {
                         return m1;
                     }
-                    throw main_1.Execution.error(this.#scope.position, 'Unknown cell ' + __filename, m1);
+                    throw main_1.Execution.error(this.#scope.position, 'Unknown cell', m1);
                 }
                 throw main_1.Execution.error(this.#scope.position, 'Syntax error');
             }
@@ -58,7 +58,7 @@ class Memory {
                     }
                 }
                 else {
-                    throw main_1.Execution.error(this.#scope.position, 'Unknown cell ' + __filename, cell);
+                    throw main_1.Execution.error(this.#scope.position, 'Unknown cell', cell);
                 }
             }
             if (main_1.regexes.d1.test(cell)) {
@@ -74,7 +74,7 @@ class Memory {
                     }
                 }
                 else {
-                    throw main_1.Execution.error(this.#scope.position, 'Unknown cell ' + __filename, cell);
+                    throw main_1.Execution.error(this.#scope.position, 'Unknown cell', cell);
                 }
             }
             if (cell in this.aliases) {
@@ -101,13 +101,13 @@ class Memory {
                     return this.aliases[cell].get(null);
                 }
                 else {
-                    throw main_1.Execution.error(this.#scope.position, 'Unknown cell ' + __filename, cell);
+                    throw main_1.Execution.error(this.#scope.position, 'Unknown cell', cell);
                 }
             }
             if (String(cell).trim().match(/[\d/.]+/)) {
                 return parseFloat(cell);
             }
-            throw main_1.Execution.error(this.#scope.position, 'Unknown cell ' + __filename, cell);
+            throw main_1.Execution.error(this.#scope.position, 'Unknown cell', cell);
         }
         return cell;
     }
@@ -125,7 +125,7 @@ class Memory {
                     if (m1) {
                         return m1;
                     }
-                    throw main_1.Execution.error(this.#scope.position, 'Unknown cell ' + __filename, m1);
+                    throw main_1.Execution.error(this.#scope.position, 'Unknown cell', m1);
                 }
                 throw main_1.Execution.error(this.#scope.position, 'Syntax error');
             }
@@ -144,16 +144,16 @@ class Memory {
                     return this.environ.get(cell);
                 }
                 else {
-                    throw main_1.Execution.error(this.#scope.position, 'Unknown cell ' + __filename, cell);
+                    throw main_1.Execution.error(this.#scope.position, 'Unknown cell', cell);
                 }
             }
             if (cell in this.aliases) {
                 return this.aliases[cell];
             }
-            throw main_1.Execution.error(this.#scope.position, 'Unknown cell ' + __filename, cell);
+            throw main_1.Execution.error(this.#scope.position, 'Unknown cell', cell);
         }
         if (cell >= 18)
-            throw main_1.Execution.error(this.#scope.position, 'Unknown cell ' + __filename, cell);
+            throw main_1.Execution.error(this.#scope.position, 'Unknown cell', cell);
         return this.cells[cell];
     }
     alias(name, link) {
@@ -165,7 +165,7 @@ class Memory {
             }
             return this;
         }
-        throw main_1.Execution.error(this.#scope.position, 'Invalid alias value' + __filename);
+        throw main_1.Execution.error(this.#scope.position, 'Invalid alias value');
     }
     define(name, value) {
         this.aliases[name] = new ConstantCell_1.ConstantCell(value, this.#scope, name);
