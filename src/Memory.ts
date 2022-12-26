@@ -42,7 +42,7 @@ export class Memory {
 					if (m1 !== false) {
 						return m1
 					}
-					throw Execution.error(this.#scope.position, 'Unknown cell ' + __filename, m1)
+					throw Execution.error(this.#scope.position, 'Unknown cell', m1)
 				}
 				throw Execution.error(this.#scope.position, 'Syntax error')
 
@@ -57,7 +57,7 @@ export class Memory {
 						return this.cells[index].set(null, this.cell(op1))
 					}
 				} else {
-					throw Execution.error(this.#scope.position, 'Unknown cell ' + __filename, cell)
+					throw Execution.error(this.#scope.position, 'Unknown cell', cell)
 				}
 			}
 			if (regexes.d1.test(cell)) {
@@ -71,7 +71,7 @@ export class Memory {
 						return this.environ.get(cell)?.get(op1)
 					}
 				} else {
-					throw Execution.error(this.#scope.position, 'Unknown cell ' + __filename, cell)
+					throw Execution.error(this.#scope.position, 'Unknown cell', cell)
 				}
 			}
 			if (cell in this.aliases) {
@@ -93,13 +93,13 @@ export class Memory {
 				} else if (this.aliases[cell] instanceof ConstantCell) {
 					return this.aliases[cell].get(null)
 				} else {
-					throw Execution.error(this.#scope.position, 'Unknown cell ' + __filename, cell)
+					throw Execution.error(this.#scope.position, 'Unknown cell', cell)
 				}
 			}
 			if (String(cell).trim().match(/[\d/.]+/)) {
 				return parseFloat(cell)
 			}
-			throw Execution.error(this.#scope.position, 'Unknown cell ' + __filename, cell)
+			throw Execution.error(this.#scope.position, 'Unknown cell', cell)
 		}
 		return cell
 	}
@@ -123,7 +123,7 @@ export class Memory {
 					if (m1) {
 						return m1
 					}
-					throw Execution.error(this.#scope.position, 'Unknown cell ' + __filename, m1)
+					throw Execution.error(this.#scope.position, 'Unknown cell', m1)
 				}
 				throw Execution.error(this.#scope.position, 'Syntax error')
 
@@ -142,15 +142,15 @@ export class Memory {
 				if (cell in this.environ) {
 					return this.environ.get(cell)
 				} else {
-					throw Execution.error(this.#scope.position, 'Unknown cell ' + __filename, cell)
+					throw Execution.error(this.#scope.position, 'Unknown cell', cell)
 				}
 			}
 			if (cell in this.aliases) {
 				return this.aliases[cell]
 			}
-			throw Execution.error(this.#scope.position, 'Unknown cell ' + __filename, cell)
+			throw Execution.error(this.#scope.position, 'Unknown cell', cell)
 		}
-		if (cell >= 18) throw Execution.error(this.#scope.position, 'Unknown cell ' + __filename, cell)
+		if (cell >= 18) throw Execution.error(this.#scope.position, 'Unknown cell', cell)
 		return this.cells[cell]
 	}
 
