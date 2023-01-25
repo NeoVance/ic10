@@ -851,13 +851,25 @@ class InterpreterIc10 {
             this.memory.cell(op1, 0);
         }
     }
-    _log() {
+    _debug(op1, op2, op3, op4) {
+        this._log(op1, op2, op3, op4);
+    }
+    _log(op1, op2, op3, op4) {
         const out = [];
         try {
             for (const argumentsKey in arguments) {
                 if (arguments.hasOwnProperty(argumentsKey)) {
                     let key = arguments[argumentsKey];
                     if (typeof key == 'string') {
+                        try {
+                            const o = this.memory.cell(key);
+                            if (o) {
+                                out.push(key + ' = ' + o + '; ');
+                                break;
+                            }
+                        }
+                        catch (e) {
+                        }
                         let keys = key.split('.');
                         try {
                             let cells = Object.keys(this.memory.cells);

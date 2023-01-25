@@ -187,7 +187,8 @@ export declare class InterpreterIc10 {
     or(op1: any, op2: any, op3: any, op4: any): void;
     xor(op1: any, op2: any, op3: any, op4: any): void;
     nor(op1: any, op2: any, op3: any, op4: any): void;
-    _log(): void;
+    _debug(op1: any, op2: any, op3: any, op4: any): void;
+    _log(op1: any, op2: any, op3: any, op4: any): void;
     _d0(op1: any): void;
     _d1(op1: any): void;
     _d2(op1: any): void;
