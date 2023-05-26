@@ -22,7 +22,7 @@ export class Device extends MemoryCell {
 		return this.#scope;
 	}
 
-	get(variable: any): Device | number | DeviceProperties | Slot[]  {
+	get(variable: any): Device | number | Slot[]  {
 		if (!variable) {
 			return this
 		}
@@ -45,7 +45,10 @@ export class Device extends MemoryCell {
 		return this as MemoryCell
 	}
 
-	getSlot(op1: string, op2 = null) {
+	getSlot(op1: string | number, op2: any = null) {
+        if (typeof op1 === "number")
+            op1 = String(op1)
+
 		if (op1 in this.properties.slots) {
 			const index = parseInt(op1);
 			if (op2) {

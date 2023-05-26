@@ -19,7 +19,6 @@ export var Execution = {
 	},
 	display: function (e: { code: any; message: any; lvl: any; obj: any; }) {
 		if (e instanceof ic10Error) {
-			// var string = `[${e.functionName}:${e.line}] (${e.code}) - ${e.message}:`
 			const string = `(${e.code}) - ${e.message}:`;
 			switch (e.lvl) {
 				case 0:
@@ -35,14 +34,12 @@ export var Execution = {
 				default:
 					console.log('LOG ' + string, e.obj)
 					break;
-
 			}
 			return string
 		} else {
 			console.log(e)
 			return e;
 		}
-
 	}
 }
 
@@ -116,7 +113,7 @@ export class InterpreterIc10 {
 		for (const commandsKey in this.lines) {
 			if (commands.hasOwnProperty(commandsKey)) {
 				let command                              = commands[commandsKey]
-				const newArgs: { [key: string]: string } = {};
+				const newArgs: Record<string, string> = {};
 				let mode                                 = 0;
 				let argNumber                            = 0;
 				for (let argsKey in command.args) {
@@ -184,7 +181,6 @@ export class InterpreterIc10 {
 		if (line > 0) {
 			this.position = line;
 		}
-		// this.memory.environ.randomize()
 		if (!(this.position in this.commands)) {
 			return 'end';
 		}
@@ -230,57 +226,62 @@ export class InterpreterIc10 {
 		return x in this.labels
 	}
 
-	define(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.define(op1, op2)
+	define(alias: string, value: number | string) {
+		this.memory.define(alias, value)
 	}
 
-	alias(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.alias(op1, op2)
+	alias(alias: string | number, target: string | number) {
+		this.memory.alias(alias, target)
 	}
 
-	l(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.memory.cell(op2, op3))
+	l(register: string, device: string, property: string) {
+        const r = this.memory.getRegister(register)
+        const value = this.memory.getDevice(device).get(property)
+        r.set(null, value)
 	}
 
-	__l(op1: any, op2: any, op3: any, op4: any) {
-		this.l(op1, op2, op3, op4)
+	__l(register: string, device: string, property: string) {
+		this.l(register, device, property)
 	}
 
-	ls(op1: any, op2: any, op3: any, op4: any) {
-		const d = this.memory.getCell(op2);
-		if (d instanceof Device) {
-			this.memory.cell(op1, d.getSlot(this.memory.cell(op3), op4))
-		} else {
-			throw Execution.error(this.position, 'Unknown Device', op2)
-		}
+	ls(register: string, device: string, slot: string, property: string) {
+        const r = this.memory.getRegister(register)
+        const d = this.memory.getDevice(device)
+        const value = d.getSlot(this.memory.getValue(slot), property)
+        r.set(null, value)
 	}
 
-	s(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, op2, op3)
+	s(device: string, property: string, value: string) {
+		const d = this.memory.getDevice(device)
+        d.set(property, this.memory.getValue(value))
 	}
 
-	__s(op1: any, op2: any, op3: any, op4: any) {
-		this.s(op1, op2, op3, op4)
+	__s(device: string, property: string, value: string) {
+		this.s(device, property, value)
 	}
 
-	move(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.memory.cell(op2))
+	move(register: string, value: string) {
+        const r = this.memory.getRegister(register)
+        r.set(null, this.memory.getValue(value))
 	}
 
-	__move(op1: any, op2: any, op3: any, op4: any) {
-		this.move(op1, op2, op3, op4)
+	__move(register: string, value: string) {
+		this.move(register, value)
 	}
 
-	add(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.memory.cell(op2) + this.memory.cell(op3))
+	add(register: string, a: string, b: string) {
+        const r = this.memory.getRegister(register)
+        r.set(null, this.memory.getValue(a) + this.memory.getValue(b))
 	}
 
-	sub(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.memory.cell(op2) - this.memory.cell(op3))
+	sub(register: string, a: string, b: string) {
+        const r = this.memory.getRegister(register)
+        r.set(null, this.memory.getValue(a) - this.memory.getValue(b))
 	}
 
-	mul(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.memory.cell(op2) * this.memory.cell(op3))
+	mul(register: string, a: string, b: string) {
+        const r = this.memory.getRegister(register)
+        r.set(null, this.memory.getValue(a) - this.memory.getValue(b))
 	}
 
 	div(op1: any, op2: any, op3: any, op4: any) {
@@ -956,6 +957,65 @@ export class InterpreterIc10 {
 			}
 		}
 	}
+
+    lbn(targetRegister: any, deviceHash: any, nameHash: any, property: any, batchMode: any) {
+        const values: number[] = [];
+        const hash   = this.memory.cell(deviceHash);
+        for (let i = 0; i <= 5; i++) {
+            const d: MemoryCell | MemoryStack | Device | number = this.memory.getCell('d' + i);
+            if (d instanceof Device) {
+                if (d.hash == hash) {
+                    values.push(d.get(property) as number)
+                }
+            }
+        }
+        if (values.length === 0) {
+            throw Execution.error(this.position, 'Can`t find Device wich hash:', hash)
+        }
+        let result = 0;
+        switch (batchMode) {
+            case 0:
+            case 'Average':
+                // @ts-ignore
+                result = values.reduce((partial_sum, a) => partial_sum + a, 0) / values.length
+                break;
+            case 1:
+            case 'Sum':
+                // @ts-ignore
+                result = values.reduce((partial_sum, a) => partial_sum + a, 0)
+                break;
+            case 2:
+            case 'Minimum':
+                // @ts-ignore
+                result = Math.min.apply(null, values)
+                break;
+            case 3:
+            case 'Maximum':
+                // @ts-ignore
+                result = Math.max.apply(null, values)
+                break;
+
+        }
+        this.memory.cell(targetRegister, Number(result))
+    }
+
+    sbn() {}
+
+    lbs() {}
+
+    lbns() {}
+
+    ss() {}
+
+    sbs() {}
+
+    snan() {}
+
+    snanz() {}
+
+    bnan() {}
+
+    brnan() {}
 
 	and(op1: any, op2: any, op3: any, op4: any) {
 		op2 = this.memory.cell(op2)

@@ -9,7 +9,7 @@ import {IntRange}                            from "./types";
 export class Memory {
 	public cells: Array<MemoryCell | MemoryStack>
 	public environ: Environ
-	public aliases: { [key: string]: MemoryCell | Device | ConstantCell }
+	public aliases: Record<string, MemoryCell | Device | ConstantCell>
 	readonly #scope: InterpreterIc10;
 
 	constructor(scope: InterpreterIc10) {
@@ -19,10 +19,11 @@ export class Memory {
 		this.aliases = {}
 
 		for (let i = 0; i < 18; i++) {
+            const n = `r${i}`
 			if (i === 16) {
-				this.cells[i] = new MemoryStack(scope, 'r' + i)
+				this.cells[i] = new MemoryStack(scope, n)
 			} else {
-				this.cells[i] = new MemoryCell(scope, 'r' + i)
+				this.cells[i] = new MemoryCell(scope, n)
 			}
 		}
 	}
@@ -31,7 +32,7 @@ export class Memory {
 		return null;
 	}
 
-	cell(cell: string | number, op1: any = null, op2: any = null): MemoryCell | any {
+	cell(cell: string | number, op1: any = null, op2: any = null): any {
 		if (typeof cell === "string") {
 			if (cell == 'sp') cell = 'r16'
 			if (cell == 'ra') cell = 'r17'
@@ -112,47 +113,124 @@ export class Memory {
 	getCell(cell: string | number): MemoryCell | MemoryStack | Device | number
 	getCell(cell: any): MemoryCell | MemoryStack | Device | number
 	getCell(cell: string | number): MemoryCell | MemoryStack | Device | number {
-		if (typeof cell === "string") {
-			if (cell == 'sp') return this.cells[16]
-			if (cell == 'ra') cell = 'r17'
-			if (regexes.rr1.test(cell)) {
-				let m = regexes.rr1.exec(cell)
-				if (m) {
-					const index = cell.replace(m[1], this.cell(m[1])) as `r${IntRange<0, 16>}`
-					let m1      = this.getCell(index)
-					if (m1) {
-						return m1
-					}
-					throw Execution.error(this.#scope.position, 'Unknown cell', m1)
-				}
-				throw Execution.error(this.#scope.position, 'Syntax error')
+        const reg = this.findRegister(cell)
 
-			}
-			if (regexes.r1.test(cell)) {
-				let m = regexes.r1.exec(cell)
-				if (m) {
-					const index: number = parseInt(m[1])
-					if (index in this.cells) {
-						return this.cells[index]
-					}
-				}
-				throw Execution.error(this.#scope.position, 'Syntax error')
-			}
-			if (regexes.d1.test(cell)) {
-				if (cell in this.environ) {
-					return this.environ.get(cell)
-				} else {
-					throw Execution.error(this.#scope.position, 'Unknown cell', cell)
-				}
-			}
-			if (cell in this.aliases) {
-				return this.aliases[cell]
-			}
-			throw Execution.error(this.#scope.position, 'Unknown cell', cell)
-		}
-		if (cell >= 18) throw Execution.error(this.#scope.position, 'Unknown cell', cell)
-		return this.cells[cell]
+        if (reg)
+            return reg
+
+        const device = this.findDevice(cell)
+
+        if (device)
+            return device
+
+		if (typeof cell === "string" && cell in this.aliases)
+            return this.aliases[cell]
+
+        throw Execution.error(this.#scope.position, 'Unknown cell', cell)
 	}
+
+    findRegister(name: string | number): MemoryCell | undefined {
+        const mapping: Record<string, string | undefined> = {
+            sp: "r16",
+            ra: "r17"
+        }
+
+        name = mapping[name] ?? name
+
+        if (typeof name === "string")
+        {
+            if (regexes.rr1.test(name)) {
+                let m = regexes.rr1.exec(name)
+
+                if (!m)
+                    throw Execution.error(this.#scope.position, 'Syntax error')
+
+                const index = name.replace(m[1], this.cell(m[1])) as `r${IntRange<0, 16>}`
+                let m1 = this.getCell(index)
+
+                if (!m1)
+                    throw Execution.error(this.#scope.position, 'Unknown cell', m1)
+
+                return m1
+            }
+            if (regexes.r1.test(name)) {
+                let m = regexes.r1.exec(name)
+
+                if (!m)
+                    throw Execution.error(this.#scope.position, 'Syntax error')
+
+                const index: number = parseInt(m[1])
+
+                if (index in this.cells)
+                    return this.cells[index]
+            }
+            if (name in this.aliases) {
+                const mem = this.aliases[name]
+
+                if (regexes.r1.test(mem.name))
+                    return mem
+            }
+
+            return undefined
+        }
+
+        if (name >= 18)
+            throw Execution.error(this.#scope.position, 'Unknown register', name)
+
+        return this.cells[name]
+    }
+
+    getRegister(name: string | number): MemoryCell {
+        const reg = this.findRegister(name)
+
+        if (!reg)
+            throw Execution.error(this.#scope.position, 'Not a register', name)
+
+        return reg
+    }
+
+    findDevice(name: string | number): Device | undefined {
+        if (typeof name === "number")
+            name = `d${name}`
+
+        if (regexes.d1.test(name))
+            return this.environ.get(name)
+
+        return undefined
+    }
+
+    getDevice(name: string | number): Device {
+        const device = this.findDevice(name)
+
+        if (!device)
+            throw Execution.error(this.#scope.position, 'Unknown device', name)
+
+        return device
+    }
+
+    findValue(value: string | number): number | undefined {
+        if (typeof value === "number")
+            return value
+
+        const v = this.aliases[value]
+
+        if (!v)
+            return undefined
+
+        if (typeof (v.value) !== "number")
+            return undefined
+
+        return v.value
+    }
+
+    getValue(value: string | number): number {
+        const v = this.findValue(value)
+
+        if (!v)
+            throw Execution.error(this.#scope.position, 'Unknown value', v)
+
+        return v
+    }
 
 	alias(name: string | number, link: string | number) {
 		const result = this.getCell(link)
@@ -167,6 +245,9 @@ export class Memory {
 	}
 
 	define(name: string, value: string | number) {
+        if (typeof value === "string")
+            value = parseInt(value)
+
 		this.aliases[name] = new ConstantCell(value, this.#scope, name)
 	}
 

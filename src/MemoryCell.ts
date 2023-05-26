@@ -6,7 +6,7 @@ import {Device}           from "./Device";
 export class MemoryCell {
 	public value: any
 	public name: string;
-	public alias:string|number|null =null;
+	public alias: string|number|null = null;
 	#scope: InterpreterIc10;
 
 	constructor(scope: InterpreterIc10, name: string) {
