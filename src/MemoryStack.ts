@@ -5,7 +5,7 @@ import {DeviceProperties}           from "./DeviceProperties";
 import {Slot}                       from "./Slot";
 
 export class MemoryStack extends MemoryCell {
-    declare value: number
+    declare public value: number
 	#scope: InterpreterIc10;
     readonly #stack: number[]
 
