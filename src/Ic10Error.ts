@@ -1,4 +1,4 @@
-export class ic10Error {
+export class Ic10Error extends Error {
 	public message: string;
 	public code: number;
 	public functionName: string;
@@ -8,7 +8,8 @@ export class ic10Error {
 	public obj: any;
 
 	constructor(caller: any, code: number, message: string, obj: any, lvl: number = 0) {
-		this.message      = message;
+        super(message);
+        this.message      = message;
 		this.code         = code;
 		this.obj          = obj;
 		this.lvl          = lvl;

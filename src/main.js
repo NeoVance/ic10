@@ -14,12 +14,18 @@ exports.regexes = {
     'strStart': new RegExp("^\".+$"),
     'strEnd': new RegExp(".+\"$"),
 };
+const modes = {
+    Average: 0,
+    Sum: 1,
+    Minimum: 2,
+    Maximum: 3
+};
 exports.Execution = {
     error(code, message, obj = null) {
-        return new ic10Error_1.ic10Error('--', code, message, obj, 0);
+        return new ic10Error_1.Ic10Error('--', code, message, obj, 0);
     },
     display: function (e) {
-        if (e instanceof ic10Error_1.ic10Error) {
+        if (e instanceof ic10Error_1.Ic10Error) {
             const string = `(${e.code}) - ${e.message}:`;
             switch (e.lvl) {
                 case 0:
@@ -106,31 +112,24 @@ class InterpreterIc10 {
                 for (let argsKey in command.args) {
                     if (command.args.hasOwnProperty(argsKey)) {
                         let arg = command.args[argsKey];
-                        if (arg.startsWith("#")) {
+                        if (arg.startsWith("#"))
                             break;
-                        }
-                        if (mode === 0) {
+                        if (mode === 0)
                             argNumber++;
-                        }
-                        if (exports.regexes.strStart.test(arg)) {
+                        if (exports.regexes.strStart.test(arg))
                             mode = 1;
-                        }
-                        if (argNumber in newArgs) {
+                        if (argNumber in newArgs)
                             newArgs[argNumber] += ' ' + arg;
-                        }
-                        else {
+                        else
                             newArgs[argNumber] = arg;
-                        }
-                        if (exports.regexes.strEnd.test(arg)) {
+                        if (exports.regexes.strEnd.test(arg))
                             mode = 0;
-                        }
                     }
                 }
                 commands[commandsKey].args = Object.values(newArgs);
             }
-            else {
+            else
                 commands.push({ command: '', args: [] });
-            }
         }
         this.commands = commands;
         this.position = 0;
@@ -163,7 +162,7 @@ class InterpreterIc10 {
         });
     }
     prepareLine(line = -1, isDebugger = false) {
-        if (line > 0) {
+        if (line >= 0) {
             this.position = line;
         }
         if (!(this.position in this.commands)) {
@@ -193,7 +192,10 @@ class InterpreterIc10 {
                 }
             }
             catch (e) {
-                this.settings.executionCallback.call(this, e);
+                if (e instanceof ic10Error_1.Ic10Error)
+                    this.settings.executionCallback.call(this, e);
+                else
+                    throw e;
             }
         }
         if (command === "hcf")
@@ -210,595 +212,510 @@ class InterpreterIc10 {
             return this.position < this.commands.length ? true : 'end';
         }
     }
+    runUntil(cond, maxIterations = 0) {
+        let status = true;
+        let n = 0;
+        do {
+            status = this.prepareLine();
+            n++;
+        } while (!cond(status) && (maxIterations <= 0 || n <= maxIterations));
+        return n;
+    }
     __issetLabel(x) {
         return x in this.labels;
     }
-    define(op1, op2, op3, op4) {
-        this.memory.define(op1, op2);
+    define(alias, value) {
+        this.memory.define(alias, value);
     }
-    alias(op1, op2, op3, op4) {
-        this.memory.alias(op1, op2);
+    alias(alias, target) {
+        this.memory.alias(alias, target);
     }
-    l(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.memory.cell(op2, op3));
+    l(register, device, property) {
+        const r = this.memory.getRegister(register);
+        const value = this.memory.getDevice(device).get(property);
+        r.set(null, value);
     }
-    __l(op1, op2, op3, op4) {
-        this.l(op1, op2, op3, op4);
+    __l(register, device, property) {
+        this.l(register, device, property);
     }
-    ls(op1, op2, op3, op4) {
-        const d = this.memory.getCell(op2);
-        if (d instanceof Device_1.Device) {
-            this.memory.cell(op1, d.getSlot(this.memory.cell(op3), op4));
-        }
-        else {
-            throw exports.Execution.error(this.position, 'Unknown Device', op2);
-        }
+    ls(register, device, slot, property) {
+        const r = this.memory.getRegister(register);
+        const d = this.memory.getDevice(device);
+        const value = d.getSlot(this.memory.getValue(slot), property);
+        r.set(null, value);
     }
-    s(op1, op2, op3, op4) {
-        this.memory.cell(op1, op2, op3);
+    s(device, property, value) {
+        const d = this.memory.getDevice(device);
+        d.set(property, this.memory.getValue(value));
     }
-    __s(op1, op2, op3, op4) {
-        this.s(op1, op2, op3, op4);
+    __s(device, property, value) {
+        this.s(device, property, value);
     }
-    move(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.memory.cell(op2));
+    __op(op, register, ...args) {
+        const r = this.memory.getRegister(register);
+        const inputs = args.map(v => this.memory.getValue(v));
+        r.set(null, op(...inputs));
     }
-    __move(op1, op2, op3, op4) {
-        this.move(op1, op2, op3, op4);
+    move(register, value) {
+        this.__op(v => v, register, value);
     }
-    add(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.memory.cell(op2) + this.memory.cell(op3));
+    __move(register, value) {
+        this.move(register, value);
     }
-    sub(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.memory.cell(op2) - this.memory.cell(op3));
+    add(register, a, b) {
+        this.__op((a, b) => a + b, register, a, b);
     }
-    mul(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.memory.cell(op2) * this.memory.cell(op3));
+    sub(register, a, b) {
+        this.__op((a, b) => a - b, register, a, b);
     }
-    div(op1, op2, op3, op4) {
-        const div = this.memory.cell(op2) / this.memory.cell(op3);
-        this.memory.cell(op1, Number(div) || 0);
+    mul(register, a, b) {
+        this.__op((a, b) => a * b, register, a, b);
     }
-    mod(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.abs(this.memory.cell(op2) % this.memory.cell(op3)));
+    div(register, a, b) {
+        this.__op((a, b) => Number(a / b) || 0, register, a, b);
     }
-    sqrt(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.sqrt(this.memory.cell(op2)));
+    mod(register, a, b) {
+        this.__op((a, b) => a % b, register, a, b);
     }
-    round(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.round(this.memory.cell(op2)));
+    sqrt(register, v) {
+        this.__op(Math.sqrt, register, v);
     }
-    trunc(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.trunc(this.memory.cell(op2)));
+    round(register, v) {
+        this.__op(Math.round, register, v);
     }
-    ceil(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.ceil(this.memory.cell(op2)));
+    trunc(register, v) {
+        this.__op(Math.trunc, register, v);
     }
-    floor(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.floor(this.memory.cell(op2)));
+    ceil(register, v) {
+        this.__op(Math.ceil, register, v);
     }
-    max(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.max(this.memory.cell(op2), this.memory.cell(op3)));
+    floor(register, v) {
+        this.__op(Math.floor, register, v);
     }
-    min(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.min(this.memory.cell(op2), this.memory.cell(op3)));
+    max(register, a, b) {
+        this.__op(Math.max, register, a, b);
     }
-    abs(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.abs(this.memory.cell(op2)));
+    minx(register, a, b) {
+        this.__op(Math.min, register, a, b);
     }
-    log(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.log(this.memory.cell(op2)));
+    abs(register, v) {
+        this.__op(Math.abs, register, v);
     }
-    exp(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.exp(this.memory.cell(op2)));
+    log(register, v) {
+        this.__op(Math.log, register, v);
     }
-    rand(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.random());
+    exp(register, v) {
+        this.__op(Math.exp, register, v);
     }
-    sin(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.sin(this.memory.cell(op2)));
+    rand(register, v) {
+        this.__op(_ => Math.random(), register, v);
     }
-    cos(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.cos(this.memory.cell(op2)));
+    sin(register, v) {
+        this.__op(Math.sin, register, v);
     }
-    tan(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.tan(this.memory.cell(op2)));
+    cos(register, v) {
+        this.__op(Math.cos, register, v);
     }
-    asin(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.asin(this.memory.cell(op2)));
+    tan(register, v) {
+        this.__op(Math.tan, register, v);
     }
-    acos(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.acos(this.memory.cell(op2)));
+    asin(register, v) {
+        this.__op(Math.asin, register, v);
     }
-    atan(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.atan(this.memory.cell(op2)));
+    acos(register, v) {
+        this.__op(Math.acos, register, v);
     }
-    atan2(op1, op2, op3, op4) {
-        this.memory.cell(op1, Math.atan2(this.memory.cell(op2), this.memory.cell(op3)));
+    atan(register, v) {
+        this.__op(Math.atan, register, v);
     }
-    yield(op1, op2, op3, op4) {
+    atan2(register, a, b) {
+        this.__op(Math.atan2, register, a, b);
     }
-    sleep(op1, op2, op3, op4) {
+    yield() {
     }
-    select(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.memory.cell(this.memory.cell(op2) ? this.memory.cell(op3) : this.memory.cell(op4)));
+    sleep(s) {
     }
-    hcf(op1, op2, op3, op4) {
-        console.log("Die Mother Fucker Die Mother Fucker Die !!!!!");
+    select(register, a, b, c) {
+        this.__op((a, b, c) => a ? b : c, register, a, b, c);
     }
-    j(op1) {
-        if (this.__issetLabel(op1)) {
-            this.position = this.labels[op1];
-        }
-        else {
-            const line = this.memory.cell(op1);
-            if (!isNaN(line)) {
-                this.position = line;
-            }
-            else {
-                throw exports.Execution.error(this.position, 'Undefined label', [op1, this.labels]);
-            }
-        }
+    hcf() {
+        console.log("Die Mother Fucker Die!!!!!");
     }
-    jr(op1) {
-        let jr = 0;
-        if (op1 > 0 || 0 > op1) {
-            jr = op1;
-        }
-        else {
-            throw exports.Execution.error(this.position, 'Can`t move on', op1);
-        }
-        this.position += jr;
-        this.position--;
+    __jump(line) {
+        this.position = line;
     }
-    jal(op1) {
-        this.memory.cell('r17', this.position);
-        this.j(op1);
+    __call(line) {
+        this.memory.getRegister("ra").set(null, this.position);
+        this.__jump(line);
     }
-    __eq(op1 = 0, op2 = 0) {
-        return Number(op1 == op2);
+    __getJumpTarget(target) {
+        if (this.__issetLabel(target))
+            return this.labels[target];
+        const line = this.memory.getValue(target);
+        if (isNaN(line))
+            throw exports.Execution.error(this.position, 'Incorrect jump target', [target, this.labels]);
+        return line;
     }
-    __ge(op1 = 0, op2 = 0) {
-        return Number(op1 >= op2);
+    j(target) {
+        this.__jump(this.__getJumpTarget(target));
     }
-    __gt(op1 = 0, op2 = 0) {
-        return Number(op1 > op2);
+    jr(offset) {
+        const d = this.memory.getValue(offset);
+        if (Math.abs(d) < 0.001)
+            throw exports.Execution.error(this.position, "Infinite loop detected", offset);
+        this.__jump(this.position + d - 1);
     }
-    __le(op1 = 0, op2 = 0) {
-        return Number(op1 <= op2);
+    jal(target) {
+        this.__call(this.__getJumpTarget(target));
     }
-    __lt(op1 = 0, op2 = 0) {
-        return Number(op1 < op2);
+    __eq(a, b = 0) {
+        return a == b;
     }
-    __ne(op1 = 0, op2 = 0) {
-        return Number(op1 != op2);
+    __ge(a, b = 0) {
+        return a >= b;
     }
-    __ap(op1 = 0, op2 = 0, op3 = 0, op4 = 0) {
-        return Number(!this.__na(...arguments));
+    __gt(a, b = 0) {
+        return a > b;
     }
-    __na(x = 0, y = 0, d = 0, op4 = 0) {
-        if (y == 0) {
-            return Number(d > 0);
-        }
-        return Number(Math.abs(x - y) > d * Math.max(Math.abs(x), Math.abs(y)));
-    }
-    __dse(op1 = 0, op2 = 0, op3 = 0, op4 = 0) {
-        try {
-            this.memory.getCell(op1);
-            return 1;
-        }
-        catch (e) {
-            return 0;
-        }
+    __le(a, b = 0) {
+        return a <= b;
     }
-    __dns(op1 = 0, op2 = 0, op3 = 0, op4 = 0) {
-        try {
-            this.memory.getCell(op1);
-            return 0;
-        }
-        catch (e) {
-            return 1;
-        }
+    __lt(a, b = 0) {
+        return a < b;
     }
-    seq(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__eq(this.memory.cell(op2), this.memory.cell(op3)));
+    __ne(a, b = 0) {
+        return a != b;
     }
-    seqz(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__eq(this.memory.cell(op2), 0));
+    __ap(x, y, c = 0) {
+        return !this.__na(x, y, c);
     }
-    sge(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__ge(this.memory.cell(op2), this.memory.cell(op3)));
+    __na(x, y, c = 0) {
+        return Math.abs(x - y) > c * Math.max(Math.abs(x), Math.abs(y));
     }
-    sgez(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__ge(this.memory.cell(op2), 0));
+    __dse(d) {
+        return this.memory.findDevice(d) !== undefined;
     }
-    sgt(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__gt(this.memory.cell(op2), this.memory.cell(op3)));
+    __dns(d) {
+        return !this.__dse(d);
     }
-    sgtz(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__gt(this.memory.cell(op2), 0));
+    __sOp(op, register, ...args) {
+        const r = this.memory.getRegister(register);
+        const inputs = args.map(v => this.memory.getValue(v));
+        r.set(null, op(...inputs) ? 1 : 0);
     }
-    sle(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__le(this.memory.cell(op2), this.memory.cell(op3)));
+    seq(register, a, b) {
+        this.__sOp(this.__eq.bind(this), register, a, b);
     }
-    slez(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__le(this.memory.cell(op2), 0));
+    seqz(register, a) {
+        this.__sOp(this.__eq.bind(this), register, a);
     }
-    slt(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__lt(this.memory.cell(op2), this.memory.cell(op3)));
+    sge(register, a, b) {
+        this.__sOp(this.__ge.bind(this), register, a, b);
     }
-    sltz(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__lt(this.memory.cell(op2), 0));
+    sgez(register, a) {
+        this.__sOp(this.__ge.bind(this), register, a);
     }
-    sne(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__ne(this.memory.cell(op2), this.memory.cell(op3)));
+    sgt(register, a, b) {
+        this.__sOp(this.__gt.bind(this), register, a, b);
     }
-    snez(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__ne(this.memory.cell(op2), 0));
+    sgtz(register, a) {
+        this.__sOp(this.__gt.bind(this), register, a);
     }
-    sap(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__ap(this.memory.cell(op2), this.memory.cell(op3)));
+    sle(register, a, b) {
+        this.__sOp(this.__le.bind(this), register, a, b);
     }
-    sapz(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__ap(this.memory.cell(op2), 0));
+    slez(register, a) {
+        this.__sOp(this.__le.bind(this), register, a);
     }
-    sna(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__na(this.memory.cell(op2), this.memory.cell(op3), this.memory.cell(op4)));
+    slt(register, a, b) {
+        this.__sOp(this.__lt.bind(this), register, a, b);
     }
-    snaz(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__na(this.memory.cell(op2), 0, this.memory.cell(op3)));
+    sltz(register, a) {
+        this.__sOp(this.__lt.bind(this), register, a);
     }
-    sdse(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__dse(op2));
+    sne(register, a, b) {
+        this.__sOp(this.__ne.bind(this), register, a, b);
     }
-    sdns(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.__dns(op2));
+    snez(register, a) {
+        this.__sOp(this.__ne.bind(this), register, a);
     }
-    beq(op1, op2, op3, op4) {
-        if (this.__eq(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.j(op3);
-        }
+    sap(register, x, y, c) {
+        this.__sOp(this.__ap.bind(this), register, x, y, c);
     }
-    beqz(op1, op2, op3, op4) {
-        if (this.__eq(this.memory.cell(op1), 0)) {
-            this.j(op2);
-        }
+    sapz(register, x, y) {
+        this.__sOp(this.__ap.bind(this), register, x, y);
     }
-    bge(op1, op2, op3, op4) {
-        if (this.__ge(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.j(op3);
-        }
+    sna(register, x, y, c) {
+        this.__sOp(this.__na.bind(this), register, x, y, c);
     }
-    bgez(op1, op2, op3, op4) {
-        if (this.__ge(this.memory.cell(op1), 0)) {
-            this.j(op2);
-        }
+    snaz(register, x, y) {
+        this.__sOp(this.__na.bind(this), register, x, y);
     }
-    bgt(op1, op2, op3, op4) {
-        if (this.__gt(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.j(op3);
-        }
+    sdse(register, d) {
+        this.memory.getRegister(register).set(null, Number(this.__dse(d)));
     }
-    bgtz(op1, op2, op3, op4) {
-        if (this.__gt(this.memory.cell(op1), 0)) {
-            this.j(op2);
-        }
+    sdns(register, d) {
+        this.memory.getRegister(register).set(null, Number(this.__dns(d)));
     }
-    ble(op1, op2, op3, op4) {
-        if (this.__le(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.j(op3);
-        }
+    __bOp(op, line, ...args) {
+        const inputs = args.map(v => this.memory.getValue(v));
+        if (!op(...inputs))
+            return;
+        this.j(line);
     }
-    blez(op1, op2, op3, op4) {
-        if (this.__le(this.memory.cell(op1), 0)) {
-            this.j(op2);
-        }
+    __bROp(op, offset, ...args) {
+        const inputs = args.map(v => this.memory.getValue(v));
+        if (!op(...inputs))
+            return;
+        this.jr(offset);
     }
-    blt(op1, op2, op3, op4) {
-        if (this.__lt(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.j(op3);
-        }
+    __bCOp(op, line, ...args) {
+        const inputs = args.map(v => this.memory.getValue(v));
+        if (!op(...inputs))
+            return;
+        this.jal(line);
     }
-    bltz(op1, op2, op3, op4) {
-        if (this.__lt(this.memory.cell(op1), 0)) {
-            this.j(op2);
-        }
+    beq(a, b, line) {
+        this.__bOp(this.__eq.bind(this), line, a, b);
     }
-    bne(op1, op2, op3, op4) {
-        if (this.__ne(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.j(op3);
-        }
+    beqz(a, line) {
+        this.__bOp(this.__eq.bind(this), line, a);
     }
-    bnez(op1, op2, op3, op4) {
-        if (this.__ne(this.memory.cell(op1), 0)) {
-            this.j(op2);
-        }
+    bge(a, b, line) {
+        this.__bOp(this.__ge.bind(this), line, a, b);
     }
-    bap(op1, op2, op3, op4) {
-        if (this.__ap(this.memory.cell(op1), this.memory.cell(op2), this.memory.cell(op3))) {
-            this.j(op4);
-        }
+    bgez(a, line) {
+        this.__bOp(this.__ge.bind(this), line, a);
     }
-    bapz(op1, op2, op3, op4) {
-        if (this.__ap(this.memory.cell(op1), 0, this.memory.cell(op2))) {
-            this.j(op3);
-        }
+    bgt(a, b, line) {
+        this.__bOp(this.__gt.bind(this), line, a, b);
     }
-    bna(op1, op2, op3, op4) {
-        if (this.__na(this.memory.cell(op1), this.memory.cell(op2), this.memory.cell(op3))) {
-            this.j(op4);
-        }
+    bgtz(a, line) {
+        this.__bOp(this.__gt.bind(this), line, a);
     }
-    bnaz(op1, op2, op3, op4) {
-        if (this.__na(this.memory.cell(op1), 0, this.memory.cell(op2))) {
-            this.j(op3);
-        }
+    ble(a, b, line) {
+        this.__bOp(this.__le.bind(this), line, a, b);
     }
-    bdse(op1, op2, op3, op4) {
-        if (this.__dse(op2)) {
-            this.j(op3);
-        }
+    blez(a, line) {
+        this.__bOp(this.__le.bind(this), line, a);
     }
-    bdns(op1, op2, op3, op4) {
-        if (this.__dns(op2)) {
-            this.j(op3);
-        }
+    blt(a, b, line) {
+        this.__bOp(this.__lt.bind(this), line, a, b);
     }
-    breq(op1, op2, op3, op4) {
-        if (this.__eq(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.jr(op3);
-        }
+    bltz(a, line) {
+        this.__bOp(this.__lt.bind(this), line, a);
     }
-    breqz(op1, op2, op3, op4) {
-        if (this.__eq(this.memory.cell(op1))) {
-            this.jr(op2);
-        }
+    bne(a, b, line) {
+        this.__bOp(this.__ne.bind(this), line, a, b);
     }
-    brge(op1, op2, op3, op4) {
-        if (this.__ge(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.jr(op3);
-        }
+    bnez(a, line) {
+        this.__bOp(this.__ne.bind(this), line, a);
     }
-    brgez(op1, op2, op3, op4) {
-        if (this.__ge(this.memory.cell(op1), 0)) {
-            this.jr(op2);
-        }
+    bap(x, y, c, line) {
+        this.__bOp(this.__ap.bind(this), line, x, y, c);
     }
-    brgt(op1, op2, op3, op4) {
-        if (this.__gt(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.jr(op3);
-        }
+    bapz(x, y, line) {
+        this.__bOp(this.__ap.bind(this), line, x, y);
     }
-    brgtz(op1, op2, op3, op4) {
-        if (this.__gt(this.memory.cell(op1), 0)) {
-            this.jr(op2);
-        }
+    bna(x, y, c, line) {
+        this.__bOp(this.__na.bind(this), line, x, y, c);
     }
-    brle(op1, op2, op3, op4) {
-        if (this.__le(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.jr(op3);
-        }
+    bnaz(x, y, line) {
+        this.__bOp(this.__na.bind(this), line, x, y);
     }
-    brlez(op1, op2, op3, op4) {
-        if (this.__le(this.memory.cell(op1), 0)) {
-            this.jr(op2);
-        }
+    bdse(d, line) {
+        if (this.__dse(d))
+            this.j(line);
     }
-    brlt(op1, op2, op3, op4) {
-        if (this.__lt(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.jr(op3);
-        }
+    bdns(d, line) {
+        if (this.__dns(d))
+            this.j(line);
     }
-    brltz(op1, op2, op3, op4) {
-        if (this.__lt(this.memory.cell(op1), 0)) {
-            this.jr(op2);
-        }
+    breq(a, b, offset) {
+        this.__bROp(this.__eq.bind(this), offset, a, b);
     }
-    brne(op1, op2, op3, op4) {
-        if (this.__ne(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.jr(op3);
-        }
+    breqz(a, offset) {
+        this.__bROp(this.__eq.bind(this), offset, a);
     }
-    brnez(op1, op2, op3, op4) {
-        if (this.__ne(this.memory.cell(op1), 0)) {
-            this.jr(op2);
-        }
+    brge(a, b, offset) {
+        this.__bROp(this.__ge.bind(this), offset, a);
     }
-    brap(op1, op2, op3, op4) {
-        if (this.__ap(this.memory.cell(op1), this.memory.cell(op2), this.memory.cell(op3))) {
-            this.jr(op4);
-        }
+    brgez(a, offset) {
+        this.__bROp(this.__ge.bind(this), offset, a);
     }
-    brapz(op1, op2, op3, op4) {
-        if (this.__ap(this.memory.cell(op1), 0, this.memory.cell(op2))) {
-            this.jr(op3);
-        }
+    brgt(a, b, offset) {
+        this.__bROp(this.__gt.bind(this), offset, a, b);
     }
-    brna(op1, op2, op3, op4) {
-        if (this.__na(this.memory.cell(op1), this.memory.cell(op2), this.memory.cell(op3))) {
-            this.jr(op4);
-        }
+    brgtz(a, offset) {
+        this.__bROp(this.__gt.bind(this), offset, a);
     }
-    brnaz(op1, op2, op3, op4) {
-        if (this.__na(this.memory.cell(op1), 0, this.memory.cell(op2))) {
-            this.jr(op3);
-        }
+    brle(a, b, offset) {
+        this.__bROp(this.__le.bind(this), offset, a, b);
     }
-    brdse(op1, op2, op3, op4) {
-        if (this.__dse(op2)) {
-            this.jr(op3);
-        }
+    brlez(a, offset) {
+        this.__bROp(this.__le.bind(this), offset, a);
     }
-    brdns(op1, op2, op3, op4) {
-        if (this.__dns(op2)) {
-            this.jr(op3);
-        }
+    brlt(a, b, offset) {
+        this.__bROp(this.__lt.bind(this), offset, a, b);
     }
-    beqal(op1, op2, op3, op4) {
-        if (this.__eq(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.jal(op3);
-        }
+    brltz(a, offset) {
+        this.__bROp(this.__lt.bind(this), offset, a);
     }
-    beqzal(op1, op2, op3, op4) {
-        if (this.__eq(this.memory.cell(op1), 0)) {
-            this.jal(op2);
-        }
+    brne(a, b, offset) {
+        this.__bROp(this.__ne.bind(this), offset, a, b);
     }
-    bgeal(op1, op2, op3, op4) {
-        if (this.__ge(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.jal(op3);
-        }
+    brnez(a, offset) {
+        this.__bROp(this.__ne.bind(this), offset, a);
     }
-    bgezal(op1, op2, op3, op4) {
-        if (this.__ge(this.memory.cell(op1), 0)) {
-            this.jal(op2);
-        }
+    brap(x, y, c, offset) {
+        this.__bROp(this.__ap.bind(this), offset, x, y, c);
     }
-    bgtal(op1, op2, op3, op4) {
-        if (this.__gt(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.jal(op3);
-        }
+    brapz(x, y, offset) {
+        this.__bROp(this.__ap.bind(this), offset, x, y);
     }
-    bgtzal(op1, op2, op3, op4) {
-        if (this.__gt(this.memory.cell(op1), 0)) {
-            this.jal(op2);
-        }
+    brna(x, y, c, offset) {
+        this.__bROp(this.__na.bind(this), offset, x, y, c);
     }
-    bleal(op1, op2, op3, op4) {
-        if (this.__le(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.jal(op3);
-        }
+    brnaz(x, y, offset) {
+        this.__bROp(this.__ap.bind(this), offset, x, y);
     }
-    blezal(op1, op2, op3, op4) {
-        if (this.__le(this.memory.cell(op1), 0)) {
-            this.jal(op2);
+    brdse(d, offset) {
+        if (this.__dse(d)) {
+            this.jr(offset);
         }
     }
-    bltal(op1, op2, op3, op4) {
-        if (this.__lt(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.jal(op3);
+    brdns(d, offset) {
+        if (this.__dns(d)) {
+            this.jr(offset);
         }
     }
-    bltzal(op1, op2, op3, op4) {
-        if (this.__lt(this.memory.cell(op1), 0)) {
-            this.jal(op2);
-        }
+    beqal(a, b, line) {
+        this.__bCOp(this.__eq.bind(this), line, a, b);
     }
-    bneal(op1, op2, op3, op4) {
-        if (this.__ne(this.memory.cell(op1), this.memory.cell(op2))) {
-            this.jal(op3);
-        }
+    beqzal(a, line) {
+        this.__bCOp(this.__eq.bind(this), line, a);
     }
-    bnezal(op1, op2, op3, op4) {
-        if (this.__ne(this.memory.cell(op1), 0)) {
-            this.jal(op2);
-        }
+    bgeal(a, b, line) {
+        this.__bCOp(this.__ge.bind(this), line, a, b);
     }
-    bapal(op1, op2, op3, op4) {
-        if (this.__ap(this.memory.cell(op1), this.memory.cell(op2), this.memory.cell(op3))) {
-            this.jal(op4);
-        }
+    bgezal(a, line) {
+        this.__bCOp(this.__ge.bind(this), line, a);
     }
-    bapzal(op1, op2, op3, op4) {
-        if (this.__ap(this.memory.cell(op1), 0) && this.memory.cell(op2)) {
-            this.jal(op3);
-        }
+    bgtal(a, b, line) {
+        this.__bCOp(this.__gt.bind(this), line, a, b);
     }
-    bnaal(op1, op2, op3, op4) {
-        if (this.__na(this.memory.cell(op1), this.memory.cell(op2), this.memory.cell(op3))) {
-            this.jal(op4);
-        }
+    bgtzal(a, line) {
+        this.__bCOp(this.__gt.bind(this), line, a);
     }
-    bnazal(op1, op2, op3, op4) {
-        if (this.__na(this.memory.cell(op1), 0, this.memory.cell(op2))) {
-            this.jal(op3);
-        }
+    bleal(a, b, line) {
+        this.__bCOp(this.__le.bind(this), line, a, b);
+    }
+    blezal(a, line) {
+        this.__bCOp(this.__le.bind(this), line, a);
+    }
+    bltal(a, b, line) {
+        this.__bCOp(this.__lt.bind(this), line, a, b);
+    }
+    bltzal(a, line) {
+        this.__bCOp(this.__lt.bind(this), line, a);
+    }
+    bneal(a, b, line) {
+        this.__bCOp(this.__ne.bind(this), line, a, b);
+    }
+    bnezal(a, line) {
+        this.__bCOp(this.__ne.bind(this), line, a);
+    }
+    bapal(x, y, c, line) {
+        this.__bCOp(this.__ap.bind(this), line, x, y, c);
+    }
+    bapzal(x, y, line) {
+        this.__bCOp(this.__ap.bind(this), line, x, y);
+    }
+    bnaal(x, y, c, line) {
+        this.__bCOp(this.__na.bind(this), line, x, y, c);
+    }
+    bnazal(x, y, line) {
+        this.__bCOp(this.__na.bind(this), line, x, y);
     }
-    bdseal(op1, op2, op3, op4) {
-        if (this.__dse(op2)) {
-            this.jal(op3);
+    bdseal(d, line) {
+        if (this.__dse(d)) {
+            this.jal(line);
         }
     }
-    bdnsal(op1, op2, op3, op4) {
-        if (this.__dns(op2)) {
-            this.jal(op3);
+    bdnsal(d, line) {
+        if (this.__dns(d)) {
+            this.jal(line);
         }
     }
-    push(op1, op2, op3, op4) {
-        this.memory.getCell('r16').push(op1);
+    push(a) {
+        this.memory.stack.push(this.memory.getValue(a));
     }
-    pop(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.memory.getCell('r16').pop());
+    pop(register) {
+        this.memory.getRegister(register).set(null, this.memory.stack.pop());
     }
-    peek(op1, op2, op3, op4) {
-        this.memory.cell(op1, this.memory.getCell('r16').peek());
+    peek(register) {
+        this.memory.getRegister(register).set(null, this.memory.stack.peek());
     }
-    lb(op1, op2, op3, op4) {
+    lb(register, deviceHash, property, mode) {
         const values = [];
-        const hash = this.memory.cell(op2);
+        const hash = this.memory.getValue(deviceHash);
         for (let i = 0; i <= 5; i++) {
-            const d = this.memory.getCell('d' + i);
-            if (d instanceof Device_1.Device) {
-                if (d.hash == hash) {
-                    values.push(d.get(op3));
-                }
+            const d = this.memory.getDevice('d' + i);
+            if (d.hash == hash) {
+                values.push(d.get(property));
             }
         }
         if (values.length === 0) {
             throw exports.Execution.error(this.position, 'Can`t find Device wich hash:', hash);
         }
         let result = 0;
-        switch (op4) {
-            case 0:
-            case 'Average':
+        const modeMapping = modes;
+        const m = modeMapping[mode] ?? this.memory.getValue(mode);
+        switch (m) {
+            case modes.Average:
                 result = values.reduce((partial_sum, a) => partial_sum + a, 0) / values.length;
                 break;
-            case 1:
-            case 'Sum':
+            case modes.Sum:
                 result = values.reduce((partial_sum, a) => partial_sum + a, 0);
                 break;
-            case 2:
-            case 'Minimum':
+            case modes.Minimum:
                 result = Math.min.apply(null, values);
                 break;
-            case 3:
-            case 'Maximum':
+            case modes.Maximum:
                 result = Math.max.apply(null, values);
                 break;
         }
-        this.memory.cell(op1, Number(result));
+        this.memory.getRegister(register).set(null, Number(result));
     }
-    lr(op1, op2, op3, op4) {
+    lr(register, device, mode, op4) {
         const values = [];
-        const d = this.memory.getCell(op2);
-        if (d instanceof Device_1.Device) {
-            for (const slotsKey in d.properties.slots) {
-                if (d.properties.slots[slotsKey] instanceof Slot_1.Slot) {
-                    const slot = d.properties.slots[slotsKey];
-                    values.push(slot.get(op4));
-                }
+        const d = this.memory.getDevice(device);
+        for (const slotsKey in d.properties.slots) {
+            if (d.properties.slots[slotsKey] instanceof Slot_1.Slot) {
+                const slot = d.properties.slots[slotsKey];
+                values.push(slot.get(op4));
             }
         }
         let result = 0;
-        switch (op3) {
-            case 0:
-            case 'Average':
+        const modeMapping = modes;
+        const m = modeMapping[mode] ?? this.memory.getValue(mode);
+        switch (m) {
+            case modes.Average:
                 result = values.reduce((partial_sum, a) => partial_sum + a, 0) / values.length;
                 break;
-            case 1:
-            case 'Sum':
+            case modes.Sum:
                 result = values.reduce((partial_sum, a) => partial_sum + a, 0);
                 break;
             case 2:
-            case 'Minimum':
+            case modes.Minimum:
                 result = Math.min.apply(null, values);
                 break;
             case 3:
-            case 'Maximum':
+            case modes.Maximum:
                 result = Math.max.apply(null, values);
                 break;
         }
-        this.memory.cell(op1, result);
+        this.memory.getRegister(register).set(null, result);
     }
     sb(op1, op2, op3, op4) {
         const hash = this.memory.cell(op1);
@@ -811,115 +728,122 @@ class InterpreterIc10 {
             }
         }
     }
-    and(op1, op2, op3, op4) {
-        op2 = this.memory.cell(op2);
-        op3 = this.memory.cell(op3);
-        if (op2 && op3) {
-            this.memory.cell(op1, 1);
+    lbn(targetRegister, deviceHash, nameHash, property, batchMode) {
+        const values = [];
+        const hash = this.memory.cell(deviceHash);
+        for (let i = 0; i <= 5; i++) {
+            const d = this.memory.getCell('d' + i);
+            if (d instanceof Device_1.Device) {
+                if (d.hash == hash) {
+                    values.push(d.get(property));
+                }
+            }
         }
-        else {
-            this.memory.cell(op1, 0);
+        if (values.length === 0) {
+            throw exports.Execution.error(this.position, 'Can`t find Device wich hash:', hash);
         }
+        let result = 0;
+        switch (batchMode) {
+            case 0:
+            case 'Average':
+                result = values.reduce((partial_sum, a) => partial_sum + a, 0) / values.length;
+                break;
+            case 1:
+            case 'Sum':
+                result = values.reduce((partial_sum, a) => partial_sum + a, 0);
+                break;
+            case 2:
+            case 'Minimum':
+                result = Math.min.apply(null, values);
+                break;
+            case 3:
+            case 'Maximum':
+                result = Math.max.apply(null, values);
+                break;
+        }
+        this.memory.cell(targetRegister, Number(result));
     }
-    or(op1, op2, op3, op4) {
-        op2 = this.memory.cell(op2);
-        op3 = this.memory.cell(op3);
-        if (op2 || op3) {
-            this.memory.cell(op1, 1);
-        }
-        else {
-            this.memory.cell(op1, 0);
-        }
+    sbn() { }
+    lbs() { }
+    lbns() { }
+    ss() { }
+    sbs() { }
+    snan() { }
+    snanz() { }
+    bnan() { }
+    brnan() { }
+    and(register, a, b) {
+        this.__op((a, b) => a && b, register, a, b);
     }
-    xor(op1, op2, op3, op4) {
-        op2 = Boolean(this.memory.cell(op2));
-        op3 = Boolean(this.memory.cell(op3));
-        if ((op2 && !op3) || (!op2 && op3)) {
-            this.memory.cell(op1, 1);
-        }
-        else {
-            this.memory.cell(op1, 0);
-        }
+    or(register, a, b) {
+        this.__op((a, b) => a || b, register, a, b);
     }
-    nor(op1, op2, op3, op4) {
-        op2 = Boolean(this.memory.cell(op2));
-        op3 = Boolean(this.memory.cell(op3));
-        if (!op2 && !op3) {
-            this.memory.cell(op1, 1);
-        }
-        else {
-            this.memory.cell(op1, 0);
-        }
+    xor(register, a, b) {
+        this.__op((a, b) => a ^ b, register, a, b);
     }
-    _debug(op1, op2, op3, op4) {
-        this._log(op1, op2, op3, op4);
+    nor(register, a, b) {
+        this.__op((a, b) => Number(!(a || b)), register, a, b);
     }
-    _log(op1, op2, op3, op4) {
+    _debug(...args) {
+        this._log(...args);
+    }
+    _log(...args) {
         const out = [];
         try {
-            for (const argumentsKey in arguments) {
-                if (arguments.hasOwnProperty(argumentsKey)) {
-                    let key = arguments[argumentsKey];
-                    if (typeof key == 'string') {
-                        try {
-                            const o = this.memory.cell(key);
-                            if (o) {
-                                out.push(key + ' = ' + o + '; ');
-                                break;
+            for (const argumentsKey in args) {
+                if (args.hasOwnProperty(argumentsKey)) {
+                    let key = args[argumentsKey];
+                    try {
+                        const o = this.memory.cell(key);
+                        if (o) {
+                            out.push(key + ' = ' + o + '; ');
+                            break;
+                        }
+                    }
+                    catch (e) {
+                    }
+                    let keys = key.split('.');
+                    try {
+                        let cells = Object.keys(this.memory.cells);
+                        let environ = Object.keys(this.memory.environ);
+                        let aliases = Object.keys(this.memory.aliases);
+                        if (environ.indexOf(keys[0]) >= 0) {
+                            if (keys[0] == key) {
+                                out.push(key + ' = ' + JSON.stringify(this.memory.environ[key].properties) + '; ');
                             }
+                            else {
+                                switch (keys.length) {
+                                    case 2:
+                                        out.push(key + ' = ' + this.memory.environ[keys[0]].get(keys[1]) + '; ');
+                                        break;
+                                    case 3:
+                                        out.push(key + ' = ' + JSON.stringify(this.memory.environ[keys[0]].getSlot(keys[1])) + '; ');
+                                        break;
+                                    case 4:
+                                        out.push(key + ' = ' + this.memory.environ[keys[0]].getSlot(keys[2], keys[3]) + '; ');
+                                        break;
+                                }
+                            }
+                            continue;
                         }
-                        catch (e) {
-                        }
-                        let keys = key.split('.');
                         try {
-                            let cells = Object.keys(this.memory.cells);
-                            let environ = Object.keys(this.memory.environ);
-                            let aliases = Object.keys(this.memory.aliases);
-                            if (environ.indexOf(keys[0]) >= 0) {
-                                if (keys[0] == key) {
-                                    out.push(key + ' = ' + JSON.stringify(this.memory.environ[key].properties) + '; ');
+                            if (this.memory.getCell(keys[0]) instanceof MemoryCell_1.MemoryCell) {
+                                const cell = this.memory.getCell(arguments[argumentsKey]);
+                                if (cell instanceof MemoryCell_1.MemoryCell) {
+                                    out.push(key + ' = ' + cell.value + '; ');
                                 }
                                 else {
-                                    switch (keys.length) {
-                                        case 2:
-                                            out.push(key + ' = ' + this.memory.environ[keys[0]].get(keys[1]) + '; ');
-                                            break;
-                                        case 3:
-                                            out.push(key + ' = ' + JSON.stringify(this.memory.environ[keys[0]].getSlot(keys[1])) + '; ');
-                                            break;
-                                        case 4:
-                                            out.push(key + ' = ' + this.memory.environ[keys[0]].getSlot(keys[2], keys[3]) + '; ');
-                                            break;
-                                    }
+                                    out.push(key + ' = ' + cell + '; ');
                                 }
                                 continue;
                             }
-                            try {
-                                if (this.memory.getCell(keys[0]) instanceof MemoryCell_1.MemoryCell) {
-                                    const cell = this.memory.getCell(arguments[argumentsKey]);
-                                    if (cell instanceof MemoryCell_1.MemoryCell) {
-                                        out.push(key + ' = ' + cell.value + '; ');
-                                    }
-                                    else {
-                                        out.push(key + ' = ' + cell + '; ');
-                                    }
-                                    continue;
-                                }
-                            }
-                            catch (e) {
-                            }
-                            out.push(key + '; ');
                         }
                         catch (e) {
-                            out.push(key + ' ' + e.message + '; ');
                         }
+                        out.push(key + '; ');
                     }
-                    else {
-                        try {
-                            out.push(key + '; ');
-                        }
-                        catch (e) {
-                        }
+                    catch (e) {
+                        out.push(key + ' ' + e.message + '; ');
                     }
                 }
             }

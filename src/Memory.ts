@@ -4,10 +4,11 @@ import {MemoryCell}                          from "./MemoryCell";
 import {MemoryStack}                         from "./MemoryStack";
 import {Device}                              from "./Device";
 import {ConstantCell}                        from "./ConstantCell";
-import {IntRange}                            from "./types";
+import {patterns} from "./Utils";
 
 export class Memory {
 	public cells: Array<MemoryCell | MemoryStack>
+    public stack: MemoryStack
 	public environ: Environ
 	public aliases: Record<string, MemoryCell | Device | ConstantCell>
 	readonly #scope: InterpreterIc10;
@@ -16,20 +17,22 @@ export class Memory {
 		this.#scope  = scope;
 		this.cells   = new Array<MemoryCell>(18)
 		this.environ = new Environ(scope)
+        this.stack = new MemoryStack(scope, 512, "r16")
 		this.aliases = {}
 
 		for (let i = 0; i < 18; i++) {
             const n = `r${i}`
 			if (i === 16) {
-				this.cells[i] = new MemoryStack(scope, n)
+				this.cells[i] = this.stack
 			} else {
 				this.cells[i] = new MemoryCell(scope, n)
 			}
+            this.cells[i].value = 0
 		}
 	}
 
 	get scope(): InterpreterIc10 | null {
-		return null;
+		return this.#scope;
 	}
 
 	cell(cell: string | number, op1: any = null, op2: any = null): any {
@@ -105,9 +108,6 @@ export class Memory {
 		return cell
 	}
 
-	getCell(cell: 'sp'): MemoryStack
-	getCell(cell: 'r16'): MemoryStack
-	getCell(cell: string | number): MemoryCell | MemoryStack | Device | number
 	getCell(cell: string | number): MemoryCell | MemoryStack | Device | number {
         const reg = this.findRegister(cell)
 
@@ -135,36 +135,33 @@ export class Memory {
 
         if (typeof name === "string")
         {
-            // TODO: was this needed?
-            // if (regexes.rr1.test(name)) {
-            //     let m = regexes.rr1.exec(name)
-            //
-            //     if (!m)
-            //         throw Execution.error(this.#scope.position, 'Syntax error')
-            //
-            //     const index = name.replace(m[1], this.cell(m[1])) as `r${IntRange<0, 16>}`
-            //     let m1 = this.getRegister(index)
-            //
-            //     if (!m1)
-            //         throw Execution.error(this.#scope.position, 'Unknown register', m1)
-            //
-            //     return m1
-            // }
-            if (regexes.r1.test(name)) {
-                let m = regexes.r1.exec(name)
+            if (patterns.reg.test(name)) {
+                let m = patterns.reg.exec(name)
 
                 if (!m)
                     throw Execution.error(this.#scope.position, 'Syntax error')
 
-                const index: number = parseInt(m[1])
+                const prefix = m.groups?.prefix ?? ""
+                const indexStr = m.groups?.index ?? "none"
 
-                if (index in this.cells)
-                    return this.cells[index]
+                const index: number = parseInt(indexStr)
+
+                let cell = this.cells[index]
+                for (let i = 0; i<prefix.length; ++i) {
+                    cell = this.cells[cell.value]
+
+                    if (cell === undefined)
+                        break
+                }
+
+                if (cell !== undefined)
+                    return cell
             }
+
             if (name in this.aliases) {
                 const mem = this.aliases[name]
 
-                if (regexes.r1.test(mem.name))
+                if (patterns.reg.test(mem.name))
                     return mem
             }
 
@@ -190,8 +187,30 @@ export class Memory {
         if (typeof name === "number")
             name = `d${name}`
 
-        if (regexes.d1.test(name))
+        if (patterns.dev.test(name))
             return this.environ.get(name)
+
+        if (patterns.recDev.test(name))
+        {
+            const m = patterns.recDev.exec(name)
+
+            if (!m)
+                throw Execution.error(this.#scope.position, 'Syntax error')
+
+            const prefix = (m.groups?.prefix ?? "")
+            const indexStr = m.groups?.index ?? "none"
+
+            const index = this.getRegister(`${prefix}${indexStr}`).value
+
+            return this.environ.get(`d${index}`)
+        }
+
+        if (name in this.aliases) {
+            const mem = this.aliases[name]
+
+            if (patterns.dev.test(mem.name))
+                return mem as Device
+        }
 
         return undefined
     }
@@ -209,10 +228,21 @@ export class Memory {
         if (typeof value === "number")
             return value
 
+        const n = Number(value)
+        if (!isNaN(n))
+            return n
+
         const v = this.aliases[value]
 
         if (!v)
+        {
+            const r = this.findRegister(value)
+
+            if (r)
+                return r.value
+
             return undefined
+        }
 
         if (typeof (v.value) !== "number")
             return undefined
@@ -223,7 +253,7 @@ export class Memory {
     getValue(value: string | number): number {
         const v = this.findValue(value)
 
-        if (!v)
+        if (v === undefined)
             throw Execution.error(this.#scope.position, 'Unknown value', v)
 
         return v

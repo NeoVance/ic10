@@ -1,5 +1,5 @@
 import fs              from "fs";
-import {ic10Error}                  from "./src/ic10Error";
+import {Ic10Error}                  from "./src/ic10Error";
 import InterpreterIc10, {Execution} from "./src/main";
 
 const code     = fs.readFileSync(".ic10", "utf8");
@@ -11,7 +11,7 @@ const settings = {
   logCallback      : function () {
     console.log(...arguments)
   },
-  executionCallback: function (e: ic10Error) {
+  executionCallback: function (e: Ic10Error) {
     Execution.display(e)
   },
 };

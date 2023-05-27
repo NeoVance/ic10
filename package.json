@@ -6,7 +6,7 @@
   "main": "src/main.js",
   "scripts": {
     "watch": "tsc -w",
-    "test": "node test.js",
+    "test": "jest",
     "nodemon": "nodemon test.js"
   },
   "repository": {

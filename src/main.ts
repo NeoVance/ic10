@@ -1,12 +1,9 @@
-import {ic10Error}   from "./ic10Error";
+import {Ic10Error}   from "./ic10Error";
 import {Memory}      from "./Memory";
 import {Device}      from "./Device";
 import {Slot}        from "./Slot";
 import {MemoryCell}  from "./MemoryCell";
 import {MemoryStack} from "./MemoryStack";
-import {Tuple} from "./types";
-
-type CmdArgs<N extends number> = Tuple<string, N>
 
 export const regexes = {
 	'rr1'     : new RegExp("[rd]+(r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a))$"),
@@ -16,12 +13,22 @@ export const regexes = {
 	'strStart': new RegExp("^\".+$"),
 	'strEnd'  : new RegExp(".+\"$"),
 }
+
+const modes = {
+    Average: 0,
+    Sum: 1,
+    Minimum: 2,
+    Maximum: 3
+} as const
+
+export type ReturnCode = "hcf" | "end" | "die"
+
 export var Execution = {
 	error(code: number, message: string, obj: any = null) {
-		return new ic10Error('--', code, message, obj, 0)
+		return new Ic10Error('--', code, message, obj, 0)
 	},
 	display: function (e: { code: any; message: any; lvl: any; obj: any; }) {
-		if (e instanceof ic10Error) {
+		if (e instanceof Ic10Error) {
 			const string = `(${e.code}) - ${e.message}:`;
 			switch (e.lvl) {
 				case 0:
@@ -46,6 +53,14 @@ export var Execution = {
 	}
 }
 
+export type InterpreterIc10Settings = {
+    debug: boolean;
+    debugCallback: Function;
+    logCallback: Function;
+    executionCallback: (err: Ic10Error) => void;
+    tickTime: number;
+}
+
 // noinspection SpellCheckingInspection
 export class InterpreterIc10 {
 	public code: string
@@ -61,16 +76,10 @@ export class InterpreterIc10 {
 		log: string,
 		error: string,
 	}
-	public settings: {
-		debug: boolean;
-		debugCallback: Function;
-		logCallback: Function;
-		executionCallback: Function;
-		tickTime: number;
-	};
+	public settings: InterpreterIc10Settings;
 	public ignoreLine: Array<number>;
 
-	constructor(code: string = '', settings = {}) {
+	constructor(code: string = '', settings: Partial<InterpreterIc10Settings> = {}) {
 		this.code       = code
 		this.memory     = new Memory(this)
 		this.constants  = {}
@@ -85,7 +94,7 @@ export class InterpreterIc10 {
 											logCallback      : (a: string, b: any[]) => {
 												this.output.log = a + ' ' + b.join('')
 											},
-											executionCallback: (e: ic10Error) => {
+											executionCallback: (e: Ic10Error) => {
 												this.output.error = <string>Execution.display(e)
 											},
 										}, settings)
@@ -100,7 +109,7 @@ export class InterpreterIc10 {
 		}
 	}
 
-	setSettings(settings: object = {}): InterpreterIc10 {
+	setSettings(settings: Partial<InterpreterIc10Settings> = {}): InterpreterIc10 {
 		this.settings = Object.assign(this.settings, settings)
 		return this;
 	}
@@ -115,36 +124,34 @@ export class InterpreterIc10 {
 							 });
 		for (const commandsKey in this.lines) {
 			if (commands.hasOwnProperty(commandsKey)) {
-				let command                              = commands[commandsKey]
+				let command = commands[commandsKey]
 				const newArgs: Record<string, string> = {};
-				let mode                                 = 0;
-				let argNumber                            = 0;
+				let mode = 0;
+				let argNumber = 0;
 				for (let argsKey in command.args) {
 					if (command.args.hasOwnProperty(argsKey)) {
 						let arg = command.args[argsKey]
-						if (arg.startsWith("#")) {
+						if (arg.startsWith("#"))
 							break;
-						}
-						if (mode === 0) {
+
+						if (mode === 0)
 							argNumber++
-						}
-						if (regexes.strStart.test(arg)) {
+
+						if (regexes.strStart.test(arg))
 							mode = 1
-						}
-						if (argNumber in newArgs) {
+
+						if (argNumber in newArgs)
 							newArgs[argNumber] += ' ' + arg
-						} else {
+						else
 							newArgs[argNumber] = arg
-						}
-						if (regexes.strEnd.test(arg)) {
+
+						if (regexes.strEnd.test(arg))
 							mode = 0
-						}
 					}
 				}
 				commands[commandsKey].args = Object.values(newArgs)
-			} else {
+			} else
 				commands.push({command: '', args: []})
-			}
 		}
 		this.commands = commands
 		this.position = 0
@@ -152,7 +159,7 @@ export class InterpreterIc10 {
 			let {command, args} = this.commands[this.position]
 			this.position++
 			if (command?.match(/^\w+:$/)) {
-				let label                             = command.replace(":", "")
+				let label = command.replace(":", "")
 				// @ts-ignore
 				this.labels[command.replace(":", "")] = this.position
 				this.memory.define(label, this.position)
@@ -180,8 +187,8 @@ export class InterpreterIc10 {
 		})
 	}
 
-	prepareLine(line = -1, isDebugger = false): string | true {
-		if (line > 0) {
+	prepareLine(line = -1, isDebugger = false): ReturnCode | true {
+		if (line >= 0) {
 			this.position = line;
 		}
 		if (!(this.position in this.commands)) {
@@ -209,10 +216,15 @@ export class InterpreterIc10 {
 					throw Execution.error(this.position, 'Undefined function', command)
 				}
 			} catch (e) {
-				this.settings.executionCallback.call(this, e)
+                if (e instanceof Ic10Error)
+    				this.settings.executionCallback.call(this, e)
+                else
+                    throw e
 			}
 		}
-		if (command === "hcf") return 'hcf'
+		if (command === "hcf")
+            return 'hcf'
+
 		if (isComment) {
 			this.ignoreLine.push(this.position)
 		}
@@ -224,6 +236,17 @@ export class InterpreterIc10 {
 			return this.position < this.commands.length ? true : 'end'
 		}
 	}
+
+    runUntil(cond: (status: true | ReturnCode) => boolean, maxIterations: number = 0) {
+        let status: ReturnCode | true = true
+        let n = 0;
+        do {
+            status = this.prepareLine()
+            n++
+        } while (!cond(status) && (maxIterations <= 0 || n <= maxIterations))
+
+        return n
+    }
 
 	__issetLabel(x: string) {
 		return x in this.labels
@@ -562,6 +585,15 @@ export class InterpreterIc10 {
         this.jr(offset)
     }
 
+    __bCOp<Args extends number[]>(op: (...args: Args) => boolean | undefined, line: string, ...args: { [K in keyof Args]: string }) {
+        const inputs = args.map(v => this.memory.getValue(v)) as Args
+
+        if (!op(...inputs))
+            return
+
+        this.jal(line)
+    }
+
 	beq(a: string, b: string, line: string) {
         this.__bOp(this.__eq.bind(this), line, a, b)
 	}
@@ -712,199 +744,170 @@ export class InterpreterIc10 {
 		}
 	}
 
-	beqal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__eq(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jal(op3)
+	beqal(a: string, b: string, line: string) {
+        this.__bCOp(this.__eq.bind(this), line, a, b)
+	}
+
+	beqzal(a: string, line: string) {
+        this.__bCOp(this.__eq.bind(this), line, a)
+	}
+
+	bgeal(a: string, b: string, line: string) {
+        this.__bCOp(this.__ge.bind(this), line, a, b)
+	}
+
+	bgezal(a: string, line: string) {
+        this.__bCOp(this.__ge.bind(this), line, a)
+	}
+
+	bgtal(a: string, b: string, line: string) {
+        this.__bCOp(this.__gt.bind(this), line, a, b)
+	}
+
+	bgtzal(a: string, line: string) {
+        this.__bCOp(this.__gt.bind(this), line, a)
+	}
+
+	bleal(a: string, b: string, line: string) {
+        this.__bCOp(this.__le.bind(this), line, a, b)
+	}
+
+	blezal(a: string, line: string) {
+        this.__bCOp(this.__le.bind(this), line, a)
+	}
+
+	bltal(a: string, b: string, line: string) {
+        this.__bCOp(this.__lt.bind(this), line, a, b)
+	}
+
+	bltzal(a: string, line: string) {
+        this.__bCOp(this.__lt.bind(this), line, a)
+	}
+
+	bneal(a: string, b: string, line: string) {
+        this.__bCOp(this.__ne.bind(this), line, a, b)
+	}
+
+	bnezal(a: string, line: string) {
+        this.__bCOp(this.__ne.bind(this), line, a)
+	}
+
+	bapal(x: string, y: string, c: string, line: string) {
+        this.__bCOp(this.__ap.bind(this), line, x, y, c)
+	}
+
+	bapzal(x: string, y: string, line: string) {
+        this.__bCOp(this.__ap.bind(this), line, x, y)
+	}
+
+	bnaal(x: string, y: string, c: string, line: string) {
+        this.__bCOp(this.__na.bind(this), line, x, y, c)
+	}
+
+	bnazal(x: string, y: string, line: string) {
+        this.__bCOp(this.__na.bind(this), line, x, y)
+	}
+
+	bdseal(d: string, line: string) {
+		if (this.__dse(d)) {
+			this.jal(line)
 		}
 	}
 
-	beqzal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__eq(this.memory.cell(op1), 0)) {
-			this.jal(op2)
+	bdnsal(d: string, line: string) {
+		if (this.__dns(d)) {
+			this.jal(line)
 		}
 	}
 
-	bgeal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ge(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jal(op3)
-		}
+	push(a: string) {
+        this.memory.stack.push(this.memory.getValue(a))
 	}
 
-	bgezal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ge(this.memory.cell(op1), 0)) {
-			this.jal(op2)
-		}
+	pop(register: string) {
+        this.memory.getRegister(register).set(null, this.memory.stack.pop())
 	}
 
-	bgtal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__gt(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jal(op3)
-		}
+	peek(register: string) {
+        this.memory.getRegister(register).set(null, this.memory.stack.peek())
 	}
 
-	bgtzal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__gt(this.memory.cell(op1), 0)) {
-			this.jal(op2)
-		}
-	}
-
-	bleal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__le(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jal(op3)
-		}
-	}
-
-	blezal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__le(this.memory.cell(op1), 0)) {
-			this.jal(op2)
-		}
-	}
-
-	bltal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__lt(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jal(op3)
-		}
-	}
-
-	bltzal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__lt(this.memory.cell(op1), 0)) {
-			this.jal(op2)
-		}
-	}
-
-	bneal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ne(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jal(op3)
-		}
-	}
-
-	bnezal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ne(this.memory.cell(op1), 0)) {
-			this.jal(op2)
-		}
-	}
-
-	bapal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ap(this.memory.cell(op1), this.memory.cell(op2), this.memory.cell(op3))) {
-			this.jal(op4)
-		}
-	}
-
-	bapzal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ap(this.memory.cell(op1), 0) && this.memory.cell(op2)) {
-			this.jal(op3)
-		}
-	}
-
-	bnaal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__na(this.memory.cell(op1), this.memory.cell(op2), this.memory.cell(op3))) {
-			this.jal(op4)
-		}
-	}
-
-	bnazal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__na(this.memory.cell(op1), 0, this.memory.cell(op2))) {
-			this.jal(op3)
-		}
-	}
-
-	bdseal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__dse(op2)) {
-			this.jal(op3)
-		}
-	}
-
-	bdnsal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__dns(op2)) {
-			this.jal(op3)
-		}
-	}
-
-	push(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.getCell('r16').push(op1)
-	}
-
-	pop(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.memory.getCell('r16').pop())
-	}
-
-	peek(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.memory.getCell('r16').peek())
-	}
-
-	lb(op1: any, op2: any, op3: any, op4: any) {
+	lb(register: string, deviceHash: string, property: string, mode: string) {
 		const values = [];
-		const hash   = this.memory.cell(op2);
+		const hash   = this.memory.getValue(deviceHash)
 		for (let i = 0; i <= 5; i++) {
-			const d: MemoryCell | MemoryStack | Device | number = this.memory.getCell('d' + i);
-			if (d instanceof Device) {
-				if (d.hash == hash) {
-					values.push(d.get(op3))
-				}
-			}
+			const d = this.memory.getDevice('d' + i);
+
+            if (d.hash == hash) {
+                values.push(d.get(property))
+            }
 		}
 		if (values.length === 0) {
 			throw Execution.error(this.position, 'Can`t find Device wich hash:', hash)
 		}
 		let result = 0;
-		switch (op4) {
-			case 0:
-			case 'Average':
+
+        const modeMapping: Record<string, number | undefined> = modes
+
+        const m = modeMapping[mode] ?? this.memory.getValue(mode)
+
+		switch (m) {
+			case modes.Average:
 				// @ts-ignore
 				result = values.reduce((partial_sum, a) => partial_sum + a, 0) / values.length
 				break;
-			case 1:
-			case 'Sum':
+			case modes.Sum:
 				// @ts-ignore
 				result = values.reduce((partial_sum, a) => partial_sum + a, 0)
 				break;
-			case 2:
-			case 'Minimum':
+			case modes.Minimum:
 				// @ts-ignore
 				result = Math.min.apply(null, values)
 				break;
-			case 3:
-			case 'Maximum':
+			case modes.Maximum:
 				// @ts-ignore
 				result = Math.max.apply(null, values)
 				break;
 
 		}
-		this.memory.cell(op1, Number(result))
+        this.memory.getRegister(register).set(null, Number(result))
 	}
 
-	lr(op1: any, op2: any, op3: any, op4: any) {
+	lr(register: string, device: string, mode: string, op4: any) {
 		const values = [];
-		const d      = this.memory.getCell(op2);
-		if (d instanceof Device) {
-			for (const slotsKey in d.properties.slots) {
-				if (d.properties.slots[slotsKey] instanceof Slot) {
-					const slot: Slot = d.properties.slots[slotsKey];
-					values.push(slot.get(op4))
-				}
-			}
-		}
+		const d = this.memory.getDevice(device);
+
+        for (const slotsKey in d.properties.slots) {
+            if (d.properties.slots[slotsKey] instanceof Slot) {
+                const slot: Slot = d.properties.slots[slotsKey];
+                values.push(slot.get(op4))
+            }
+        }
+
 		let result = 0;
-		switch (op3) {
-			case 0:
-			case 'Average':
+
+        const modeMapping: Record<string, number | undefined> = modes
+
+        const m = modeMapping[mode] ?? this.memory.getValue(mode)
+
+		switch (m) {
+			case modes.Average:
 				result = values.reduce((partial_sum, a) => partial_sum + a, 0) / values.length
 				break;
-			case 1:
-			case 'Sum':
+			case modes.Sum:
 				result = values.reduce((partial_sum, a) => partial_sum + a, 0)
 				break;
 			case 2:
-			case 'Minimum':
+			case modes.Minimum:
 				result = Math.min.apply(null, values)
 				break;
 			case 3:
-			case 'Maximum':
+			case modes.Maximum:
 				result = Math.max.apply(null, values)
 				break;
-
 		}
-		this.memory.cell(op1, result)
+
+        this.memory.getRegister(register).set(null, result)
 	}
 
 	sb(op1: any, op2: any, op3: any, op4: any) {
@@ -982,106 +985,81 @@ export class InterpreterIc10 {
         this.__op((a, b) => a && b, register, a, b)
 	}
 
-	or(op1: any, op2: any, op3: any, op4: any) {
-		op2 = this.memory.cell(op2)
-		op3 = this.memory.cell(op3)
-		if (op2 || op3) {
-			this.memory.cell(op1, 1)
-		} else {
-			this.memory.cell(op1, 0)
-		}
+	or(register: string, a: string, b: string) {
+		this.__op((a, b) => a || b, register, a, b)
 	}
 
-	xor(op1: any, op2: any, op3: any, op4: any) {
-		op2 = Boolean(this.memory.cell(op2))
-		op3 = Boolean(this.memory.cell(op3))
-		if ((op2 && !op3) || (!op2 && op3)) {
-			this.memory.cell(op1, 1)
-		} else {
-			this.memory.cell(op1, 0)
-		}
+	xor(register: string, a: string, b: string) {
+		this.__op((a, b) => a ^ b, register, a ,b)
 	}
 
-	nor(op1: any, op2: any, op3: any, op4: any) {
-		op2 = Boolean(this.memory.cell(op2))
-		op3 = Boolean(this.memory.cell(op3))
-		if (!op2 && !op3) {
-			this.memory.cell(op1, 1)
-		} else {
-			this.memory.cell(op1, 0)
-		}
+	nor(register: string, a: string, b: string) {
+		this.__op((a, b) => Number(!(a || b)), register, a, b)
 	}
 
-	_debug(op1: any, op2: any, op3: any, op4: any){
-		this._log(op1, op2, op3, op4)
+	_debug(...args: string[]){
+		this._log(...args)
 	}
-	_log(op1: any, op2: any, op3: any, op4: any) {
+	_log(...args: string[]) {
 		const out = [];
 		try {
-			for (const argumentsKey in arguments) {
-				if (arguments.hasOwnProperty(argumentsKey)) {
-					let key = arguments[argumentsKey];
-					if (typeof key == 'string') {
-						try {
-							const o = this.memory.cell(key)
-							if(o){
-								out.push(key + ' = ' + o + '; ')
-								break
-							}
-						} catch (e) {
+			for (const argumentsKey in args) {
+				if (args.hasOwnProperty(argumentsKey)) {
+					let key = args[argumentsKey];
+                    try {
+                        const o = this.memory.cell(key)
+                        if (o) {
+                            out.push(key + ' = ' + o + '; ')
+                            break
+                        }
+                    } catch (e) {
 
-						}
-						let keys = key.split('.');
-						try {
-							let cells   = Object.keys(this.memory.cells);
-							let environ = Object.keys(this.memory.environ);
-							let aliases = Object.keys(this.memory.aliases);
-							if (environ.indexOf(keys[0]) >= 0) {
-								if (keys[0] == key) {
-									// @ts-ignore
-									out.push(key + ' = ' + JSON.stringify(this.memory.environ[key].properties) + '; ')
-								} else {
-									switch (keys.length) {
-										case 2:
-											// @ts-ignore
-											out.push(key + ' = ' + this.memory.environ[keys[0]].get(keys[1]) + '; ')
-											break;
-										case 3:
-											// @ts-ignore
-											out.push(key + ' = ' + JSON.stringify(this.memory.environ[keys[0]].getSlot(keys[1])) + '; ')
-											break;
-										case 4:
-											// @ts-ignore
-											out.push(key + ' = ' + this.memory.environ[keys[0]].getSlot(keys[2], keys[3]) + '; ')
-											break;
-									}
+                    }
+                    let keys = key.split('.');
+                    try {
+                        let cells = Object.keys(this.memory.cells);
+                        let environ = Object.keys(this.memory.environ);
+                        let aliases = Object.keys(this.memory.aliases);
+                        if (environ.indexOf(keys[0]) >= 0) {
+                            if (keys[0] == key) {
+                                // @ts-ignore
+                                out.push(key + ' = ' + JSON.stringify(this.memory.environ[key].properties) + '; ')
+                            } else {
+                                switch (keys.length) {
+                                    case 2:
+                                        // @ts-ignore
+                                        out.push(key + ' = ' + this.memory.environ[keys[0]].get(keys[1]) + '; ')
+                                        break;
+                                    case 3:
+                                        // @ts-ignore
+                                        out.push(key + ' = ' + JSON.stringify(this.memory.environ[keys[0]].getSlot(keys[1])) + '; ')
+                                        break;
+                                    case 4:
+                                        // @ts-ignore
+                                        out.push(key + ' = ' + this.memory.environ[keys[0]].getSlot(keys[2], keys[3]) + '; ')
+                                        break;
+                                }
 
-								}
-								continue
-							}
-							try {
-								if (this.memory.getCell(keys[0]) instanceof MemoryCell) {
-									const cell = this.memory.getCell(arguments[argumentsKey])
-									if (cell instanceof MemoryCell) {
-										out.push(key + ' = ' + cell.value + '; ')
-									} else {
-										out.push(key + ' = ' + cell + '; ')
-									}
-									continue
-								}
-							} catch (e) {
-							}
-							out.push(key + '; ')
-						} catch (e) {
-							// @ts-ignore
-							out.push(key + ' ' + e.message + '; ')
-						}
-					} else {
-						try {
-							out.push(key + '; ')
-						} catch (e) {
-						}
-					}
+                            }
+                            continue
+                        }
+                        try {
+                            if (this.memory.getCell(keys[0]) instanceof MemoryCell) {
+                                const cell = this.memory.getCell(arguments[argumentsKey])
+                                if (cell instanceof MemoryCell) {
+                                    out.push(key + ' = ' + cell.value + '; ')
+                                } else {
+                                    out.push(key + ' = ' + cell + '; ')
+                                }
+                                continue
+                            }
+                        } catch (e) {
+                        }
+                        out.push(key + '; ')
+                    } catch (e) {
+                        // @ts-ignore
+                        out.push(key + ' ' + e.message + '; ')
+                    }
 				}
 			}
 			this.settings.logCallback.call(this, `Log[${this.position}]: `, out)
