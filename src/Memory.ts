@@ -14,7 +14,7 @@ export class Memory {
 
 	constructor(scope: InterpreterIc10) {
 		this.#scope  = scope;
-		this.cells   = new Array<MemoryCell>(15)
+		this.cells   = new Array<MemoryCell>(18)
 		this.environ = new Environ(scope)
 		this.aliases = {}
 
@@ -107,11 +107,7 @@ export class Memory {
 
 	getCell(cell: 'sp'): MemoryStack
 	getCell(cell: 'r16'): MemoryStack
-	getCell(cell: `d${IntRange<0, 6>}`): Device
-	getCell(cell: `r${IntRange<0, 16>}`): MemoryCell
-	getCell(cell: number): number
 	getCell(cell: string | number): MemoryCell | MemoryStack | Device | number
-	getCell(cell: any): MemoryCell | MemoryStack | Device | number
 	getCell(cell: string | number): MemoryCell | MemoryStack | Device | number {
         const reg = this.findRegister(cell)
 
@@ -139,20 +135,21 @@ export class Memory {
 
         if (typeof name === "string")
         {
-            if (regexes.rr1.test(name)) {
-                let m = regexes.rr1.exec(name)
-
-                if (!m)
-                    throw Execution.error(this.#scope.position, 'Syntax error')
-
-                const index = name.replace(m[1], this.cell(m[1])) as `r${IntRange<0, 16>}`
-                let m1 = this.getCell(index)
-
-                if (!m1)
-                    throw Execution.error(this.#scope.position, 'Unknown cell', m1)
-
-                return m1
-            }
+            // TODO: was this needed?
+            // if (regexes.rr1.test(name)) {
+            //     let m = regexes.rr1.exec(name)
+            //
+            //     if (!m)
+            //         throw Execution.error(this.#scope.position, 'Syntax error')
+            //
+            //     const index = name.replace(m[1], this.cell(m[1])) as `r${IntRange<0, 16>}`
+            //     let m1 = this.getRegister(index)
+            //
+            //     if (!m1)
+            //         throw Execution.error(this.#scope.position, 'Unknown register', m1)
+            //
+            //     return m1
+            // }
             if (regexes.r1.test(name)) {
                 let m = regexes.r1.exec(name)
 
