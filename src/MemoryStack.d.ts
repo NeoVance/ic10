@@ -1,6 +1,6 @@
 import InterpreterIc10 from "./main";
-import { MemoryCell } from "./MemoryCell";
-export declare class MemoryStack extends MemoryCell {
+import { RegisterCell } from "./RegisterCell";
+export declare class MemoryStack extends RegisterCell {
     #private;
     value: number;
     constructor(scope: InterpreterIc10, size: number, name: string);
