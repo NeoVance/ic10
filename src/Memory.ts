@@ -1,4 +1,4 @@
-import InterpreterIc10, {Execution, regexes} from "./main";
+import InterpreterIc10, {Execution} from "./main";
 import {Environ}                             from "./Environ";
 import {MemoryCell}                          from "./MemoryCell";
 import {MemoryStack}                         from "./MemoryStack";
@@ -7,10 +7,10 @@ import {ConstantCell}                        from "./ConstantCell";
 import {patterns} from "./Utils";
 
 export class Memory {
-	public cells: Array<MemoryCell | MemoryStack>
+	public cells: Array<MemoryCell>
     public stack: MemoryStack
 	public environ: Environ
-	public aliases: Record<string, MemoryCell | Device | ConstantCell>
+	public aliases: Record<string, MemoryCell | Device>
 	readonly #scope: InterpreterIc10;
 
 	constructor(scope: InterpreterIc10) {
@@ -33,96 +33,6 @@ export class Memory {
 
 	get scope(): InterpreterIc10 | null {
 		return this.#scope;
-	}
-
-	cell(cell: string | number, op1: any = null, op2: any = null): any {
-		if (typeof cell === "string") {
-			if (cell == 'sp') cell = 'r16'
-			if (cell == 'ra') cell = 'r17'
-			if (regexes.rr1.test(cell)) {
-				let m = regexes.rr1.exec(cell)
-				if (m) {
-					let m1 = this.cell(cell.replace(m[1], this.cell(m[1])), op1, op2) ?? false
-					if (m1 !== false) {
-						return m1
-					}
-					throw Execution.error(this.#scope.position, 'Unknown cell', m1)
-				}
-				throw Execution.error(this.#scope.position, 'Syntax error')
-
-			}
-			if (regexes.r1.test(cell)) {
-				let m = regexes.r1.exec(cell)
-				if (m && m[1] in this.cells) {
-					const index = parseInt(m[1]);
-					if (op1 === null) {
-						return this.cells[index].get()
-					} else {
-						return this.cells[index].set(null, this.cell(op1))
-					}
-				} else {
-					throw Execution.error(this.#scope.position, 'Unknown cell', cell)
-				}
-			}
-			if (regexes.d1.test(cell)) {
-				if (cell in this.environ) {
-					if (op1 === null) {
-						throw Execution.error(this.#scope.position, 'Have not `Port`', cell)
-					} else {
-						if (op2 !== null) {
-							return this.environ.get(cell)?.set(op1, this.cell(op2))
-						}
-						return this.environ.get(cell)?.get(op1)
-					}
-				} else {
-					throw Execution.error(this.#scope.position, 'Unknown cell', cell)
-				}
-			}
-			if (cell in this.aliases) {
-				if (this.aliases[cell].constructor.name === 'MemoryCell') {
-					if (op1 === null) {
-						return this.aliases[cell].get(null)
-					} else {
-						return this.aliases[cell].set(null, this.cell(op1))
-					}
-				} else if (this.aliases[cell] instanceof Device) {
-					if (op1 === null) {
-						throw Execution.error(this.#scope.position, 'Have not `Port`', cell)
-					} else {
-						if (op2 !== null) {
-							return this.aliases[cell].set(op1, this.cell(op2))
-						}
-						return this.aliases[cell].get(op1)
-					}
-				} else if (this.aliases[cell] instanceof ConstantCell) {
-					return this.aliases[cell].get(null)
-				} else {
-					throw Execution.error(this.#scope.position, 'Unknown cell', cell)
-				}
-			}
-			if (String(cell).trim().match(/[\d/.]+/)) {
-				return parseFloat(cell)
-			}
-			throw Execution.error(this.#scope.position, 'Unknown cell', cell)
-		}
-		return cell
-	}
-
-	getCell(cell: string | number): MemoryCell | MemoryStack | Device | number {
-        const reg = this.findRegister(cell)
-
-        if (reg)
-            return reg
-
-        const device = this.findDevice(cell)
-
-        if (device)
-            return device
-
-		if (typeof cell === "string" && cell in this.aliases)
-            return this.aliases[cell]
-
-        throw Execution.error(this.#scope.position, 'Unknown cell', cell)
 	}
 
     findRegister(name: string | number): MemoryCell | undefined {
@@ -162,7 +72,7 @@ export class Memory {
                 const mem = this.aliases[name]
 
                 if (patterns.reg.test(mem.name))
-                    return mem
+                    return mem as MemoryCell
             }
 
             return undefined
@@ -244,10 +154,10 @@ export class Memory {
             return undefined
         }
 
-        if (typeof (v.value) !== "number")
+        if (!patterns.reg.test(v.name))
             return undefined
 
-        return v.value
+        return (v as MemoryCell).value
     }
 
     getValue(value: string | number): number {
@@ -259,15 +169,22 @@ export class Memory {
         return v
     }
 
-	alias(name: string | number, link: string | number) {
-		const result = this.getCell(link)
-		if (typeof result !== 'number') {
-			this.aliases[name] = result
-			if (this.aliases[name] instanceof MemoryCell) {
-				this.aliases[name].alias = name;
-			}
-			return this
-		}
+	alias(name: string | number, link: string): Memory {
+        const register = this.findRegister(link)
+
+        if (register !== undefined)
+        {
+            this.aliases[name] = register
+            return this
+        }
+
+        const device = this.findDevice(link)
+
+        if (device !== undefined) {
+            this.aliases[name] = device
+            return this
+        }
+
 		throw Execution.error(this.#scope.position, 'Invalid alias value')
 	}
 
@@ -282,9 +199,9 @@ export class Memory {
 		const out: { [key: string]: any } = {};
 		for (let i = 0; i < 18; i++) {
 			if (i === 16) {
-				out['r' + i] = this.cells[i].get()
+				out['r' + i] = this.cells[i].value
 			} else {
-				out['r' + i] = this.cells[i].get()
+				out['r' + i] = this.cells[i].value
 				out['stack'] = this.cells[i].value
 			}
 		}

@@ -5,7 +5,6 @@ const main_1 = require("./main");
 const Environ_1 = require("./Environ");
 const MemoryCell_1 = require("./MemoryCell");
 const MemoryStack_1 = require("./MemoryStack");
-const Device_1 = require("./Device");
 const ConstantCell_1 = require("./ConstantCell");
 const Utils_1 = require("./Utils");
 class Memory {
@@ -33,99 +32,6 @@ class Memory {
     }
     get scope() {
         return this.#scope;
-    }
-    cell(cell, op1 = null, op2 = null) {
-        if (typeof cell === "string") {
-            if (cell == 'sp')
-                cell = 'r16';
-            if (cell == 'ra')
-                cell = 'r17';
-            if (main_1.regexes.rr1.test(cell)) {
-                let m = main_1.regexes.rr1.exec(cell);
-                if (m) {
-                    let m1 = this.cell(cell.replace(m[1], this.cell(m[1])), op1, op2) ?? false;
-                    if (m1 !== false) {
-                        return m1;
-                    }
-                    throw main_1.Execution.error(this.#scope.position, 'Unknown cell', m1);
-                }
-                throw main_1.Execution.error(this.#scope.position, 'Syntax error');
-            }
-            if (main_1.regexes.r1.test(cell)) {
-                let m = main_1.regexes.r1.exec(cell);
-                if (m && m[1] in this.cells) {
-                    const index = parseInt(m[1]);
-                    if (op1 === null) {
-                        return this.cells[index].get();
-                    }
-                    else {
-                        return this.cells[index].set(null, this.cell(op1));
-                    }
-                }
-                else {
-                    throw main_1.Execution.error(this.#scope.position, 'Unknown cell', cell);
-                }
-            }
-            if (main_1.regexes.d1.test(cell)) {
-                if (cell in this.environ) {
-                    if (op1 === null) {
-                        throw main_1.Execution.error(this.#scope.position, 'Have not `Port`', cell);
-                    }
-                    else {
-                        if (op2 !== null) {
-                            return this.environ.get(cell)?.set(op1, this.cell(op2));
-                        }
-                        return this.environ.get(cell)?.get(op1);
-                    }
-                }
-                else {
-                    throw main_1.Execution.error(this.#scope.position, 'Unknown cell', cell);
-                }
-            }
-            if (cell in this.aliases) {
-                if (this.aliases[cell].constructor.name === 'MemoryCell') {
-                    if (op1 === null) {
-                        return this.aliases[cell].get(null);
-                    }
-                    else {
-                        return this.aliases[cell].set(null, this.cell(op1));
-                    }
-                }
-                else if (this.aliases[cell] instanceof Device_1.Device) {
-                    if (op1 === null) {
-                        throw main_1.Execution.error(this.#scope.position, 'Have not `Port`', cell);
-                    }
-                    else {
-                        if (op2 !== null) {
-                            return this.aliases[cell].set(op1, this.cell(op2));
-                        }
-                        return this.aliases[cell].get(op1);
-                    }
-                }
-                else if (this.aliases[cell] instanceof ConstantCell_1.ConstantCell) {
-                    return this.aliases[cell].get(null);
-                }
-                else {
-                    throw main_1.Execution.error(this.#scope.position, 'Unknown cell', cell);
-                }
-            }
-            if (String(cell).trim().match(/[\d/.]+/)) {
-                return parseFloat(cell);
-            }
-            throw main_1.Execution.error(this.#scope.position, 'Unknown cell', cell);
-        }
-        return cell;
-    }
-    getCell(cell) {
-        const reg = this.findRegister(cell);
-        if (reg)
-            return reg;
-        const device = this.findDevice(cell);
-        if (device)
-            return device;
-        if (typeof cell === "string" && cell in this.aliases)
-            return this.aliases[cell];
-        throw main_1.Execution.error(this.#scope.position, 'Unknown cell', cell);
     }
     findRegister(name) {
         const mapping = {
@@ -207,7 +113,7 @@ class Memory {
                 return r.value;
             return undefined;
         }
-        if (typeof (v.value) !== "number")
+        if (!Utils_1.patterns.reg.test(v.name))
             return undefined;
         return v.value;
     }
@@ -218,12 +124,14 @@ class Memory {
         return v;
     }
     alias(name, link) {
-        const result = this.getCell(link);
-        if (typeof result !== 'number') {
-            this.aliases[name] = result;
-            if (this.aliases[name] instanceof MemoryCell_1.MemoryCell) {
-                this.aliases[name].alias = name;
-            }
+        const register = this.findRegister(link);
+        if (register !== undefined) {
+            this.aliases[name] = register;
+            return this;
+        }
+        const device = this.findDevice(link);
+        if (device !== undefined) {
+            this.aliases[name] = device;
             return this;
         }
         throw main_1.Execution.error(this.#scope.position, 'Invalid alias value');
@@ -237,10 +145,10 @@ class Memory {
         const out = {};
         for (let i = 0; i < 18; i++) {
             if (i === 16) {
-                out['r' + i] = this.cells[i].get();
+                out['r' + i] = this.cells[i].value;
             }
             else {
-                out['r' + i] = this.cells[i].get();
+                out['r' + i] = this.cells[i].value;
                 out['stack'] = this.cells[i].value;
             }
         }

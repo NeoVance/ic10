@@ -1,5 +1,6 @@
 import { Ic10Error } from "./ic10Error";
 import { Memory } from "./Memory";
+import { Device } from "./Device";
 export declare const regexes: {
     rr1: RegExp;
     r1: RegExp;
@@ -60,12 +61,7 @@ export declare class InterpreterIc10 {
     runUntil(cond: (status: true | ReturnCode) => boolean, maxIterations?: number): number;
     __issetLabel(x: string): boolean;
     define(alias: string, value: number | string): void;
-    alias(alias: string | number, target: string | number): void;
-    l(register: string, device: string, property: string): void;
-    __l(register: string, device: string, property: string): void;
-    ls(register: string, device: string, slot: string, property: string): void;
-    s(device: string, property: string, value: string): void;
-    __s(device: string, property: string, value: string): void;
+    alias(alias: string | number, target: string): void;
     __op<Args extends number[]>(op: (...args: Args) => number, register: string, ...args: {
         [K in keyof Args]: string;
     }): void;
@@ -114,6 +110,8 @@ export declare class InterpreterIc10 {
     __na(x: number, y: number, c?: number): boolean;
     __dse(d: string): boolean;
     __dns(d: string): boolean;
+    __nan(v: number): boolean;
+    __nanz(v: number): boolean;
     __sOp<Args extends number[]>(op: (...args: Args) => boolean, register: string, ...args: {
         [K in keyof Args]: string;
     }): void;
@@ -135,6 +133,8 @@ export declare class InterpreterIc10 {
     snaz(register: string, x: string, y: string): void;
     sdse(register: string, d: string): void;
     sdns(register: string, d: string): void;
+    snan(register: string, v: string): void;
+    snanz(register: string, v: string): void;
     __bOp<Args extends number[]>(op: (...args: Args) => boolean | undefined, line: string, ...args: {
         [K in keyof Args]: string;
     }): void;
@@ -162,6 +162,7 @@ export declare class InterpreterIc10 {
     bnaz(x: string, y: string, line: string): void;
     bdse(d: string, line: string): void;
     bdns(d: string, line: string): void;
+    bnan(v: string, line: string): void;
     breq(a: string, b: string, offset: string): void;
     breqz(a: string, offset: string): void;
     brge(a: string, b: string, offset: string): void;
@@ -180,6 +181,7 @@ export declare class InterpreterIc10 {
     brnaz(x: string, y: string, offset: string): void;
     brdse(d: string, offset: string): void;
     brdns(d: string, offset: string): void;
+    brnan(v: string, offset: string): void;
     beqal(a: string, b: string, line: string): void;
     beqzal(a: string, line: string): void;
     bgeal(a: string, b: string, line: string): void;
@@ -201,19 +203,22 @@ export declare class InterpreterIc10 {
     push(a: string): void;
     pop(register: string): void;
     peek(register: string): void;
+    __transformBatch(values: number[], mode: string): number;
+    __getDevices(hash: number, name?: number): Device[];
+    l(register: string, device: string, property: string): void;
+    __l(register: string, device: string, property: string): void;
+    ls(register: string, device: string, slot: string, property: string): void;
+    s(device: string, property: string, value: string): void;
+    __s(device: string, property: string, value: string): void;
     lb(register: string, deviceHash: string, property: string, mode: string): void;
-    lr(register: string, device: string, mode: string, op4: any): void;
-    sb(op1: any, op2: any, op3: any, op4: any): void;
-    lbn(targetRegister: any, deviceHash: any, nameHash: any, property: any, batchMode: any): void;
-    sbn(): void;
-    lbs(): void;
-    lbns(): void;
-    ss(): void;
-    sbs(): void;
-    snan(): void;
-    snanz(): void;
-    bnan(): void;
-    brnan(): void;
+    lr(register: string, device: string, mode: string, property: string): void;
+    sb(deviceHash: string, property: string, value: string): void;
+    lbn(targetRegister: string, deviceHash: string, nameHash: string, property: string, batchMode: string): void;
+    sbn(deviceHash: string, nameHash: string, property: string, value: string): void;
+    lbs(register: string, deviceHash: string, slotIndex: string, property: string, batchMode: string): void;
+    lbns(register: string, deviceHash: string, nameHash: string, slotIndex: string, property: string, batchMode: string): void;
+    ss(device: string, slotIndex: string, property: string, value: string): void;
+    sbs(deviceHash: string, slotIndex: string, property: string, value: string): void;
     and(register: string, a: string, b: string): void;
     or(register: string, a: string, b: string): void;
     xor(register: string, a: string, b: string): void;

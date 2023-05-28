@@ -20,7 +20,7 @@ export class MemoryStack extends MemoryCell {
 		if (this.value >= 512) {
 			throw Execution.error(this.#scope.position, 'Stack Overflow !!!')
 		}
-		this.#stack[this.value] = this.#scope.memory.cell(value)
+		this.#stack[this.value] = value
 		this.value++
 		return this
 	}

@@ -51,11 +51,11 @@ export class Slot {
 		return this.#scope;
 	}
 
-	get(op1: string) {
-		if (op1 in this.properties) {
-			return this.properties[op1]
+	get(property: string) {
+		if (property in this.properties) {
+			return this.properties[property]
 		} else {
-			throw Execution.error(this.#scope.position, 'Unknown parameter', op1)
+			throw Execution.error(this.#scope.position, 'Unknown parameter', property)
 		}
 	}
 

@@ -1,9 +1,7 @@
-import {Ic10Error}   from "./ic10Error";
-import {Memory}      from "./Memory";
-import {Device}      from "./Device";
-import {Slot}        from "./Slot";
-import {MemoryCell}  from "./MemoryCell";
-import {MemoryStack} from "./MemoryStack";
+import {Ic10Error} from "./ic10Error";
+import {Memory} from "./Memory";
+import {Device} from "./Device";
+import {Slot} from "./Slot";
 
 export const regexes = {
 	'rr1'     : new RegExp("[rd]+(r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a))$"),
@@ -98,7 +96,6 @@ export class InterpreterIc10 {
 												this.output.error = <string>Execution.display(e)
 											},
 										}, settings)
-		this.memory.environ.randomize()
 		if (code) {
 			this.init(code)
 		}
@@ -256,34 +253,8 @@ export class InterpreterIc10 {
 		this.memory.define(alias, value)
 	}
 
-	alias(alias: string | number, target: string | number) {
+	alias(alias: string | number, target: string) {
 		this.memory.alias(alias, target)
-	}
-
-	l(register: string, device: string, property: string) {
-        const r = this.memory.getRegister(register)
-        const value = this.memory.getDevice(device).get(property)
-        r.set(null, value)
-	}
-
-	__l(register: string, device: string, property: string) {
-		this.l(register, device, property)
-	}
-
-	ls(register: string, device: string, slot: string, property: string) {
-        const r = this.memory.getRegister(register)
-        const d = this.memory.getDevice(device)
-        const value = d.getSlot(this.memory.getValue(slot), property)
-        r.set(null, value)
-	}
-
-	s(device: string, property: string, value: string) {
-		const d = this.memory.getDevice(device)
-        d.set(property, this.memory.getValue(value))
-	}
-
-	__s(device: string, property: string, value: string) {
-		this.s(device, property, value)
 	}
 
     __op<Args extends number[]>(op: (...args: Args) => number, register: string, ...args: { [K in keyof Args]: string }) {
@@ -291,7 +262,7 @@ export class InterpreterIc10 {
 
         const inputs = args.map(v => this.memory.getValue(v)) as Args
 
-        r.set(null, op(...inputs))
+        r.value = op(...inputs)
     }
 
 	move(register: string, value: string) {
@@ -414,7 +385,7 @@ export class InterpreterIc10 {
     }
 
     __call(line: number) {
-        this.memory.getRegister("ra").set(null, this.position)
+        this.memory.getRegister("ra").value = this.position
         this.__jump(line)
     }
 
@@ -487,12 +458,20 @@ export class InterpreterIc10 {
 		return !this.__dse(d)
 	}
 
+    __nan(v: number) {
+        return isNaN(this.memory.getValue(v))
+    }
+
+    __nanz(v: number) {
+        return !this.__nan(v)
+    }
+
     __sOp<Args extends number[]>(op: (...args: Args) => boolean, register: string, ...args: { [K in keyof Args]: string }) {
         const r = this.memory.getRegister(register)
 
         const inputs = args.map(v => this.memory.getValue(v)) as Args
 
-        r.set(null, op(...inputs) ? 1 : 0)
+        r.value = op(...inputs) ? 1 : 0
     }
 
 	seq(register: string, a: string, b: string) {
@@ -560,12 +539,20 @@ export class InterpreterIc10 {
 	}
 
 	sdse(register: string, d: string) {
-        this.memory.getRegister(register).set(null, Number(this.__dse(d)))
+        this.memory.getRegister(register).value = Number(this.__dse(d))
 	}
 
 	sdns(register: string, d: string) {
-        this.memory.getRegister(register).set(null, Number(this.__dns(d)))
+        this.memory.getRegister(register).value = Number(this.__dns(d))
 	}
+
+    snan(register: string, v: string) {
+        this.__sOp(this.__nan.bind(this), register, v)
+    }
+
+    snanz(register: string, v: string) {
+        this.__sOp(this.__nanz.bind(this), register, v)
+    }
 
     __bOp<Args extends number[]>(op: (...args: Args) => boolean | undefined, line: string, ...args: { [K in keyof Args]: string }) {
         const inputs = args.map(v => this.memory.getValue(v)) as Args
@@ -668,6 +655,10 @@ export class InterpreterIc10 {
             this.j(line)
 	}
 
+    bnan(v: string, line: string) {
+        this.__bOp(this.__nan.bind(this), line, v)
+    }
+
 	breq(a: string, b: string, offset: string) {
         this.__bROp(this.__eq.bind(this), offset, a, b)
 	}
@@ -743,6 +734,10 @@ export class InterpreterIc10 {
 			this.jr(offset)
 		}
 	}
+
+    brnan(v: string, offset: string) {
+        this.__bROp(this.__nan.bind(this), offset, v)
+    }
 
 	beqal(a: string, b: string, line: string) {
         this.__bCOp(this.__eq.bind(this), line, a, b)
@@ -825,161 +820,156 @@ export class InterpreterIc10 {
 	}
 
 	pop(register: string) {
-        this.memory.getRegister(register).set(null, this.memory.stack.pop())
+        this.memory.getRegister(register).value = this.memory.stack.pop()
 	}
 
 	peek(register: string) {
-        this.memory.getRegister(register).set(null, this.memory.stack.peek())
+        this.memory.getRegister(register).value = this.memory.stack.peek()
 	}
 
-	lb(register: string, deviceHash: string, property: string, mode: string) {
-		const values = [];
-		const hash   = this.memory.getValue(deviceHash)
-		for (let i = 0; i <= 5; i++) {
-			const d = this.memory.getDevice('d' + i);
-
-            if (d.hash == hash) {
-                values.push(d.get(property))
-            }
-		}
-		if (values.length === 0) {
-			throw Execution.error(this.position, 'Can`t find Device wich hash:', hash)
-		}
-		let result = 0;
-
+    __transformBatch(values: number[], mode: string) {
         const modeMapping: Record<string, number | undefined> = modes
 
         const m = modeMapping[mode] ?? this.memory.getValue(mode)
 
-		switch (m) {
-			case modes.Average:
-				// @ts-ignore
-				result = values.reduce((partial_sum, a) => partial_sum + a, 0) / values.length
-				break;
-			case modes.Sum:
-				// @ts-ignore
-				result = values.reduce((partial_sum, a) => partial_sum + a, 0)
-				break;
-			case modes.Minimum:
-				// @ts-ignore
-				result = Math.min.apply(null, values)
-				break;
-			case modes.Maximum:
-				// @ts-ignore
-				result = Math.max.apply(null, values)
-				break;
-
-		}
-        this.memory.getRegister(register).set(null, Number(result))
-	}
-
-	lr(register: string, device: string, mode: string, op4: any) {
-		const values = [];
-		const d = this.memory.getDevice(device);
-
-        for (const slotsKey in d.properties.slots) {
-            if (d.properties.slots[slotsKey] instanceof Slot) {
-                const slot: Slot = d.properties.slots[slotsKey];
-                values.push(slot.get(op4))
-            }
+        switch (m) {
+            case modes.Average:
+                return values.reduce((partial_sum, a) => partial_sum + a, 0) / values.length
+            case modes.Sum:
+                return values.reduce((partial_sum, a) => partial_sum + a, 0)
+            case modes.Minimum:
+                return Math.min(...values)
+            case modes.Maximum:
+                return  Math.max(...values)
         }
 
-		let result = 0;
-
-        const modeMapping: Record<string, number | undefined> = modes
-
-        const m = modeMapping[mode] ?? this.memory.getValue(mode)
-
-		switch (m) {
-			case modes.Average:
-				result = values.reduce((partial_sum, a) => partial_sum + a, 0) / values.length
-				break;
-			case modes.Sum:
-				result = values.reduce((partial_sum, a) => partial_sum + a, 0)
-				break;
-			case 2:
-			case modes.Minimum:
-				result = Math.min.apply(null, values)
-				break;
-			case 3:
-			case modes.Maximum:
-				result = Math.max.apply(null, values)
-				break;
-		}
-
-        this.memory.getRegister(register).set(null, result)
-	}
-
-	sb(op1: any, op2: any, op3: any, op4: any) {
-		const hash = this.memory.cell(op1);
-		for (let i = 0; i <= 5; i++) {
-			const d: MemoryCell | MemoryStack | Device | number = this.memory.getCell('d' + i);
-			if (d instanceof Device) {
-				if (d.hash == hash) {
-					d.set(op2, op3)
-				}
-			}
-		}
-	}
-
-    lbn(targetRegister: any, deviceHash: any, nameHash: any, property: any, batchMode: any) {
-        const values: number[] = [];
-        const hash   = this.memory.cell(deviceHash);
-        for (let i = 0; i <= 5; i++) {
-            const d: MemoryCell | MemoryStack | Device | number = this.memory.getCell('d' + i);
-            if (d instanceof Device) {
-                if (d.hash == hash) {
-                    values.push(d.get(property) as number)
-                }
-            }
-        }
-        if (values.length === 0) {
-            throw Execution.error(this.position, 'Can`t find Device wich hash:', hash)
-        }
-        let result = 0;
-        switch (batchMode) {
-            case 0:
-            case 'Average':
-                // @ts-ignore
-                result = values.reduce((partial_sum, a) => partial_sum + a, 0) / values.length
-                break;
-            case 1:
-            case 'Sum':
-                // @ts-ignore
-                result = values.reduce((partial_sum, a) => partial_sum + a, 0)
-                break;
-            case 2:
-            case 'Minimum':
-                // @ts-ignore
-                result = Math.min.apply(null, values)
-                break;
-            case 3:
-            case 'Maximum':
-                // @ts-ignore
-                result = Math.max.apply(null, values)
-                break;
-
-        }
-        this.memory.cell(targetRegister, Number(result))
+        throw Execution.error(this.position, "Unknown batch mode", mode)
     }
 
-    sbn() {}
+    __getDevices(hash: number, name?: number) {
+        const devices: Device[] = []
 
-    lbs() {}
+        //TODO: check all devices in the network
+        for (let i = 0; i <= 5; i++) {
+            const d = this.memory.getDevice('d' + i);
+            //TODO: add filter for name
+            if (d.hash == hash) {
+                devices.push(d)
+            }
+        }
 
-    lbns() {}
+        return devices
+    }
 
-    ss() {}
+    l(register: string, device: string, property: string) {
+        const r = this.memory.getRegister(register)
+        r.value = this.memory.getDevice(device).get(property)
+    }
 
-    sbs() {}
+    __l(register: string, device: string, property: string) {
+        this.l(register, device, property)
+    }
 
-    snan() {}
+    ls(register: string, device: string, slot: string, property: string) {
+        const r = this.memory.getRegister(register)
+        const d = this.memory.getDevice(device)
+        r.value = d.getSlot(this.memory.getValue(slot), property) as number
+    }
 
-    snanz() {}
+    s(device: string, property: string, value: string) {
+        const d = this.memory.getDevice(device)
+        d.set(property, this.memory.getValue(value))
+    }
 
-    bnan() {}
+    __s(device: string, property: string, value: string) {
+        this.s(device, property, value)
+    }
 
-    brnan() {}
+	lb(register: string, deviceHash: string, property: string, mode: string) {
+		const hash   = this.memory.getValue(deviceHash)
+
+        const devices = this.__getDevices(hash)
+
+        const values = devices.map(d => d.get(property) as number)
+
+		if (values.length === 0)
+			throw Execution.error(this.position, 'Can`t find Device wich hash:', hash)
+
+        this.memory.getRegister(register).value = this.__transformBatch(values, mode)
+	}
+
+	lr(register: string, device: string, mode: string, property: string) {
+        //TODO: well, we don't have reagents so we need to do it later
+        throw Execution.error(this.position, "lr not implemented yet")
+	}
+
+	sb(deviceHash: string, property: string, value: string) {
+		const hash = this.memory.getValue(deviceHash)
+        const v = this.memory.getValue(value)
+        const devices = this.__getDevices(hash)
+
+        devices.forEach(d => d.set(property, v))
+	}
+
+    lbn(targetRegister: string, deviceHash: string, nameHash: string, property: string, batchMode: string) {
+        const hash = this.memory.getValue(deviceHash);
+        const name = this.memory.getValue(nameHash)
+        const devices = this.__getDevices(hash, name)
+
+        const values = devices.map(d => d.get(property) as number)
+        if (values.length === 0)
+            throw Execution.error(this.position, 'Can`t find Device wich hash:', hash)
+
+        this.memory.getRegister(targetRegister).value = this.__transformBatch(values, batchMode)
+    }
+
+    sbn(deviceHash: string, nameHash: string, property: string, value: string) {
+        const hash = this.memory.getValue(deviceHash)
+        const v = this.memory.getValue(value)
+        const name = this.memory.getValue(nameHash)
+        const devices = this.__getDevices(hash, name)
+
+        devices.forEach(d => d.set(property, v))
+    }
+
+    lbs(register: string, deviceHash: string, slotIndex: string, property: string, batchMode: string) {
+        const hash = this.memory.getValue(deviceHash)
+        const slot = this.memory.getValue(slotIndex)
+        const devices = this.__getDevices(hash)
+
+        const values = devices.map(d => d.getSlot(slot, property) as number)
+
+        this.memory.getRegister(register).value = this.__transformBatch(values, batchMode)
+    }
+
+    lbns(register: string, deviceHash: string, nameHash: string, slotIndex: string, property: string, batchMode: string) {
+        const hash = this.memory.getValue(deviceHash)
+        const name = this.memory.getValue(nameHash)
+        const slot = this.memory.getValue(slotIndex)
+        const devices = this.__getDevices(hash, name)
+
+        const values = devices.map(d => d.getSlot(slot, property) as number)
+
+        this.memory.getRegister(register).value = this.__transformBatch(values, batchMode)
+    }
+
+    ss(device: string, slotIndex: string, property: string, value: string) {
+        const d = this.memory.getDevice(device)
+        const v = this.memory.getValue(value)
+        const slot = this.memory.getValue(slotIndex);
+
+        (d.getSlot(slot) as Slot).set(property, v)
+    }
+
+    sbs(deviceHash: string, slotIndex: string, property: string, value: string) {
+        const hash = this.memory.getValue(deviceHash)
+        const v = this.memory.getValue(value)
+        const slot = this.memory.getValue(slotIndex);
+
+        const devices = this.__getDevices(hash)
+
+        devices.map(d => (d.getSlot(slot) as Slot).set(property, v))
+    }
 
 	and(register: string, a: string, b: string) {
         this.__op((a, b) => a && b, register, a, b)
@@ -1006,56 +996,39 @@ export class InterpreterIc10 {
 			for (const argumentsKey in args) {
 				if (args.hasOwnProperty(argumentsKey)) {
 					let key = args[argumentsKey];
+
                     try {
-                        const o = this.memory.cell(key)
-                        if (o) {
-                            out.push(key + ' = ' + o + '; ')
+                        const value = this.memory.findValue(key)
+
+                        if (value !== undefined) {
+                            out.push(`${key} = ${value};`)
                             break
                         }
-                    } catch (e) {
+                    } catch {}
 
-                    }
                     let keys = key.split('.');
                     try {
-                        let cells = Object.keys(this.memory.cells);
                         let environ = Object.keys(this.memory.environ);
-                        let aliases = Object.keys(this.memory.aliases);
                         if (environ.indexOf(keys[0]) >= 0) {
                             if (keys[0] == key) {
-                                // @ts-ignore
-                                out.push(key + ' = ' + JSON.stringify(this.memory.environ[key].properties) + '; ')
-                            } else {
-                                switch (keys.length) {
-                                    case 2:
-                                        // @ts-ignore
-                                        out.push(key + ' = ' + this.memory.environ[keys[0]].get(keys[1]) + '; ')
-                                        break;
-                                    case 3:
-                                        // @ts-ignore
-                                        out.push(key + ' = ' + JSON.stringify(this.memory.environ[keys[0]].getSlot(keys[1])) + '; ')
-                                        break;
-                                    case 4:
-                                        // @ts-ignore
-                                        out.push(key + ' = ' + this.memory.environ[keys[0]].getSlot(keys[2], keys[3]) + '; ')
-                                        break;
-                                }
+                                out.push(`${key} = ${JSON.stringify(this.memory.environ.get(key).properties)};`)
+                                continue
+                            }
 
+                            switch (keys.length) {
+                                case 2:
+                                    out.push(`${key} = ${this.memory.environ.get(keys[0]).get(keys[1])};`)
+                                    break;
+                                case 3:
+                                    out.push(`${key} = ${JSON.stringify(this.memory.environ.get(keys[0]).getSlot(Number(keys[1])))};`)
+                                    break;
+                                case 4:
+                                    out.push(`${key} = ${this.memory.environ.get(keys[0]).getSlot(Number(keys[2]), keys[3])};`)
+                                    break;
                             }
                             continue
                         }
-                        try {
-                            if (this.memory.getCell(keys[0]) instanceof MemoryCell) {
-                                const cell = this.memory.getCell(arguments[argumentsKey])
-                                if (cell instanceof MemoryCell) {
-                                    out.push(key + ' = ' + cell.value + '; ')
-                                } else {
-                                    out.push(key + ' = ' + cell + '; ')
-                                }
-                                continue
-                            }
-                        } catch (e) {
-                        }
-                        out.push(key + '; ')
+                        out.push(`${key};`)
                     } catch (e) {
                         // @ts-ignore
                         out.push(key + ' ' + e.message + '; ')
@@ -1093,25 +1066,19 @@ export class InterpreterIc10 {
 	}
 
 	__d(device: string, args: any) {
-		const d: MemoryCell | MemoryStack | Device | number = this.memory.getCell(device);
+		const d = this.memory.getDevice(device);
 		switch (Object.keys(args).length) {
 			case 0:
 				throw Execution.error(this.position, 'missing arguments');
 			case 1:
-				if (d instanceof Device) {
-					d.hash = args[0];
-				}
-				break;
+                d.hash = args[0];
+                break;
 			case 2:
-				if (d instanceof Device) {
-					d.set(args[0], args[1]);
-				}
-				break;
+                d.set(args[0], args[1]);
+                break;
 			case 3:
-				if (d instanceof Device) {
-					d.setSlot(args[0], args[1], args[2]);
-				}
-		}
+                d.setSlot(args[0], args[1], args[2]);
+        }
 
 	}
 

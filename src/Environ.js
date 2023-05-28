@@ -22,14 +22,6 @@ class Environ {
         this.d5 = new Device_1.Device(scope, 'd5', 6);
         this.db = new Chip_1.Chip(scope, 'db', 7);
     }
-    randomize() {
-        for (const x in this) {
-            let d = this[x];
-            if (d instanceof Device_1.Device) {
-                d.properties.randomize();
-            }
-        }
-    }
     get(cell) {
         switch (cell) {
             case 'd0':

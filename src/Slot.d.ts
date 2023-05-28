@@ -24,6 +24,6 @@ export declare class Slot {
     };
     constructor(scope: InterpreterIc10, number: number);
     get scope(): InterpreterIc10;
-    get(op1: string): number;
+    get(property: string): number;
     set(op1: string, value: any): void;
 }

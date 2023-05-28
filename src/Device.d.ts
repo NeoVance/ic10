@@ -1,16 +1,18 @@
-import { MemoryCell } from "./MemoryCell";
-import { DeviceProperties } from "./DeviceProperties";
+import { DeviceFields } from "./DeviceProperties";
 import InterpreterIc10 from "./main";
 import { Slot } from "./Slot";
-export declare class Device extends MemoryCell {
+export declare class Device {
     #private;
     number: number;
     hash: number;
-    properties: DeviceProperties;
-    constructor(scope: InterpreterIc10, name: string, number: number);
+    name: string;
+    properties: Partial<DeviceFields>;
+    slots: Slot[];
+    constructor(scope: InterpreterIc10, name: string, number: number, slotCount?: number, fields?: DeviceFields);
     get scope(): InterpreterIc10;
-    get(variable: any): Device | number | Slot[];
-    set(variable: any, value: any): MemoryCell;
-    getSlot(op1: string | number, op2?: any): number | Slot;
-    setSlot(op1: string, op2: any, value: any): void;
+    get(variable: string): number;
+    set(variable: string, value: number): Device;
+    getSlot(slot: number): Slot;
+    getSlot(slot: number, property: string): number;
+    setSlot(slot: number, property: string, value: number): void;
 }

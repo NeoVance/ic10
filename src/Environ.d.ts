@@ -11,6 +11,5 @@ export declare class Environ {
     d5: Device;
     db: Chip;
     constructor(scope: InterpreterIc10);
-    randomize(): void;
     get(cell: string): Device;
 }

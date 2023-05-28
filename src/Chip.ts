@@ -6,9 +6,9 @@ export class Chip extends Device {
 	#scope: InterpreterIc10
 
 	constructor(scope: InterpreterIc10, name: string, number: number) {
-		super(scope, name, number)
+		super(scope, name, number, 1)
 		this.hash                                        = -128473777
 		this.#scope                                      = scope
-		this.properties.slots[0].properties.OccupantHash = -744098481
+		this.slots[0].properties.OccupantHash = -744098481
 	}
 }

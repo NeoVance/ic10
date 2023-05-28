@@ -16,7 +16,7 @@ class MemoryStack extends MemoryCell_1.MemoryCell {
         if (this.value >= 512) {
             throw main_1.Execution.error(this.#scope.position, 'Stack Overflow !!!');
         }
-        this.#stack[this.value] = this.#scope.memory.cell(value);
+        this.#stack[this.value] = value;
         this.value++;
         return this;
     }

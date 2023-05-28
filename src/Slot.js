@@ -31,12 +31,12 @@ class Slot {
     get scope() {
         return this.#scope;
     }
-    get(op1) {
-        if (op1 in this.properties) {
-            return this.properties[op1];
+    get(property) {
+        if (property in this.properties) {
+            return this.properties[property];
         }
         else {
-            throw main_1.Execution.error(this.#scope.position, 'Unknown parameter', op1);
+            throw main_1.Execution.error(this.#scope.position, 'Unknown parameter', property);
         }
     }
     set(op1, value) {

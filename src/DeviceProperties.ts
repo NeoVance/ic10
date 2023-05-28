@@ -2,7 +2,6 @@ import InterpreterIc10 from "./main";
 import {Slot}          from "./Slot";
 
 export interface DeviceFields {
-	slots: Slot[]
 	hash: number
 	Activate: number
 	AirRelease: number

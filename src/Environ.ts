@@ -23,15 +23,6 @@ export class Environ {
 		this.db     = new Chip(scope, 'db', 7)
 	}
 
-	randomize() {
-		for (const x in this) {
-			let d = this[x]
-			if (d instanceof Device) {
-				d.properties.randomize()
-			}
-		}
-	}
-
 	get(cell: string): Device  {
 		switch (cell) {
 			case 'd0':
