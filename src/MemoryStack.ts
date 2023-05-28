@@ -1,7 +1,7 @@
 import InterpreterIc10, {Execution} from "./main";
-import {MemoryCell}                 from "./MemoryCell";
+import {RegisterCell}                 from "./RegisterCell";
 
-export class MemoryStack extends MemoryCell {
+export class MemoryStack extends RegisterCell {
     declare public value: number
 	#scope: InterpreterIc10;
     readonly #stack: number[]

@@ -1,19 +1,20 @@
 import InterpreterIc10 from "./main";
 import { Environ } from "./Environ";
-import { MemoryCell } from "./MemoryCell";
+import { RegisterCell } from "./RegisterCell";
 import { MemoryStack } from "./MemoryStack";
 import { Device } from "./Device";
+import { ValueCell } from "./ValueCell";
 export declare class Memory {
     #private;
-    cells: Array<MemoryCell>;
+    cells: Array<RegisterCell>;
     stack: MemoryStack;
     environ: Environ;
-    aliases: Record<string, MemoryCell | Device>;
+    aliases: Record<string, ValueCell | Device>;
     constructor(scope: InterpreterIc10);
     get scope(): InterpreterIc10 | null;
     reset(): void;
-    findRegister(name: string | number): MemoryCell | undefined;
-    getRegister(name: string | number): MemoryCell;
+    findRegister(name: string | number): RegisterCell | undefined;
+    getRegister(name: string | number): RegisterCell;
     findDevice(name: string | number): Device | undefined;
     getDevice(name: string | number): Device;
     findValue(value: string | number): number | undefined;

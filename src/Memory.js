@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Memory = void 0;
 const main_1 = require("./main");
 const Environ_1 = require("./Environ");
-const MemoryCell_1 = require("./MemoryCell");
+const RegisterCell_1 = require("./RegisterCell");
 const MemoryStack_1 = require("./MemoryStack");
 const ConstantCell_1 = require("./ConstantCell");
 const Utils_1 = require("./Utils");
@@ -25,7 +25,7 @@ class Memory {
                 this.cells[i] = this.stack;
             }
             else {
-                this.cells[i] = new MemoryCell_1.MemoryCell(scope, n);
+                this.cells[i] = new RegisterCell_1.RegisterCell(n);
             }
             this.cells[i].value = 0;
         }
@@ -127,7 +127,7 @@ class Memory {
                 return r.value;
             return undefined;
         }
-        if (!(v instanceof MemoryCell_1.MemoryCell))
+        if (!(v instanceof RegisterCell_1.RegisterCell))
             return undefined;
         return v.value;
     }
@@ -156,7 +156,7 @@ class Memory {
                 throw main_1.Execution.error(this.#scope.position, "");
             value = parseInt(value);
         }
-        this.aliases[name] = new ConstantCell_1.ConstantCell(value, this.#scope, name);
+        this.aliases[name] = new ConstantCell_1.ConstantCell(value, name);
     }
     toLog() {
         const out = {};

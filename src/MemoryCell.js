@@ -1,13 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MemoryCell = void 0;
-class MemoryCell {
-    value = 0;
-    name;
-    scope;
-    constructor(scope, name) {
-        this.scope = scope;
-        this.name = name;
+const ValueCell_1 = require("./ValueCell");
+class MemoryCell extends ValueCell_1.ValueCell {
+    constructor(name) {
+        super(0, name);
     }
 }
 exports.MemoryCell = MemoryCell;

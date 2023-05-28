@@ -1,21 +1,22 @@
 import InterpreterIc10, {Execution} from "./main";
 import {Environ}                             from "./Environ";
-import {MemoryCell}                          from "./MemoryCell";
+import {RegisterCell}                          from "./RegisterCell";
 import {MemoryStack}                         from "./MemoryStack";
 import {Device}                              from "./Device";
 import {ConstantCell}                        from "./ConstantCell";
 import {hashStr, isHash, isNumber, isPort, isRecPort, isRegister, isSimplePort, patterns} from "./Utils";
+import {ValueCell} from "./ValueCell";
 
 export class Memory {
-	public cells: Array<MemoryCell>
+	public cells: Array<RegisterCell>
     public stack: MemoryStack
 	public environ: Environ
-	public aliases: Record<string, MemoryCell | Device>
+	public aliases: Record<string, ValueCell | Device>
 	readonly #scope: InterpreterIc10;
 
 	constructor(scope: InterpreterIc10) {
 		this.#scope  = scope;
-		this.cells   = new Array<MemoryCell>(18)
+		this.cells   = new Array<RegisterCell>(18)
 		this.environ = new Environ(scope)
         this.stack = new MemoryStack(scope, 512, "r16")
 		this.aliases = {}
@@ -25,7 +26,7 @@ export class Memory {
 			if (i === 16) {
 				this.cells[i] = this.stack
 			} else {
-				this.cells[i] = new MemoryCell(n)
+				this.cells[i] = new RegisterCell(n)
 			}
             this.cells[i].value = 0
 		}
@@ -44,7 +45,7 @@ export class Memory {
         this.environ = new Environ(this.#scope)
     }
 
-    findRegister(name: string | number): MemoryCell | undefined {
+    findRegister(name: string | number): RegisterCell | undefined {
         const mapping: Record<string, string | undefined> = {
             sp: "r16",
             ra: "r17"
@@ -81,7 +82,7 @@ export class Memory {
                 const mem = this.aliases[name]
 
                 if (isRegister(mem.name))
-                    return mem as MemoryCell
+                    return mem as RegisterCell
             }
 
             return undefined
@@ -93,7 +94,7 @@ export class Memory {
         return this.cells[name]
     }
 
-    getRegister(name: string | number): MemoryCell {
+    getRegister(name: string | number): RegisterCell {
         const reg = this.findRegister(name)
 
         if (!reg)
@@ -174,10 +175,10 @@ export class Memory {
             return undefined
         }
 
-        if (!(v instanceof MemoryCell))
+        if (!(v instanceof RegisterCell))
             return undefined
 
-        return (v as MemoryCell).value
+        return (v as RegisterCell).value
     }
 
     getValue(value: string | number): number {

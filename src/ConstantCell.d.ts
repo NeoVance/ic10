@@ -1,6 +1,5 @@
-import InterpreterIc10 from "./main";
-import { MemoryCell } from "./MemoryCell";
-export declare class ConstantCell extends MemoryCell {
+import { ValueCell } from "./ValueCell";
+export declare class ConstantCell extends ValueCell {
     readonly value: number;
-    constructor(value: number, scope: InterpreterIc10, name: string);
+    constructor(value: number, name: string);
 }

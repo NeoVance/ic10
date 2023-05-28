@@ -2,12 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MemoryStack = void 0;
 const main_1 = require("./main");
-const MemoryCell_1 = require("./MemoryCell");
-class MemoryStack extends MemoryCell_1.MemoryCell {
+const RegisterCell_1 = require("./RegisterCell");
+class MemoryStack extends RegisterCell_1.RegisterCell {
     #scope;
     #stack;
     constructor(scope, size, name) {
-        super(scope, name);
+        super(name);
         this.#scope = scope;
         this.#stack = Array(size).fill(0);
         this.value = 0;
