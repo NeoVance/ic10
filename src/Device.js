@@ -8,6 +8,7 @@ exports.IcHash = (0, Utils_1.hashStr)("ItemIntegratedCircuit10");
 class Device {
     hash;
     name;
+    nameHash;
     properties;
     slots;
     #scope;

@@ -688,7 +688,7 @@ class InterpreterIc10 {
         const devices = [];
         for (let i = 0; i <= 5; i++) {
             const d = this.memory.getDevice('d' + i);
-            if (d.hash == hash) {
+            if (d.hash == hash && (name === undefined || d.nameHash === name)) {
                 devices.push(d);
             }
         }

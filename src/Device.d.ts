@@ -6,6 +6,7 @@ export declare class Device {
     #private;
     hash: number;
     name: string;
+    nameHash?: number;
     properties: Partial<DeviceFields>;
     slots: Slot[];
     constructor(scope: InterpreterIc10, name: string, slotCount?: number, fields?: Partial<DeviceFields>);
