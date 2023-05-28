@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Environ = void 0;
 const Device_1 = require("./Device");
-const Chip_1 = require("./Chip");
+const IcHousing_1 = require("./devices/IcHousing");
 class Environ {
     d0;
     d1;
@@ -14,21 +14,13 @@ class Environ {
     #scope;
     constructor(scope) {
         this.#scope = scope;
-        this.d0 = new Device_1.Device(scope, 'd0', 1);
-        this.d1 = new Device_1.Device(scope, 'd1', 2);
-        this.d2 = new Device_1.Device(scope, 'd2', 3);
-        this.d3 = new Device_1.Device(scope, 'd3', 4);
-        this.d4 = new Device_1.Device(scope, 'd4', 5);
-        this.d5 = new Device_1.Device(scope, 'd5', 6);
-        this.db = new Chip_1.Chip(scope, 'db', 7);
-    }
-    randomize() {
-        for (const x in this) {
-            let d = this[x];
-            if (d instanceof Device_1.Device) {
-                d.properties.randomize();
-            }
-        }
+        this.d0 = new Device_1.Device(scope, 'd0');
+        this.d1 = new Device_1.Device(scope, 'd1');
+        this.d2 = new Device_1.Device(scope, 'd2');
+        this.d3 = new Device_1.Device(scope, 'd3');
+        this.d4 = new Device_1.Device(scope, 'd4');
+        this.d5 = new Device_1.Device(scope, 'd5');
+        this.db = new IcHousing_1.IcHousing(scope, 'db');
     }
     get(cell) {
         switch (cell) {

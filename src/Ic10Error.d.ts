@@ -1,4 +1,4 @@
-export declare class ic10Error {
+export declare class Ic10Error extends Error {
     message: string;
     code: number;
     functionName: string;

@@ -2,43 +2,37 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MemoryStack = void 0;
 const main_1 = require("./main");
-const MemoryCell_1 = require("./MemoryCell");
-class MemoryStack extends MemoryCell_1.MemoryCell {
+const RegisterCell_1 = require("./RegisterCell");
+class MemoryStack extends RegisterCell_1.RegisterCell {
     #scope;
-    constructor(scope, name) {
-        super(scope, name);
+    #stack;
+    constructor(scope, size, name) {
+        super(name);
         this.#scope = scope;
-        this.value = [];
-        this.index = 0;
+        this.#stack = Array(size).fill(0);
+        this.value = 0;
     }
     push(value) {
-        if (this.value.length >= 512) {
+        if (this.value >= 512) {
             throw main_1.Execution.error(this.#scope.position, 'Stack Overflow !!!');
         }
-        this.value[this.index] = this.#scope.memory.cell(value);
-        this.index++;
+        this.#stack[this.value] = value;
+        this.value++;
         return this;
     }
     pop() {
-        const o = this.value.slice(this.index - 1, this.index)[0] ?? 0;
-        this.index--;
-        if (this.index < 0) {
-            this.index = 0;
+        const o = this.#stack.slice(this.value - 1, this.value)[0] ?? 0;
+        this.value--;
+        if (this.value < 0) {
+            this.value = 0;
         }
         return o;
     }
     peek() {
-        return this.value.slice(this.index, this.index + 1)[0] ?? 0;
+        return this.#stack.slice(this.value, this.value + 1)[0] ?? 0;
     }
     getStack() {
-        return this.value;
-    }
-    get(variable = null) {
-        return this.index;
-    }
-    set(variable, value) {
-        this.index = value;
-        return this;
+        return this.#stack;
     }
 }
 exports.MemoryStack = MemoryStack;

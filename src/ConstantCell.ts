@@ -1,21 +1,11 @@
 import InterpreterIc10, {Execution} from "./main";
-import {MemoryCell}                 from "./MemoryCell";
+import {RegisterCell}                 from "./RegisterCell";
+import {ValueCell} from "./ValueCell";
 
-export class ConstantCell extends MemoryCell {
-	declare public value: number
-	#scope: InterpreterIc10;
+export class ConstantCell extends ValueCell {
+	declare public readonly value: number
 
-	constructor(value: number, scope: InterpreterIc10, name: string) {
-		super(scope, name);
-		this.#scope = scope;
-		this.value  = value
-	}
-
-	get() {
-		return this.value
-	}
-
-	set(value: any, _: any = null): ConstantCell {
-		throw Execution.error(this.#scope.position, 'Can`t change constant')
+	constructor(value: number, name: string) {
+        super(value, name)
 	}
 }

@@ -1,4 +1,4 @@
 import { ValueCell } from "./ValueCell";
-export declare class MemoryCell extends ValueCell {
+export declare class RegisterCell extends ValueCell {
     constructor(name: string);
 }

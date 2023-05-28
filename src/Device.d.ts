@@ -1,16 +1,21 @@
-import { MemoryCell } from "./MemoryCell";
-import { DeviceProperties } from "./DeviceProperties";
+import { DeviceFields } from "./DeviceProperties";
 import InterpreterIc10 from "./main";
 import { Slot } from "./Slot";
-export declare class Device extends MemoryCell {
+export declare const IcHash: number;
+export declare class Device {
     #private;
-    number: number;
     hash: number;
-    properties: DeviceProperties;
-    constructor(scope: InterpreterIc10, name: string, number: number);
+    name: string;
+    nameHash?: number;
+    properties: Partial<DeviceFields>;
+    slots: Slot[];
+    constructor(scope: InterpreterIc10, name: string, slotCount?: number, fields?: Partial<DeviceFields>);
     get scope(): InterpreterIc10;
-    get(variable: any): Device | number | DeviceProperties | Slot[];
-    set(variable: any, value: any): MemoryCell;
-    getSlot(op1: string, op2?: null): number | Slot;
-    setSlot(op1: string, op2: any, value: any): void;
+    init(properties: Partial<DeviceFields>): void;
+    has(variable: string): boolean;
+    get(variable: string): number;
+    set(variable: string, value: number): Device;
+    getSlot(slot: number): Slot;
+    getSlot(slot: number, property: string): number;
+    setSlot(slot: number, property: string, value: number): void;
 }

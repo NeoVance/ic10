@@ -1,24 +1,28 @@
-import {ic10Error}   from "./ic10Error";
-import {Memory}      from "./Memory";
-import {Device}      from "./Device";
-import {Slot}        from "./Slot";
-import {MemoryCell}  from "./MemoryCell";
-import {MemoryStack} from "./MemoryStack";
+import {Ic10Error} from "./ic10Error";
+import {Memory} from "./Memory";
+import {Device, IcHash} from "./Device";
+import {Slot} from "./Slot";
 
-export const regexes = {
-	'rr1'     : new RegExp("[rd]+(r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a))$"),
-	'r1'      : new RegExp("^r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a)$"),
-	'd1'      : new RegExp("^d([012345b])$"),
-	'rr'      : new RegExp("^d([012345b])$"),
-	'strStart': new RegExp("^\".+$"),
-	'strEnd'  : new RegExp(".+\"$"),
+const regexes = {
+	strStart: new RegExp("^\".+$"),
+	strEnd  : new RegExp(".+\"$"),
 }
+
+const modes = {
+    Average: 0,
+    Sum: 1,
+    Minimum: 2,
+    Maximum: 3
+} as const
+
+export type ReturnCode = "hcf" | "end" | "die"
+
 export var Execution = {
 	error(code: number, message: string, obj: any = null) {
-		return new ic10Error('--', code, message, obj, 0)
+		return new Ic10Error('--', code, message, obj, 0)
 	},
 	display: function (e: { code: any; message: any; lvl: any; obj: any; }) {
-		if (e instanceof ic10Error) {
+		if (e instanceof Ic10Error) {
 			const string = `(${e.code}) - ${e.message}:`;
 			switch (e.lvl) {
 				case 0:
@@ -43,6 +47,14 @@ export var Execution = {
 	}
 }
 
+export type InterpreterIc10Settings = {
+    debug: boolean;
+    debugCallback: Function;
+    logCallback: Function;
+    executionCallback: (err: Ic10Error) => void;
+    tickTime: number;
+}
+
 // noinspection SpellCheckingInspection
 export class InterpreterIc10 {
 	public code: string
@@ -58,16 +70,11 @@ export class InterpreterIc10 {
 		log: string,
 		error: string,
 	}
-	public settings: {
-		debug: boolean;
-		debugCallback: Function;
-		logCallback: Function;
-		executionCallback: Function;
-		tickTime: number;
-	};
+	public settings: InterpreterIc10Settings;
 	public ignoreLine: Array<number>;
+    public device?: Device
 
-	constructor(code: string = '', settings = {}) {
+	constructor(code: string = '', settings: Partial<InterpreterIc10Settings> = {}) {
 		this.code       = code
 		this.memory     = new Memory(this)
 		this.constants  = {}
@@ -82,11 +89,10 @@ export class InterpreterIc10 {
 											logCallback      : (a: string, b: any[]) => {
 												this.output.log = a + ' ' + b.join('')
 											},
-											executionCallback: (e: ic10Error) => {
+											executionCallback: (e: Ic10Error) => {
 												this.output.error = <string>Execution.display(e)
 											},
 										}, settings)
-		this.memory.environ.randomize()
 		if (code) {
 			this.init(code)
 		}
@@ -97,12 +103,24 @@ export class InterpreterIc10 {
 		}
 	}
 
-	setSettings(settings: object = {}): InterpreterIc10 {
+	setSettings(settings: Partial<InterpreterIc10Settings> = {}): InterpreterIc10 {
 		this.settings = Object.assign(this.settings, settings)
 		return this;
 	}
 
-	init(text: string): InterpreterIc10 {
+	init(text: string, device?: Device): InterpreterIc10 {
+        this.memory.reset()
+        if (device !== undefined) {
+            const ics = device.slots
+                .filter(s => s.has("OccupantHash") && s.get("OccupantHash") === IcHash )
+
+            if (ics.length === 1) {
+                this.device = device
+                this.memory.environ.db = device
+                device.name = "db"
+            }
+        }
+
 		this.lines     = text.split(/\r?\n/);
 		const commands = this.lines
 							 .map((line: string) => {
@@ -112,36 +130,34 @@ export class InterpreterIc10 {
 							 });
 		for (const commandsKey in this.lines) {
 			if (commands.hasOwnProperty(commandsKey)) {
-				let command                              = commands[commandsKey]
+				let command = commands[commandsKey]
 				const newArgs: Record<string, string> = {};
-				let mode                                 = 0;
-				let argNumber                            = 0;
+				let mode = 0;
+				let argNumber = 0;
 				for (let argsKey in command.args) {
 					if (command.args.hasOwnProperty(argsKey)) {
 						let arg = command.args[argsKey]
-						if (arg.startsWith("#")) {
+						if (arg.startsWith("#"))
 							break;
-						}
-						if (mode === 0) {
+
+						if (mode === 0)
 							argNumber++
-						}
-						if (regexes.strStart.test(arg)) {
+
+						if (regexes.strStart.test(arg))
 							mode = 1
-						}
-						if (argNumber in newArgs) {
+
+						if (argNumber in newArgs)
 							newArgs[argNumber] += ' ' + arg
-						} else {
+						else
 							newArgs[argNumber] = arg
-						}
-						if (regexes.strEnd.test(arg)) {
+
+						if (regexes.strEnd.test(arg))
 							mode = 0
-						}
 					}
 				}
 				commands[commandsKey].args = Object.values(newArgs)
-			} else {
+			} else
 				commands.push({command: '', args: []})
-			}
 		}
 		this.commands = commands
 		this.position = 0
@@ -149,15 +165,29 @@ export class InterpreterIc10 {
 			let {command, args} = this.commands[this.position]
 			this.position++
 			if (command?.match(/^\w+:$/)) {
-				let label                             = command.replace(":", "")
+				let label = command.replace(":", "")
 				// @ts-ignore
 				this.labels[command.replace(":", "")] = this.position
 				this.memory.define(label, this.position)
 			}
 		}
 		this.position = 0
+        this.__updateDevice()
 		return this
 	}
+
+    __updateDevice() {
+        if (this.device === undefined)
+            return
+
+        if (this.device.has("LineNumber"))
+            this.device.set("LineNumber", this.position)
+
+        this.device.slots.forEach(slot => {
+            if (slot.has("LineNumber"))
+                slot.set("LineNumber", this.position)
+        })
+    }
 
 	stop(): InterpreterIc10 {
 		clearInterval(this.interval)
@@ -177,8 +207,8 @@ export class InterpreterIc10 {
 		})
 	}
 
-	prepareLine(line = -1, isDebugger = false): string | true {
-		if (line > 0) {
+	prepareLine(line = -1, isDebugger = false): ReturnCode | true {
+		if (line >= 0) {
 			this.position = line;
 		}
 		if (!(this.position in this.commands)) {
@@ -201,15 +231,21 @@ export class InterpreterIc10 {
 				if (command in this) {
 					// @ts-ignore
 					this[command](...args)
+                    this.__updateDevice()
 					this.__debug(command, args)
 				} else if (!isComment) {
 					throw Execution.error(this.position, 'Undefined function', command)
 				}
 			} catch (e) {
-				this.settings.executionCallback.call(this, e)
+                if (e instanceof Ic10Error)
+    				this.settings.executionCallback.call(this, e)
+                else
+                    throw e
 			}
 		}
-		if (command === "hcf") return 'hcf'
+		if (command === "hcf")
+            return 'hcf'
+
 		if (isComment) {
 			this.ignoreLine.push(this.position)
 		}
@@ -222,6 +258,17 @@ export class InterpreterIc10 {
 		}
 	}
 
+    runUntil(cond: (status: true | ReturnCode) => boolean, maxIterations: number = 0) {
+        let status: ReturnCode | true = true
+        let n = 0;
+        do {
+            status = this.prepareLine()
+            n++
+        } while (!cond(status) && (maxIterations <= 0 || n <= maxIterations))
+
+        return n
+    }
+
 	__issetLabel(x: string) {
 		return x in this.labels
 	}
@@ -230,39 +277,20 @@ export class InterpreterIc10 {
 		this.memory.define(alias, value)
 	}
 
-	alias(alias: string | number, target: string | number) {
+	alias(alias: string | number, target: string) {
 		this.memory.alias(alias, target)
 	}
 
-	l(register: string, device: string, property: string) {
+    __op<Args extends number[]>(op: (...args: Args) => number, register: string, ...args: { [K in keyof Args]: string }) {
         const r = this.memory.getRegister(register)
-        const value = this.memory.getDevice(device).get(property)
-        r.set(null, value)
-	}
 
-	__l(register: string, device: string, property: string) {
-		this.l(register, device, property)
-	}
+        const inputs = args.map(v => this.memory.getValue(v)) as Args
 
-	ls(register: string, device: string, slot: string, property: string) {
-        const r = this.memory.getRegister(register)
-        const d = this.memory.getDevice(device)
-        const value = d.getSlot(this.memory.getValue(slot), property)
-        r.set(null, value)
-	}
-
-	s(device: string, property: string, value: string) {
-		const d = this.memory.getDevice(device)
-        d.set(property, this.memory.getValue(value))
-	}
-
-	__s(device: string, property: string, value: string) {
-		this.s(device, property, value)
-	}
+        r.value = op(...inputs)
+    }
 
 	move(register: string, value: string) {
-        const r = this.memory.getRegister(register)
-        r.set(null, this.memory.getValue(value))
+        this.__op(v => v, register, value)
 	}
 
 	__move(register: string, value: string) {
@@ -270,863 +298,765 @@ export class InterpreterIc10 {
 	}
 
 	add(register: string, a: string, b: string) {
-        const r = this.memory.getRegister(register)
-        r.set(null, this.memory.getValue(a) + this.memory.getValue(b))
+        this.__op((a, b) => a + b, register, a, b)
 	}
 
 	sub(register: string, a: string, b: string) {
-        const r = this.memory.getRegister(register)
-        r.set(null, this.memory.getValue(a) - this.memory.getValue(b))
+        this.__op((a, b) => a - b, register, a, b)
 	}
 
 	mul(register: string, a: string, b: string) {
-        const r = this.memory.getRegister(register)
-        r.set(null, this.memory.getValue(a) - this.memory.getValue(b))
+        this.__op((a, b) => a * b, register, a, b)
 	}
 
-	div(op1: any, op2: any, op3: any, op4: any) {
-		const div = this.memory.cell(op2) / this.memory.cell(op3);
-		this.memory.cell(op1, Number(div) || 0)
+	div(register: string, a: string, b: string) {
+        this.__op((a, b) => Number(a / b) || 0, register, a, b)
 	}
 
-	mod(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.abs(this.memory.cell(op2) % this.memory.cell(op3)))
+	mod(register: string, a: string, b: string) {
+        this.__op((a, b) => a % b, register, a, b)
 	}
 
-	sqrt(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.sqrt(this.memory.cell(op2)))
+	sqrt(register: string, v: string) {
+        this.__op(Math.sqrt, register, v)
 	}
 
-	round(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.round(this.memory.cell(op2)))
+	round(register: string, v: string) {
+        this.__op(Math.round, register, v)
 	}
 
-	trunc(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.trunc(this.memory.cell(op2)))
-	}
-
-	ceil(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.ceil(this.memory.cell(op2)))
-	}
-
-	floor(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.floor(this.memory.cell(op2)))
-	}
-
-	max(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.max(this.memory.cell(op2), this.memory.cell(op3)))
-	}
-
-	min(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.min(this.memory.cell(op2), this.memory.cell(op3)))
-	}
-
-	abs(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.abs(this.memory.cell(op2)))
-	}
-
-	log(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.log(this.memory.cell(op2)))
-	}
-
-	exp(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.exp(this.memory.cell(op2)))
-	}
-
-	rand(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.random())
-	}
-
-	sin(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.sin(this.memory.cell(op2)))
-	}
-
-	cos(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.cos(this.memory.cell(op2)))
-	}
-
-	tan(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.tan(this.memory.cell(op2)))
-	}
-
-	asin(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.asin(this.memory.cell(op2)))
-	}
-
-	acos(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.acos(this.memory.cell(op2)))
-	}
-
-	atan(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, Math.atan(this.memory.cell(op2)))
-	}
-
-	atan2(op1: any, op2: any, op3: any, op4: any) {
-
-		this.memory.cell(op1, Math.atan2(this.memory.cell(op2), this.memory.cell(op3)))
-	}
-
-	yield(op1: any, op2: any, op3: any, op4: any) {
-	}
-
-	sleep(op1: any, op2: any, op3: any, op4: any) {
-	}
-
-	select(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.memory.cell(this.memory.cell(op2) ? this.memory.cell(op3) : this.memory.cell(op4)))
-	}
-
-	hcf(op1: any, op2: any, op3: any, op4: any) {
-		console.log("Die Mother Fucker Die Mother Fucker Die !!!!!")
-	}
-
-	j(op1: any) {
-		if (this.__issetLabel(op1)) {
-			this.position = this.labels[op1]
-		} else {
-			const line = this.memory.cell(op1);
-			if (!isNaN(line)) {
-				this.position = line
-			} else {
-				throw Execution.error(this.position, 'Undefined label', [op1, this.labels])
-			}
-		}
-	}
-
-	jr(op1: any) {
-		let jr = 0;
-		if (op1 > 0 || 0 > op1) {
-			jr = op1
-		} else {
-			throw Execution.error(this.position, 'Can`t move on', op1)
-		}
-		this.position += jr;
-		this.position--
-	}
-
-	jal(op1: any) {
-		this.memory.cell('r17', this.position)
-		this.j(op1)
-	}
-
-	__eq(op1 = 0, op2 = 0) {
-		return Number(op1 == op2)
-	}
-
-	__ge(op1 = 0, op2 = 0) {
-		return Number(op1 >= op2)
-	}
-
-	__gt(op1 = 0, op2 = 0) {
-		return Number(op1 > op2)
-	}
-
-	__le(op1 = 0, op2 = 0) {
-		return Number(op1 <= op2)
-	}
-
-	__lt(op1 = 0, op2 = 0) {
-		return Number(op1 < op2)
-	}
-
-	__ne(op1 = 0, op2 = 0) {
-		return Number(op1 != op2)
-	}
-
-	__ap(op1 = 0, op2 = 0, op3 = 0, op4 = 0) {
-		return Number(!this.__na(...arguments))
-	}
-
-	__na(x = 0, y = 0, d = 0, op4 = 0) {
-		if (y == 0) {
-			return Number(d > 0)
-		}
-		return Number(Math.abs(x - y) > d * Math.max(Math.abs(x), Math.abs(y)))
-	}
-
-	__dse(op1 = 0, op2 = 0, op3 = 0, op4 = 0) {
-		try {
-			this.memory.getCell(op1)
-			return 1
-		} catch (e) {
-			return 0
-		}
-	}
-
-	__dns(op1 = 0, op2 = 0, op3 = 0, op4 = 0) {
-		try {
-			this.memory.getCell(op1)
-			return 0
-		} catch (e) {
-			return 1
-		}
-	}
-
-
-	seq(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__eq(this.memory.cell(op2), this.memory.cell(op3)))
-	}
-
-	seqz(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__eq(this.memory.cell(op2), 0))
-	}
-
-	sge(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__ge(this.memory.cell(op2), this.memory.cell(op3)))
-	}
-
-	sgez(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__ge(this.memory.cell(op2), 0))
-	}
-
-	sgt(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__gt(this.memory.cell(op2), this.memory.cell(op3)))
-	}
-
-	sgtz(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__gt(this.memory.cell(op2), 0))
-	}
-
-	sle(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__le(this.memory.cell(op2), this.memory.cell(op3)))
-	}
-
-	slez(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__le(this.memory.cell(op2), 0))
-	}
-
-	slt(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__lt(this.memory.cell(op2), this.memory.cell(op3)))
-	}
-
-	sltz(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__lt(this.memory.cell(op2), 0))
-	}
-
-	sne(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__ne(this.memory.cell(op2), this.memory.cell(op3)))
-	}
-
-	snez(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__ne(this.memory.cell(op2), 0))
-	}
-
-	sap(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__ap(this.memory.cell(op2), this.memory.cell(op3)))
-	}
-
-	sapz(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__ap(this.memory.cell(op2), 0))
-	}
-
-	sna(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__na(this.memory.cell(op2), this.memory.cell(op3), this.memory.cell(op4)))
-	}
-
-	snaz(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__na(this.memory.cell(op2), 0, this.memory.cell(op3)))
-	}
-
-	sdse(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__dse(op2))
-	}
-
-	sdns(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.__dns(op2))
-	}
-
-	beq(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__eq(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.j(op3)
-		}
-	}
-
-	beqz(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__eq(this.memory.cell(op1), 0)) {
-			this.j(op2)
-		}
-	}
-
-	bge(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ge(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.j(op3)
-		}
-	}
-
-	bgez(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ge(this.memory.cell(op1), 0)) {
-			this.j(op2)
-		}
-	}
-
-	bgt(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__gt(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.j(op3)
-		}
-	}
-
-	bgtz(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__gt(this.memory.cell(op1), 0)) {
-			this.j(op2)
-		}
-	}
-
-	ble(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__le(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.j(op3)
-		}
-	}
-
-	blez(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__le(this.memory.cell(op1), 0)) {
-			this.j(op2)
-		}
-	}
-
-	blt(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__lt(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.j(op3)
-		}
-	}
-
-	bltz(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__lt(this.memory.cell(op1), 0)) {
-			this.j(op2)
-		}
-	}
-
-	bne(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ne(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.j(op3)
-		}
-	}
-
-	bnez(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ne(this.memory.cell(op1), 0)) {
-			this.j(op2)
-		}
-	}
-
-	bap(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ap(this.memory.cell(op1), this.memory.cell(op2), this.memory.cell(op3))) {
-			this.j(op4)
-		}
-	}
-
-	bapz(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ap(this.memory.cell(op1), 0, this.memory.cell(op2))) {
-			this.j(op3)
-		}
-	}
-
-	bna(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__na(this.memory.cell(op1), this.memory.cell(op2), this.memory.cell(op3))) {
-			this.j(op4)
-		}
-	}
-
-	bnaz(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__na(this.memory.cell(op1), 0, this.memory.cell(op2))) {
-			this.j(op3)
-		}
-	}
-
-	bdse(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__dse(op2)) {
-			this.j(op3)
-		}
-	}
-
-	bdns(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__dns(op2)) {
-			this.j(op3)
-		}
-	}
-
-	breq(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__eq(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jr(op3)
-		}
-	}
-
-	breqz(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__eq(this.memory.cell(op1))) {
-			this.jr(op2)
-		}
-	}
-
-	brge(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ge(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jr(op3)
-		}
-	}
-
-	brgez(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ge(this.memory.cell(op1), 0)) {
-			this.jr(op2)
-		}
-	}
-
-	brgt(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__gt(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jr(op3)
-		}
-	}
-
-	brgtz(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__gt(this.memory.cell(op1), 0)) {
-			this.jr(op2)
-		}
-	}
-
-	brle(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__le(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jr(op3)
-		}
-	}
-
-	brlez(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__le(this.memory.cell(op1), 0)) {
-			this.jr(op2)
-		}
-	}
-
-	brlt(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__lt(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jr(op3)
-		}
-	}
-
-	brltz(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__lt(this.memory.cell(op1), 0)) {
-			this.jr(op2)
-		}
-	}
-
-	brne(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ne(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jr(op3)
-		}
-	}
-
-	brnez(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ne(this.memory.cell(op1), 0)) {
-			this.jr(op2)
-		}
-	}
-
-	brap(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ap(this.memory.cell(op1), this.memory.cell(op2), this.memory.cell(op3))) {
-			this.jr(op4)
-		}
-	}
-
-	brapz(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ap(this.memory.cell(op1), 0, this.memory.cell(op2))) {
-			this.jr(op3)
-		}
-	}
-
-	brna(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__na(this.memory.cell(op1), this.memory.cell(op2), this.memory.cell(op3))) {
-			this.jr(op4)
-		}
-	}
-
-	brnaz(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__na(this.memory.cell(op1), 0, this.memory.cell(op2))) {
-			this.jr(op3)
-		}
-	}
-
-	brdse(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__dse(op2)) {
-			this.jr(op3)
-		}
-	}
-
-	brdns(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__dns(op2)) {
-			this.jr(op3)
-		}
-	}
-
-	beqal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__eq(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jal(op3)
-		}
-	}
-
-	beqzal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__eq(this.memory.cell(op1), 0)) {
-			this.jal(op2)
-		}
-	}
-
-	bgeal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ge(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jal(op3)
-		}
-	}
-
-	bgezal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ge(this.memory.cell(op1), 0)) {
-			this.jal(op2)
-		}
-	}
-
-	bgtal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__gt(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jal(op3)
-		}
-	}
-
-	bgtzal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__gt(this.memory.cell(op1), 0)) {
-			this.jal(op2)
-		}
-	}
-
-	bleal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__le(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jal(op3)
-		}
-	}
-
-	blezal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__le(this.memory.cell(op1), 0)) {
-			this.jal(op2)
-		}
-	}
-
-	bltal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__lt(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jal(op3)
-		}
-	}
-
-	bltzal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__lt(this.memory.cell(op1), 0)) {
-			this.jal(op2)
-		}
-	}
-
-	bneal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ne(this.memory.cell(op1), this.memory.cell(op2))) {
-			this.jal(op3)
-		}
-	}
-
-	bnezal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ne(this.memory.cell(op1), 0)) {
-			this.jal(op2)
-		}
-	}
-
-	bapal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ap(this.memory.cell(op1), this.memory.cell(op2), this.memory.cell(op3))) {
-			this.jal(op4)
-		}
-	}
-
-	bapzal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__ap(this.memory.cell(op1), 0) && this.memory.cell(op2)) {
-			this.jal(op3)
-		}
-	}
-
-	bnaal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__na(this.memory.cell(op1), this.memory.cell(op2), this.memory.cell(op3))) {
-			this.jal(op4)
-		}
-	}
-
-	bnazal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__na(this.memory.cell(op1), 0, this.memory.cell(op2))) {
-			this.jal(op3)
-		}
-	}
-
-	bdseal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__dse(op2)) {
-			this.jal(op3)
-		}
-	}
-
-	bdnsal(op1: any, op2: any, op3: any, op4: any) {
-		if (this.__dns(op2)) {
-			this.jal(op3)
-		}
-	}
-
-	push(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.getCell('r16').push(op1)
-	}
-
-	pop(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.memory.getCell('r16').pop())
-	}
-
-	peek(op1: any, op2: any, op3: any, op4: any) {
-		this.memory.cell(op1, this.memory.getCell('r16').peek())
-	}
-
-	lb(op1: any, op2: any, op3: any, op4: any) {
-		const values = [];
-		const hash   = this.memory.cell(op2);
-		for (let i = 0; i <= 5; i++) {
-			const d: MemoryCell | MemoryStack | Device | number = this.memory.getCell('d' + i);
-			if (d instanceof Device) {
-				if (d.hash == hash) {
-					values.push(d.get(op3))
-				}
-			}
-		}
-		if (values.length === 0) {
-			throw Execution.error(this.position, 'Can`t find Device wich hash:', hash)
-		}
-		let result = 0;
-		switch (op4) {
-			case 0:
-			case 'Average':
-				// @ts-ignore
-				result = values.reduce((partial_sum, a) => partial_sum + a, 0) / values.length
-				break;
-			case 1:
-			case 'Sum':
-				// @ts-ignore
-				result = values.reduce((partial_sum, a) => partial_sum + a, 0)
-				break;
-			case 2:
-			case 'Minimum':
-				// @ts-ignore
-				result = Math.min.apply(null, values)
-				break;
-			case 3:
-			case 'Maximum':
-				// @ts-ignore
-				result = Math.max.apply(null, values)
-				break;
-
-		}
-		this.memory.cell(op1, Number(result))
-	}
-
-	lr(op1: any, op2: any, op3: any, op4: any) {
-		const values = [];
-		const d      = this.memory.getCell(op2);
-		if (d instanceof Device) {
-			for (const slotsKey in d.properties.slots) {
-				if (d.properties.slots[slotsKey] instanceof Slot) {
-					const slot: Slot = d.properties.slots[slotsKey];
-					values.push(slot.get(op4))
-				}
-			}
-		}
-		let result = 0;
-		switch (op3) {
-			case 0:
-			case 'Average':
-				result = values.reduce((partial_sum, a) => partial_sum + a, 0) / values.length
-				break;
-			case 1:
-			case 'Sum':
-				result = values.reduce((partial_sum, a) => partial_sum + a, 0)
-				break;
-			case 2:
-			case 'Minimum':
-				result = Math.min.apply(null, values)
-				break;
-			case 3:
-			case 'Maximum':
-				result = Math.max.apply(null, values)
-				break;
-
-		}
-		this.memory.cell(op1, result)
-	}
-
-	sb(op1: any, op2: any, op3: any, op4: any) {
-		const hash = this.memory.cell(op1);
-		for (let i = 0; i <= 5; i++) {
-			const d: MemoryCell | MemoryStack | Device | number = this.memory.getCell('d' + i);
-			if (d instanceof Device) {
-				if (d.hash == hash) {
-					d.set(op2, op3)
-				}
-			}
-		}
-	}
-
-    lbn(targetRegister: any, deviceHash: any, nameHash: any, property: any, batchMode: any) {
-        const values: number[] = [];
-        const hash   = this.memory.cell(deviceHash);
-        for (let i = 0; i <= 5; i++) {
-            const d: MemoryCell | MemoryStack | Device | number = this.memory.getCell('d' + i);
-            if (d instanceof Device) {
-                if (d.hash == hash) {
-                    values.push(d.get(property) as number)
-                }
-            }
-        }
-        if (values.length === 0) {
-            throw Execution.error(this.position, 'Can`t find Device wich hash:', hash)
-        }
-        let result = 0;
-        switch (batchMode) {
-            case 0:
-            case 'Average':
-                // @ts-ignore
-                result = values.reduce((partial_sum, a) => partial_sum + a, 0) / values.length
-                break;
-            case 1:
-            case 'Sum':
-                // @ts-ignore
-                result = values.reduce((partial_sum, a) => partial_sum + a, 0)
-                break;
-            case 2:
-            case 'Minimum':
-                // @ts-ignore
-                result = Math.min.apply(null, values)
-                break;
-            case 3:
-            case 'Maximum':
-                // @ts-ignore
-                result = Math.max.apply(null, values)
-                break;
-
-        }
-        this.memory.cell(targetRegister, Number(result))
+    trunc(register: string, v: string) {
+        this.__op(Math.trunc, register, v)
     }
 
-    sbn() {}
+    ceil(register: string, v: string) {
+        this.__op(Math.ceil, register, v)
+    }
 
-    lbs() {}
+    floor(register: string, v: string) {
+        this.__op(Math.floor, register, v)
+    }
 
-    lbns() {}
+	max(register: string, a: string, b: string) {
+        this.__op(Math.max, register, a, b)
+	}
 
-    ss() {}
+    minx(register: string, a: string, b: string) {
+        this.__op(Math.min, register, a, b)
+    }
 
-    sbs() {}
+    abs(register: string, v: string) {
+        this.__op(Math.abs, register, v)
+    }
 
-    snan() {}
+	log(register: string, v: string) {
+        this.__op(Math.log, register, v)
+	}
 
-    snanz() {}
+    exp(register: string, v: string) {
+        this.__op(Math.exp, register, v)
+    }
 
-    bnan() {}
+	rand(register: string, v: string) {
+        this.__op(_ => Math.random(), register, v)
+	}
 
-    brnan() {}
+    sin(register: string, v: string) {
+        this.__op(Math.sin, register, v)
+    }
 
-	and(op1: any, op2: any, op3: any, op4: any) {
-		op2 = this.memory.cell(op2)
-		op3 = this.memory.cell(op3)
-		if (op2 && op3) {
-			this.memory.cell(op1, 1)
-		} else {
-			this.memory.cell(op1, 0)
+    cos(register: string, v: string) {
+        this.__op(Math.cos, register, v)
+    }
+
+    tan(register: string, v: string) {
+        this.__op(Math.tan, register, v)
+    }
+
+    asin(register: string, v: string) {
+        this.__op(Math.asin, register, v)
+    }
+
+    acos(register: string, v: string) {
+        this.__op(Math.acos, register, v)
+    }
+
+    atan(register: string, v: string) {
+        this.__op(Math.atan, register, v)
+    }
+
+	atan2(register: string, a: string, b: string) {
+        this.__op(Math.atan2, register, a, b)
+	}
+
+	yield() {
+	}
+
+	sleep(s: number) {
+        //TODO: yield for s * x ticks
+	}
+
+	select(register: string, a: string, b: string, c: string) {
+        this.__op((a, b, c) => a ? b : c, register, a, b, c)
+	}
+
+	hcf() {
+		console.log("Die Mother Fucker Die!!!!!")
+	}
+
+    __jump(line: number) {
+        this.position = line
+    }
+
+    __call(line: number) {
+        this.memory.getRegister("ra").value = this.position
+        this.__jump(line)
+    }
+
+    __getJumpTarget(target: string) {
+        if (this.__issetLabel(target))
+            return this.labels[target]
+
+        const line = this.memory.getValue(target);
+
+        if (isNaN(line))
+            throw Execution.error(this.position, 'Incorrect jump target', [target, this.labels])
+
+        return line
+    }
+
+	j(target: string) {
+        this.__jump(this.__getJumpTarget(target))
+    }
+
+	jr(offset: string) {
+        const d = this.memory.getValue(offset)
+
+        if (Math.abs(d) < 0.001)
+            throw Execution.error(this.position, "Infinite loop detected", offset)
+
+        this.__jump(this.position + d - 1)
+	}
+
+	jal(target: string) {
+        this.__call(this.__getJumpTarget(target))
+	}
+
+	__eq(a: number, b: number = 0) {
+		return a == b
+	}
+
+	__ge(a: number, b: number = 0) {
+		return a >= b
+	}
+
+	__gt(a: number, b: number = 0) {
+		return a > b
+	}
+
+	__le(a: number, b: number = 0) {
+		return a <= b
+	}
+
+	__lt(a: number, b: number = 0) {
+		return a < b
+	}
+
+	__ne(a: number, b: number = 0) {
+		return a != b
+	}
+
+	__ap(x: number, y: number, c: number = 0) {
+		return !this.__na(x, y, c)
+	}
+
+	__na(x: number, y: number, c: number = 0) {
+		return Math.abs(x - y) > c * Math.max(Math.abs(x), Math.abs(y))
+	}
+
+	__dse(d: string) {
+        return this.memory.findDevice(d) !== undefined
+	}
+
+	__dns(d: string) {
+		return !this.__dse(d)
+	}
+
+    __nan(v: number) {
+        return isNaN(this.memory.getValue(v))
+    }
+
+    __nanz(v: number) {
+        return !this.__nan(v)
+    }
+
+    __sOp<Args extends number[]>(op: (...args: Args) => boolean, register: string, ...args: { [K in keyof Args]: string }) {
+        const r = this.memory.getRegister(register)
+
+        const inputs = args.map(v => this.memory.getValue(v)) as Args
+
+        r.value = op(...inputs) ? 1 : 0
+    }
+
+	seq(register: string, a: string, b: string) {
+        this.__sOp(this.__eq.bind(this), register, a, b)
+	}
+
+	seqz(register: string, a: string) {
+        this.__sOp(this.__eq.bind(this), register, a)
+	}
+
+	sge(register: string, a: string, b: string) {
+        this.__sOp(this.__ge.bind(this), register, a, b)
+	}
+
+	sgez(register: string, a: string) {
+        this.__sOp(this.__ge.bind(this), register, a)
+	}
+
+	sgt(register: string, a: string, b: string) {
+		this.__sOp(this.__gt.bind(this), register, a, b)
+	}
+
+	sgtz(register: string, a: string) {
+        this.__sOp(this.__gt.bind(this), register, a)
+	}
+
+	sle(register: string, a: string, b: string) {
+        this.__sOp(this.__le.bind(this), register, a, b)
+	}
+
+	slez(register: string, a: string) {
+        this.__sOp(this.__le.bind(this), register, a)
+	}
+
+	slt(register: string, a: string, b: string) {
+        this.__sOp(this.__lt.bind(this), register, a, b)
+	}
+
+	sltz(register: string, a: string) {
+        this.__sOp(this.__lt.bind(this), register, a)
+	}
+
+	sne(register: string, a: string, b: string) {
+        this.__sOp(this.__ne.bind(this), register, a, b)
+	}
+
+	snez(register: string, a: string) {
+        this.__sOp(this.__ne.bind(this), register, a)
+	}
+
+	sap(register: string, x: string, y: string, c: string) {
+        this.__sOp(this.__ap.bind(this), register, x, y, c)
+	}
+
+	sapz(register: string, x: string, y: string) {
+        this.__sOp(this.__ap.bind(this), register, x, y)
+	}
+
+	sna(register: string, x: string, y: string, c: string) {
+        this.__sOp(this.__na.bind(this), register, x, y, c)
+	}
+
+	snaz(register: string, x: string, y: string) {
+        this.__sOp(this.__na.bind(this), register, x, y)
+	}
+
+	sdse(register: string, d: string) {
+        this.memory.getRegister(register).value = Number(this.__dse(d))
+	}
+
+	sdns(register: string, d: string) {
+        this.memory.getRegister(register).value = Number(this.__dns(d))
+	}
+
+    snan(register: string, v: string) {
+        this.__sOp(this.__nan.bind(this), register, v)
+    }
+
+    snanz(register: string, v: string) {
+        this.__sOp(this.__nanz.bind(this), register, v)
+    }
+
+    __bOp<Args extends number[]>(op: (...args: Args) => boolean | undefined, line: string, ...args: { [K in keyof Args]: string }) {
+        const inputs = args.map(v => this.memory.getValue(v)) as Args
+
+        if (!op(...inputs))
+            return
+
+        this.j(line)
+    }
+
+    __bROp<Args extends number[]>(op: (...args: Args) => boolean | undefined, offset: string, ...args: { [K in keyof Args]: string }) {
+        const inputs = args.map(v => this.memory.getValue(v)) as Args
+
+        if (!op(...inputs))
+            return
+
+        this.jr(offset)
+    }
+
+    __bCOp<Args extends number[]>(op: (...args: Args) => boolean | undefined, line: string, ...args: { [K in keyof Args]: string }) {
+        const inputs = args.map(v => this.memory.getValue(v)) as Args
+
+        if (!op(...inputs))
+            return
+
+        this.jal(line)
+    }
+
+	beq(a: string, b: string, line: string) {
+        this.__bOp(this.__eq.bind(this), line, a, b)
+	}
+
+	beqz(a: string, line: string) {
+        this.__bOp(this.__eq.bind(this), line, a)
+	}
+
+	bge(a: string, b: string, line: string) {
+        this.__bOp(this.__ge.bind(this), line, a, b)
+	}
+
+	bgez(a: string, line: string) {
+        this.__bOp(this.__ge.bind(this), line, a)
+	}
+
+	bgt(a: string, b: string, line: string) {
+        this.__bOp(this.__gt.bind(this), line, a, b)
+	}
+
+	bgtz(a: string, line: string) {
+        this.__bOp(this.__gt.bind(this), line, a)
+	}
+
+	ble(a: string, b: string, line: string) {
+        this.__bOp(this.__le.bind(this), line, a, b)
+	}
+
+	blez(a: string, line: string) {
+        this.__bOp(this.__le.bind(this), line, a)
+	}
+
+	blt(a: string, b: string, line: string) {
+        this.__bOp(this.__lt.bind(this), line, a, b)
+	}
+
+	bltz(a: string, line: string) {
+        this.__bOp(this.__lt.bind(this), line, a)
+	}
+
+	bne(a: string, b: string, line: string) {
+        this.__bOp(this.__ne.bind(this), line, a, b)
+	}
+
+	bnez(a: string, line: string) {
+        this.__bOp(this.__ne.bind(this), line, a)
+	}
+
+	bap(x: string, y: string, c: string, line: string) {
+		this.__bOp(this.__ap.bind(this), line, x, y, c)
+	}
+
+	bapz(x: string, y: string, line: string) {
+        this.__bOp(this.__ap.bind(this), line, x, y)
+	}
+
+	bna(x: string, y: string, c: string, line: string) {
+        this.__bOp(this.__na.bind(this), line, x, y, c)
+	}
+
+	bnaz(x: string, y: string, line: string) {
+        this.__bOp(this.__na.bind(this), line, x, y)
+	}
+
+	bdse(d: string, line: string) {
+        if (this.__dse(d))
+            this.j(line)
+	}
+
+	bdns(d: string, line: string) {
+		if (this.__dns(d))
+            this.j(line)
+	}
+
+    bnan(v: string, line: string) {
+        this.__bOp(this.__nan.bind(this), line, v)
+    }
+
+	breq(a: string, b: string, offset: string) {
+        this.__bROp(this.__eq.bind(this), offset, a, b)
+	}
+
+	breqz(a: string, offset: string) {
+        this.__bROp(this.__eq.bind(this), offset, a)
+	}
+
+	brge(a: string, b: string, offset: string) {
+        this.__bROp(this.__ge.bind(this), offset, a)
+	}
+
+	brgez(a: string, offset: string) {
+        this.__bROp(this.__ge.bind(this), offset, a)
+	}
+
+	brgt(a: string, b: string, offset: string) {
+        this.__bROp(this.__gt.bind(this), offset, a, b)
+	}
+
+	brgtz(a: string, offset: string) {
+        this.__bROp(this.__gt.bind(this), offset, a)
+	}
+
+	brle(a: string, b: string, offset: string) {
+        this.__bROp(this.__le.bind(this), offset, a, b)
+	}
+
+	brlez(a: string, offset: string) {
+        this.__bROp(this.__le.bind(this), offset, a)
+	}
+
+	brlt(a: string, b: string, offset: string) {
+        this.__bROp(this.__lt.bind(this), offset, a, b)
+	}
+
+	brltz(a: string, offset: string) {
+        this.__bROp(this.__lt.bind(this), offset, a)
+	}
+
+	brne(a: string, b: string, offset: string) {
+        this.__bROp(this.__ne.bind(this), offset, a, b)
+	}
+
+	brnez(a: string, offset: string) {
+        this.__bROp(this.__ne.bind(this), offset, a)
+	}
+
+	brap(x: string, y: string, c: string, offset: string) {
+		this.__bROp(this.__ap.bind(this), offset, x, y, c)
+	}
+
+	brapz(x: string, y: string, offset: string) {
+        this.__bROp(this.__ap.bind(this), offset, x, y)
+	}
+
+	brna(x: string, y: string, c: string, offset: string) {
+        this.__bROp(this.__na.bind(this), offset, x, y, c)
+	}
+
+	brnaz(x: string, y: string, offset: string) {
+        this.__bROp(this.__ap.bind(this), offset, x, y)
+	}
+
+	brdse(d: string, offset: string) {
+		if (this.__dse(d)) {
+			this.jr(offset)
 		}
 	}
 
-	or(op1: any, op2: any, op3: any, op4: any) {
-		op2 = this.memory.cell(op2)
-		op3 = this.memory.cell(op3)
-		if (op2 || op3) {
-			this.memory.cell(op1, 1)
-		} else {
-			this.memory.cell(op1, 0)
+	brdns(d: string, offset: string) {
+		if (this.__dns(d)) {
+			this.jr(offset)
 		}
 	}
 
-	xor(op1: any, op2: any, op3: any, op4: any) {
-		op2 = Boolean(this.memory.cell(op2))
-		op3 = Boolean(this.memory.cell(op3))
-		if ((op2 && !op3) || (!op2 && op3)) {
-			this.memory.cell(op1, 1)
-		} else {
-			this.memory.cell(op1, 0)
+    brnan(v: string, offset: string) {
+        this.__bROp(this.__nan.bind(this), offset, v)
+    }
+
+	beqal(a: string, b: string, line: string) {
+        this.__bCOp(this.__eq.bind(this), line, a, b)
+	}
+
+	beqzal(a: string, line: string) {
+        this.__bCOp(this.__eq.bind(this), line, a)
+	}
+
+	bgeal(a: string, b: string, line: string) {
+        this.__bCOp(this.__ge.bind(this), line, a, b)
+	}
+
+	bgezal(a: string, line: string) {
+        this.__bCOp(this.__ge.bind(this), line, a)
+	}
+
+	bgtal(a: string, b: string, line: string) {
+        this.__bCOp(this.__gt.bind(this), line, a, b)
+	}
+
+	bgtzal(a: string, line: string) {
+        this.__bCOp(this.__gt.bind(this), line, a)
+	}
+
+	bleal(a: string, b: string, line: string) {
+        this.__bCOp(this.__le.bind(this), line, a, b)
+	}
+
+	blezal(a: string, line: string) {
+        this.__bCOp(this.__le.bind(this), line, a)
+	}
+
+	bltal(a: string, b: string, line: string) {
+        this.__bCOp(this.__lt.bind(this), line, a, b)
+	}
+
+	bltzal(a: string, line: string) {
+        this.__bCOp(this.__lt.bind(this), line, a)
+	}
+
+	bneal(a: string, b: string, line: string) {
+        this.__bCOp(this.__ne.bind(this), line, a, b)
+	}
+
+	bnezal(a: string, line: string) {
+        this.__bCOp(this.__ne.bind(this), line, a)
+	}
+
+	bapal(x: string, y: string, c: string, line: string) {
+        this.__bCOp(this.__ap.bind(this), line, x, y, c)
+	}
+
+	bapzal(x: string, y: string, line: string) {
+        this.__bCOp(this.__ap.bind(this), line, x, y)
+	}
+
+	bnaal(x: string, y: string, c: string, line: string) {
+        this.__bCOp(this.__na.bind(this), line, x, y, c)
+	}
+
+	bnazal(x: string, y: string, line: string) {
+        this.__bCOp(this.__na.bind(this), line, x, y)
+	}
+
+	bdseal(d: string, line: string) {
+		if (this.__dse(d)) {
+			this.jal(line)
 		}
 	}
 
-	nor(op1: any, op2: any, op3: any, op4: any) {
-		op2 = Boolean(this.memory.cell(op2))
-		op3 = Boolean(this.memory.cell(op3))
-		if (!op2 && !op3) {
-			this.memory.cell(op1, 1)
-		} else {
-			this.memory.cell(op1, 0)
+	bdnsal(d: string, line: string) {
+		if (this.__dns(d)) {
+			this.jal(line)
 		}
 	}
 
-	_debug(op1: any, op2: any, op3: any, op4: any){
-		this._log(op1, op2, op3, op4)
+	push(a: string) {
+        this.memory.stack.push(this.memory.getValue(a))
 	}
-	_log(op1: any, op2: any, op3: any, op4: any) {
+
+	pop(register: string) {
+        this.memory.getRegister(register).value = this.memory.stack.pop()
+	}
+
+	peek(register: string) {
+        this.memory.getRegister(register).value = this.memory.stack.peek()
+	}
+
+    __transformBatch(values: number[], mode: string) {
+        const modeMapping: Record<string, number | undefined> = modes
+
+        const m = modeMapping[mode] ?? this.memory.getValue(mode)
+
+        switch (m) {
+            case modes.Average:
+                return values.reduce((partial_sum, a) => partial_sum + a, 0) / values.length
+            case modes.Sum:
+                return values.reduce((partial_sum, a) => partial_sum + a, 0)
+            case modes.Minimum:
+                return Math.min(...values)
+            case modes.Maximum:
+                return  Math.max(...values)
+        }
+
+        throw Execution.error(this.position, "Unknown batch mode", mode)
+    }
+
+    __getDevices(hash: number, name?: number) {
+        const devices: Device[] = []
+
+        //TODO: check all devices in the network
+        for (let i = 0; i <= 5; i++) {
+            const d = this.memory.getDevice('d' + i);
+
+            if (d.hash == hash && (name === undefined || d.nameHash === name)) {
+                devices.push(d)
+            }
+        }
+
+        return devices
+    }
+
+    l(register: string, device: string, property: string) {
+        const r = this.memory.getRegister(register)
+        r.value = this.memory.getDevice(device).get(property)
+    }
+
+    __l(register: string, device: string, property: string) {
+        this.l(register, device, property)
+    }
+
+    ls(register: string, device: string, slot: string, property: string) {
+        const r = this.memory.getRegister(register)
+        const d = this.memory.getDevice(device)
+        r.value = d.getSlot(this.memory.getValue(slot), property) as number
+    }
+
+    s(device: string, property: string, value: string) {
+        const d = this.memory.getDevice(device)
+        d.set(property, this.memory.getValue(value))
+    }
+
+    __s(device: string, property: string, value: string) {
+        this.s(device, property, value)
+    }
+
+	lb(register: string, deviceHash: string, property: string, mode: string) {
+		const hash   = this.memory.getValue(deviceHash)
+
+        const devices = this.__getDevices(hash)
+
+        const values = devices.map(d => d.get(property) as number)
+
+		if (values.length === 0)
+			throw Execution.error(this.position, 'Can`t find Device wich hash:', hash)
+
+        this.memory.getRegister(register).value = this.__transformBatch(values, mode)
+	}
+
+	lr(register: string, device: string, mode: string, property: string) {
+        //TODO: well, we don't have reagents so we need to do it later
+        throw Execution.error(this.position, "lr not implemented yet")
+	}
+
+	sb(deviceHash: string, property: string, value: string) {
+		const hash = this.memory.getValue(deviceHash)
+        const v = this.memory.getValue(value)
+        const devices = this.__getDevices(hash)
+
+        devices.forEach(d => d.set(property, v))
+	}
+
+    lbn(targetRegister: string, deviceHash: string, nameHash: string, property: string, batchMode: string) {
+        const hash = this.memory.getValue(deviceHash);
+        const name = this.memory.getValue(nameHash)
+        const devices = this.__getDevices(hash, name)
+
+        const values = devices.map(d => d.get(property) as number)
+        if (values.length === 0)
+            throw Execution.error(this.position, 'Can`t find Device wich hash:', hash)
+
+        this.memory.getRegister(targetRegister).value = this.__transformBatch(values, batchMode)
+    }
+
+    sbn(deviceHash: string, nameHash: string, property: string, value: string) {
+        const hash = this.memory.getValue(deviceHash)
+        const v = this.memory.getValue(value)
+        const name = this.memory.getValue(nameHash)
+        const devices = this.__getDevices(hash, name)
+
+        devices.forEach(d => d.set(property, v))
+    }
+
+    lbs(register: string, deviceHash: string, slotIndex: string, property: string, batchMode: string) {
+        const hash = this.memory.getValue(deviceHash)
+        const slot = this.memory.getValue(slotIndex)
+        const devices = this.__getDevices(hash)
+
+        const values = devices.map(d => d.getSlot(slot, property) as number)
+
+        this.memory.getRegister(register).value = this.__transformBatch(values, batchMode)
+    }
+
+    lbns(register: string, deviceHash: string, nameHash: string, slotIndex: string, property: string, batchMode: string) {
+        const hash = this.memory.getValue(deviceHash)
+        const name = this.memory.getValue(nameHash)
+        const slot = this.memory.getValue(slotIndex)
+        const devices = this.__getDevices(hash, name)
+
+        const values = devices.map(d => d.getSlot(slot, property) as number)
+
+        this.memory.getRegister(register).value = this.__transformBatch(values, batchMode)
+    }
+
+    ss(device: string, slotIndex: string, property: string, value: string) {
+        const d = this.memory.getDevice(device)
+        const v = this.memory.getValue(value)
+        const slot = this.memory.getValue(slotIndex);
+
+        (d.getSlot(slot) as Slot).set(property, v)
+    }
+
+    sbs(deviceHash: string, slotIndex: string, property: string, value: string) {
+        const hash = this.memory.getValue(deviceHash)
+        const v = this.memory.getValue(value)
+        const slot = this.memory.getValue(slotIndex);
+
+        const devices = this.__getDevices(hash)
+
+        devices.map(d => (d.getSlot(slot) as Slot).set(property, v))
+    }
+
+	and(register: string, a: string, b: string) {
+        this.__op((a, b) => a && b, register, a, b)
+	}
+
+	or(register: string, a: string, b: string) {
+		this.__op((a, b) => a || b, register, a, b)
+	}
+
+	xor(register: string, a: string, b: string) {
+		this.__op((a, b) => a ^ b, register, a ,b)
+	}
+
+	nor(register: string, a: string, b: string) {
+		this.__op((a, b) => Number(!(a || b)), register, a, b)
+	}
+
+	_debug(...args: string[]){
+		this._log(...args)
+	}
+	_log(...args: string[]) {
 		const out = [];
 		try {
-			for (const argumentsKey in arguments) {
-				if (arguments.hasOwnProperty(argumentsKey)) {
-					let key = arguments[argumentsKey];
-					if (typeof key == 'string') {
-						try {
-							const o = this.memory.cell(key)
-							if(o){
-								out.push(key + ' = ' + o + '; ')
-								break
-							}
-						} catch (e) {
+			for (const argumentsKey in args) {
+				if (args.hasOwnProperty(argumentsKey)) {
+					let key = args[argumentsKey];
 
-						}
-						let keys = key.split('.');
-						try {
-							let cells   = Object.keys(this.memory.cells);
-							let environ = Object.keys(this.memory.environ);
-							let aliases = Object.keys(this.memory.aliases);
-							if (environ.indexOf(keys[0]) >= 0) {
-								if (keys[0] == key) {
-									// @ts-ignore
-									out.push(key + ' = ' + JSON.stringify(this.memory.environ[key].properties) + '; ')
-								} else {
-									switch (keys.length) {
-										case 2:
-											// @ts-ignore
-											out.push(key + ' = ' + this.memory.environ[keys[0]].get(keys[1]) + '; ')
-											break;
-										case 3:
-											// @ts-ignore
-											out.push(key + ' = ' + JSON.stringify(this.memory.environ[keys[0]].getSlot(keys[1])) + '; ')
-											break;
-										case 4:
-											// @ts-ignore
-											out.push(key + ' = ' + this.memory.environ[keys[0]].getSlot(keys[2], keys[3]) + '; ')
-											break;
-									}
+                    try {
+                        const value = this.memory.findValue(key)
 
-								}
-								continue
-							}
-							try {
-								if (this.memory.getCell(keys[0]) instanceof MemoryCell) {
-									const cell = this.memory.getCell(arguments[argumentsKey])
-									if (cell instanceof MemoryCell) {
-										out.push(key + ' = ' + cell.value + '; ')
-									} else {
-										out.push(key + ' = ' + cell + '; ')
-									}
-									continue
-								}
-							} catch (e) {
-							}
-							out.push(key + '; ')
-						} catch (e) {
-							// @ts-ignore
-							out.push(key + ' ' + e.message + '; ')
-						}
-					} else {
-						try {
-							out.push(key + '; ')
-						} catch (e) {
-						}
-					}
+                        if (value !== undefined) {
+                            out.push(`${key} = ${value};`)
+                            break
+                        }
+                    } catch {}
+
+                    let keys = key.split('.');
+                    try {
+                        let environ = Object.keys(this.memory.environ);
+                        if (environ.indexOf(keys[0]) >= 0) {
+                            if (keys[0] == key) {
+                                out.push(`${key} = ${JSON.stringify(this.memory.environ.get(key).properties)};`)
+                                continue
+                            }
+
+                            switch (keys.length) {
+                                case 2:
+                                    out.push(`${key} = ${this.memory.environ.get(keys[0]).get(keys[1])};`)
+                                    break;
+                                case 3:
+                                    out.push(`${key} = ${JSON.stringify(this.memory.environ.get(keys[0]).getSlot(Number(keys[1])))};`)
+                                    break;
+                                case 4:
+                                    out.push(`${key} = ${this.memory.environ.get(keys[0]).getSlot(Number(keys[2]), keys[3])};`)
+                                    break;
+                            }
+                            continue
+                        }
+                        out.push(`${key};`)
+                    } catch (e) {
+                        // @ts-ignore
+                        out.push(key + ' ' + e.message + '; ')
+                    }
 				}
 			}
 			this.settings.logCallback.call(this, `Log[${this.position}]: `, out)
@@ -1160,25 +1090,19 @@ export class InterpreterIc10 {
 	}
 
 	__d(device: string, args: any) {
-		const d: MemoryCell | MemoryStack | Device | number = this.memory.getCell(device);
+		const d = this.memory.getDevice(device);
 		switch (Object.keys(args).length) {
 			case 0:
 				throw Execution.error(this.position, 'missing arguments');
 			case 1:
-				if (d instanceof Device) {
-					d.hash = args[0];
-				}
-				break;
+                d.hash = args[0];
+                break;
 			case 2:
-				if (d instanceof Device) {
-					d.set(args[0], args[1]);
-				}
-				break;
+                d.set(args[0], args[1]);
+                break;
 			case 3:
-				if (d instanceof Device) {
-					d.setSlot(args[0], args[1], args[2]);
-				}
-		}
+                d.setSlot(args[0], args[1], args[2]);
+        }
 
 	}
 

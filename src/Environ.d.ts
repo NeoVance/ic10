@@ -1,6 +1,6 @@
 import InterpreterIc10 from "./main";
 import { Device } from "./Device";
-import { Chip } from "./Chip";
+import { IcHousing } from "./devices/IcHousing";
 export declare class Environ {
     #private;
     d0: Device;
@@ -9,8 +9,7 @@ export declare class Environ {
     d3: Device;
     d4: Device;
     d5: Device;
-    db: Chip;
+    db: IcHousing;
     constructor(scope: InterpreterIc10);
-    randomize(): void;
     get(cell: string): Device;
 }

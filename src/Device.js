@@ -1,72 +1,65 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Device = void 0;
-const MemoryCell_1 = require("./MemoryCell");
-const DeviceProperties_1 = require("./DeviceProperties");
+exports.Device = exports.IcHash = void 0;
 const main_1 = require("./main");
-class Device extends MemoryCell_1.MemoryCell {
-    number;
+const Slot_1 = require("./Slot");
+const Utils_1 = require("./Utils");
+exports.IcHash = (0, Utils_1.hashStr)("ItemIntegratedCircuit10");
+class Device {
     hash;
+    name;
+    nameHash;
     properties;
+    slots;
     #scope;
-    constructor(scope, name, number) {
-        super(scope, name);
+    constructor(scope, name, slotCount, fields) {
+        this.name = name;
         this.#scope = scope;
-        this.hash = 100000000;
+        this.hash = 0;
         this.#scope = scope;
-        this.number = number;
-        this.properties = new DeviceProperties_1.DeviceProperties(scope);
+        this.properties = fields ?? {};
+        this.slots = Array(slotCount ?? 0).fill(0).map((_, i) => new Slot_1.Slot(scope, i));
+        if (this.properties.PrefabHash !== undefined)
+            this.hash = this.properties.PrefabHash;
     }
     get scope() {
         return this.#scope;
     }
+    init(properties) {
+        this.properties = properties;
+    }
+    has(variable) {
+        return (variable in this.properties);
+    }
     get(variable) {
-        if (!variable) {
-            return this;
-        }
         if (variable == 'hash') {
             return this.hash;
         }
-        if (variable in this.properties) {
-            return this.properties.get(variable);
-        }
-        else {
+        if (!this.has(variable))
             throw main_1.Execution.error(this.#scope.position, 'Unknown variable', variable);
-        }
+        return this.properties[variable];
     }
     set(variable, value) {
-        if (variable in this.properties) {
-            this.properties.set(variable, value);
-        }
-        else {
+        if (!this.has(variable))
             throw main_1.Execution.error(this.#scope.position, 'Unknown variable', variable);
-        }
+        this.properties[variable] = value;
+        if (this.properties.PrefabHash !== undefined)
+            this.hash = this.properties.PrefabHash;
         return this;
     }
-    getSlot(op1, op2 = null) {
-        if (op1 in this.properties.slots) {
-            const index = parseInt(op1);
-            if (op2) {
-                return this.properties.slots[index]?.get(op2);
-            }
-            else {
-                return this.properties.slots[index];
-            }
-        }
-        else {
-            throw main_1.Execution.error(this.#scope.position, 'Unknown Slot', op1);
-        }
+    getSlot(slot, property) {
+        const s = this.slots[slot];
+        if (s === undefined)
+            throw main_1.Execution.error(this.#scope.position, 'Unknown Slot', slot);
+        if (property === undefined)
+            return s;
+        return s.get(property);
     }
-    setSlot(op1, op2, value) {
-        if (op1 in this.properties.slots) {
-            const index = parseInt(op1);
-            if (op2) {
-                return this.properties.slots[index].set(op2, value);
-            }
-            else {
-                throw main_1.Execution.error(this.#scope.position, 'Unknown Slot', op1);
-            }
-        }
+    setSlot(slot, property, value) {
+        const s = this.slots[slot];
+        if (s === undefined)
+            throw main_1.Execution.error(this.#scope.position, 'Unknown Slot', slot);
+        s.set(property, value);
     }
 }
 exports.Device = Device;

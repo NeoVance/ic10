@@ -44,4 +44,4 @@ const settings = {
 const interpreterIc10 = new main_1.default(code, settings);
 interpreterIc10.init(code);
 interpreterIc10.run();
-//# sourceMappingURL=test.js.map
+//# sourceMappingURL=example.js.map

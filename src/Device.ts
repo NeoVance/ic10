@@ -1,74 +1,87 @@
-import {MemoryCell}                     from "./MemoryCell";
-import {DeviceFields, DeviceProperties} from "./DeviceProperties";
+import {DeviceFields} from "./DeviceProperties";
 import InterpreterIc10, {Execution}     from "./main";
 import {Slot}                       from "./Slot";
+import {hashStr} from "./Utils";
 
-export class Device extends MemoryCell {
-	public number: number;
+export const IcHash = hashStr("ItemIntegratedCircuit10")
+
+export class Device {
 	public hash: number;
-	public properties: DeviceProperties
-	#scope: InterpreterIc10
+    public name: string;
+    public nameHash?: number;
+	public properties: Partial<DeviceFields>
+    public slots: Slot[]
+	readonly #scope: InterpreterIc10
 
-	constructor(scope: InterpreterIc10, name: string, number: number) {
-		super(scope, name);
+	constructor(scope: InterpreterIc10, name: string, slotCount?: number, fields?: Partial<DeviceFields>) {
+        this.name = name
 		this.#scope     = scope;
-		this.hash       = 100000000
+		this.hash       = 0
 		this.#scope     = scope
-		this.number     = number
-		this.properties = new DeviceProperties(scope)
+		this.properties = fields ?? {}
+        this.slots = Array(slotCount ?? 0).fill(0).map((_, i) => new Slot(scope, i))
+
+        if (this.properties.PrefabHash !== undefined)
+            this.hash = this.properties.PrefabHash
 	}
 
 	get scope(): InterpreterIc10 {
 		return this.#scope;
 	}
 
-	get(variable: any): Device | number | Slot[]  {
-		if (!variable) {
-			return this
-		}
+    init(properties: Partial<DeviceFields>) {
+        this.properties = properties
+    }
+
+    has(variable: string) {
+        return (variable in this.properties)
+    }
+
+	get(variable: string): number  {
 		if (variable == 'hash') {
 			return this.hash
 		}
-		if (variable in this.properties) {
-			return this.properties.get(variable)
-		} else {
-			throw Execution.error(this.#scope.position, 'Unknown variable', variable)
-		}
+
+		if (!this.has(variable))
+            throw Execution.error(this.#scope.position, 'Unknown variable', variable)
+
+        return (this.properties as Record<string, number>)[variable]
 	}
 
-	set(variable: any, value: any):MemoryCell {
-		if (variable in this.properties) {
-			this.properties.set(variable, value)
-		} else {
-			throw Execution.error(this.#scope.position, 'Unknown variable', variable)
-		}
-		return this as MemoryCell
+	set(variable: string, value: number): Device {
+        if (!this.has(variable))
+            throw Execution.error(this.#scope.position, 'Unknown variable', variable);
+
+        (this.properties as Record<string, number>)[variable] = value
+
+        if (this.properties.PrefabHash !== undefined)
+            this.hash = this.properties.PrefabHash
+
+		return this
 	}
 
-	getSlot(op1: string | number, op2: any = null) {
-        if (typeof op1 === "number")
-            op1 = String(op1)
+    getSlot(slot: number): Slot
+    getSlot(slot: number, property: string): number
 
-		if (op1 in this.properties.slots) {
-			const index = parseInt(op1);
-			if (op2) {
-				return this.properties.slots[index]?.get(op2)
-			} else {
-				return this.properties.slots[index]
-			}
-		} else {
-			throw Execution.error(this.#scope.position, 'Unknown Slot', op1)
-		}
+	getSlot(slot: number, property?: string): Slot | number {
+        const s = this.slots[slot]
+
+        if (s === undefined)
+            throw Execution.error(this.#scope.position, 'Unknown Slot', slot)
+
+        if (property === undefined)
+            return s
+
+        return s.get(property)
 	}
 
-	setSlot(op1: string, op2: any, value: any) {
-		if (op1 in this.properties.slots) {
-			const index = parseInt(op1);
-			if (op2) {
-				return this.properties.slots[index].set(op2, value)
-			} else {
-				throw Execution.error(this.#scope.position, 'Unknown Slot', op1)
-			}
-		}
-	}
+    setSlot(slot: number, property: string, value: number): void
+	setSlot(slot: number, property: string, value: number) {
+        const s = this.slots[slot]
+
+        if (s === undefined)
+            throw Execution.error(this.#scope.position, 'Unknown Slot', slot)
+
+        s.set(property, value)
+    }
 }
