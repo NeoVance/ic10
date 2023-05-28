@@ -4,7 +4,7 @@ import {MemoryCell}                          from "./MemoryCell";
 import {MemoryStack}                         from "./MemoryStack";
 import {Device}                              from "./Device";
 import {ConstantCell}                        from "./ConstantCell";
-import {isNumber, isPort, isRecPort, isRegister, isSimplePort, patterns} from "./Utils";
+import {hashStr, isHash, isNumber, isPort, isRecPort, isRegister, isSimplePort, patterns} from "./Utils";
 
 export class Memory {
 	public cells: Array<MemoryCell>
@@ -146,6 +146,17 @@ export class Memory {
     findValue(value: string | number): number | undefined {
         if (typeof value === "number")
             return value
+
+        if (isHash(value)) {
+            const m = patterns.hash.exec(value)
+
+            if (!m)
+                throw Execution.error(this.#scope.position, 'Syntax error')
+
+            const hash = m.groups?.hash ?? ""
+
+            return hashStr(hash)
+        }
 
         const n = Number(value)
         if (!isNaN(n))

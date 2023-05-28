@@ -1,16 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.InterpreterIc10 = exports.Execution = exports.regexes = void 0;
+exports.InterpreterIc10 = exports.Execution = void 0;
 const ic10Error_1 = require("./ic10Error");
 const Memory_1 = require("./Memory");
 const Device_1 = require("./Device");
-exports.regexes = {
-    'rr1': new RegExp("[rd]+(r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a))$"),
-    'r1': new RegExp("^r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a)$"),
-    'd1': new RegExp("^d([012345b])$"),
-    'rr': new RegExp("^d([012345b])$"),
-    'strStart': new RegExp("^\".+$"),
-    'strEnd': new RegExp(".+\"$"),
+const regexes = {
+    strStart: new RegExp("^\".+$"),
+    strEnd: new RegExp(".+\"$"),
 };
 const modes = {
     Average: 0,
@@ -124,13 +120,13 @@ class InterpreterIc10 {
                             break;
                         if (mode === 0)
                             argNumber++;
-                        if (exports.regexes.strStart.test(arg))
+                        if (regexes.strStart.test(arg))
                             mode = 1;
                         if (argNumber in newArgs)
                             newArgs[argNumber] += ' ' + arg;
                         else
                             newArgs[argNumber] = arg;
-                        if (exports.regexes.strEnd.test(arg))
+                        if (regexes.strEnd.test(arg))
                             mode = 0;
                     }
                 }

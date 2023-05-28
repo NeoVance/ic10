@@ -1,5 +1,6 @@
 import InterpreterIc10 from "../src/main";
 import {Hardsuit} from "../src/devices/Hardsuit";
+import {hashStr} from "../src/Utils";
 
 const interpreterIc10 = new InterpreterIc10();
 
@@ -42,7 +43,7 @@ describe('test', () => {
 
 		expect(interpreterIc10.memory.getRegister('heading').value).toBe(10)
         expect(interpreterIc10.memory.getRegister('r2').value).toBe(10)
-	});
+	})
 
 	test('example code', () => {
 		const code = ic10`
@@ -60,7 +61,7 @@ describe('test', () => {
 		interpreterIc10.init(code, new Hardsuit(interpreterIc10, "db"))
 
         runWithoutLoop()
-	});
+	})
 
 	test('stack', () => {
 		const code = ic10`
@@ -81,7 +82,7 @@ describe('test', () => {
         const expectedValues = [1, 2, 7, 32, 0]
 
         expectedValues.forEach((v, i) => expect(stack[i]).toBe(v))
-	});
+	})
 
 	test('rr_n', () => {
 		const code = ic10`
@@ -93,7 +94,7 @@ describe('test', () => {
         runWithoutLoop()
 
 		expect(interpreterIc10.memory.getRegister('r2').value).toBe(10)
-	});
+	})
 
     test('dr_n', () => {
         const code = ic10`
@@ -123,7 +124,7 @@ describe('test', () => {
 		runWithoutLoop()
 
 		expect(interpreterIc10.memory.getDevice('d0').get('Setting')).toBe(8)
-	});
+	})
 
 	test('read from device', () => {
 		const code = ic10`
@@ -138,7 +139,7 @@ describe('test', () => {
 		runWithoutLoop()
 
 		expect(interpreterIc10.memory.getRegister('r1').value).toBe(15)
-	});
+	})
 
 	test('float', () => {
 		const code = ic10`
@@ -158,7 +159,7 @@ describe('test', () => {
         expect(interpreterIc10.memory.getRegister("r1").value).toBe(0)
         expect(interpreterIc10.memory.getRegister("r2").value).toBe(0.1)
         expect(interpreterIc10.memory.getRegister("r3").value).toBe(1)
-	});
+	})
 
 	test('example2',  () => {
 		const code = ic10`
@@ -196,5 +197,14 @@ describe('test', () => {
         interpreterIc10.runUntil(s => s !== true, 100)
 
         expect(interpreterIc10.memory.environ.d0.properties.Setting).toBe(5)
-	});
-});
+	})
+
+    test('hash', () => {
+        interpret`
+            s db Setting HASH("test")
+        `
+        runWithoutLoop()
+
+        expect(interpreterIc10.memory.getDevice("db").get("Setting")).toBe(hashStr("test"))
+    })
+})

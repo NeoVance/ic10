@@ -110,6 +110,13 @@ class Memory {
     findValue(value) {
         if (typeof value === "number")
             return value;
+        if ((0, Utils_1.isHash)(value)) {
+            const m = Utils_1.patterns.hash.exec(value);
+            if (!m)
+                throw main_1.Execution.error(this.#scope.position, 'Syntax error');
+            const hash = m.groups?.hash ?? "";
+            return (0, Utils_1.hashStr)(hash);
+        }
         const n = Number(value);
         if (!isNaN(n))
             return n;

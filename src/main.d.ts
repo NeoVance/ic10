@@ -1,14 +1,6 @@
 import { Ic10Error } from "./ic10Error";
 import { Memory } from "./Memory";
 import { Device } from "./Device";
-export declare const regexes: {
-    rr1: RegExp;
-    r1: RegExp;
-    d1: RegExp;
-    rr: RegExp;
-    strStart: RegExp;
-    strEnd: RegExp;
-};
 export type ReturnCode = "hcf" | "end" | "die";
 export declare var Execution: {
     error(code: number, message: string, obj?: any): Ic10Error;

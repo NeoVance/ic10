@@ -47,4 +47,4 @@ class Hardsuit extends Device_1.Device {
     }
 }
 exports.Hardsuit = Hardsuit;
-//# sourceMappingURL=HardSuit.js.map
+//# sourceMappingURL=Hardsuit.js.map
