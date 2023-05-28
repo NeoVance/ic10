@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.InterpreterIc10 = exports.Execution = exports.regexes = void 0;
 const ic10Error_1 = require("./ic10Error");
 const Memory_1 = require("./Memory");
+const Device_1 = require("./Device");
 exports.regexes = {
     'rr1': new RegExp("[rd]+(r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a))$"),
     'r1': new RegExp("^r(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|a)$"),
@@ -59,6 +60,7 @@ class InterpreterIc10 {
     output;
     settings;
     ignoreLine;
+    device;
     constructor(code = '', settings = {}) {
         this.code = code;
         this.memory = new Memory_1.Memory(this);
@@ -91,7 +93,17 @@ class InterpreterIc10 {
         this.settings = Object.assign(this.settings, settings);
         return this;
     }
-    init(text) {
+    init(text, device) {
+        this.memory.reset();
+        if (device !== undefined) {
+            const ics = device.slots
+                .filter(s => s.has("OccupantHash") && s.get("OccupantHash") === Device_1.IcHash);
+            if (ics.length === 1) {
+                this.device = device;
+                this.memory.environ.db = device;
+                device.name = "db";
+            }
+        }
         this.lines = text.split(/\r?\n/);
         const commands = this.lines
             .map((line) => {
@@ -139,7 +151,18 @@ class InterpreterIc10 {
             }
         }
         this.position = 0;
+        this.__updateDevice();
         return this;
+    }
+    __updateDevice() {
+        if (this.device === undefined)
+            return;
+        if (this.device.has("LineNumber"))
+            this.device.set("LineNumber", this.position);
+        this.device.slots.forEach(slot => {
+            if (slot.has("LineNumber"))
+                slot.set("LineNumber", this.position);
+        });
     }
     stop() {
         clearInterval(this.interval);
@@ -181,6 +204,7 @@ class InterpreterIc10 {
                 command = command.replace("#", "_");
                 if (command in this) {
                     this[command](...args);
+                    this.__updateDevice();
                     this.__debug(command, args);
                 }
                 else if (!isComment) {

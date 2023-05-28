@@ -11,6 +11,7 @@ export declare class Memory {
     aliases: Record<string, MemoryCell | Device>;
     constructor(scope: InterpreterIc10);
     get scope(): InterpreterIc10 | null;
+    reset(): void;
     findRegister(name: string | number): MemoryCell | undefined;
     getRegister(name: string | number): MemoryCell;
     findDevice(name: string | number): Device | undefined;

@@ -1,39 +1,49 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Device = void 0;
+exports.Device = exports.IcHash = void 0;
 const main_1 = require("./main");
 const Slot_1 = require("./Slot");
+const Utils_1 = require("./Utils");
+exports.IcHash = (0, Utils_1.hashStr)("ItemIntegratedCircuit10");
 class Device {
-    number;
     hash;
     name;
     properties;
     slots;
     #scope;
-    constructor(scope, name, number, slotCount, fields) {
+    constructor(scope, name, slotCount, fields) {
         this.name = name;
         this.#scope = scope;
-        this.hash = 100000000;
+        this.hash = 0;
         this.#scope = scope;
-        this.number = number;
         this.properties = fields ?? {};
         this.slots = Array(slotCount ?? 0).fill(0).map((_, i) => new Slot_1.Slot(scope, i));
+        if (this.properties.PrefabHash !== undefined)
+            this.hash = this.properties.PrefabHash;
     }
     get scope() {
         return this.#scope;
+    }
+    init(properties) {
+        this.properties = properties;
+    }
+    has(variable) {
+        return (variable in this.properties);
     }
     get(variable) {
         if (variable == 'hash') {
             return this.hash;
         }
-        if (!(variable in this.properties))
+        if (!this.has(variable))
             throw main_1.Execution.error(this.#scope.position, 'Unknown variable', variable);
         return this.properties[variable];
     }
     set(variable, value) {
-        if (!(variable in this.properties))
+        if (!this.has(variable))
             throw main_1.Execution.error(this.#scope.position, 'Unknown variable', variable);
         this.properties[variable] = value;
+        if (this.properties.PrefabHash !== undefined)
+            this.hash = this.properties.PrefabHash;
         return this;
     }
     getSlot(slot, property) {

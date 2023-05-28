@@ -1,7 +1,4 @@
 import InterpreterIc10                  from "./main";
-import {DeviceFields, DeviceProperties} from "./DeviceProperties";
-import {Slot}                           from "./Slot";
-import {Device}           from "./Device";
 
 export class MemoryCell {
 	public value: number = 0

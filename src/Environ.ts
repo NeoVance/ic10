@@ -1,6 +1,6 @@
 import InterpreterIc10 from "./main";
 import {Device}        from "./Device";
-import {Chip}          from "./Chip";
+import {IcHousing}          from "./devices/IcHousing";
 
 export class Environ {
 	public d0: Device
@@ -9,18 +9,18 @@ export class Environ {
 	public d3: Device
 	public d4: Device
 	public d5: Device
-	public db: Chip
+	public db: IcHousing
 	#scope: InterpreterIc10;
 
 	constructor(scope: InterpreterIc10) {
 		this.#scope = scope;
-		this.d0     = new Device(scope, 'd0', 1)
-		this.d1     = new Device(scope, 'd1', 2)
-		this.d2     = new Device(scope, 'd2', 3)
-		this.d3     = new Device(scope, 'd3', 4)
-		this.d4     = new Device(scope, 'd4', 5)
-		this.d5     = new Device(scope, 'd5', 6)
-		this.db     = new Chip(scope, 'db', 7)
+		this.d0     = new Device(scope, 'd0')
+		this.d1     = new Device(scope, 'd1')
+		this.d2     = new Device(scope, 'd2')
+		this.d3     = new Device(scope, 'd3')
+		this.d4     = new Device(scope, 'd4')
+		this.d5     = new Device(scope, 'd5')
+		this.db     = new IcHousing(scope, 'db')
 	}
 
 	get(cell: string): Device  {

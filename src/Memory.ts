@@ -4,7 +4,7 @@ import {MemoryCell}                          from "./MemoryCell";
 import {MemoryStack}                         from "./MemoryStack";
 import {Device}                              from "./Device";
 import {ConstantCell}                        from "./ConstantCell";
-import {patterns} from "./Utils";
+import {isNumber, isPort, isRecPort, isRegister, isSimplePort, patterns} from "./Utils";
 
 export class Memory {
 	public cells: Array<MemoryCell>
@@ -35,6 +35,15 @@ export class Memory {
 		return this.#scope;
 	}
 
+    reset() {
+        for (let r of this.cells)
+            r.value = 0
+
+        this.stack.getStack().fill(0)
+        this.aliases = {}
+        this.environ = new Environ(this.#scope)
+    }
+
     findRegister(name: string | number): MemoryCell | undefined {
         const mapping: Record<string, string | undefined> = {
             sp: "r16",
@@ -45,7 +54,7 @@ export class Memory {
 
         if (typeof name === "string")
         {
-            if (patterns.reg.test(name)) {
+            if (isRegister(name)) {
                 let m = patterns.reg.exec(name)
 
                 if (!m)
@@ -71,7 +80,7 @@ export class Memory {
             if (name in this.aliases) {
                 const mem = this.aliases[name]
 
-                if (patterns.reg.test(mem.name))
+                if (isRegister(mem.name))
                     return mem as MemoryCell
             }
 
@@ -97,10 +106,10 @@ export class Memory {
         if (typeof name === "number")
             name = `d${name}`
 
-        if (patterns.dev.test(name))
+        if (isSimplePort(name))
             return this.environ.get(name)
 
-        if (patterns.recDev.test(name))
+        if (isRecPort(name))
         {
             const m = patterns.recDev.exec(name)
 
@@ -118,7 +127,7 @@ export class Memory {
         if (name in this.aliases) {
             const mem = this.aliases[name]
 
-            if (patterns.dev.test(mem.name))
+            if (isPort(mem.name))
                 return mem as Device
         }
 
@@ -154,7 +163,7 @@ export class Memory {
             return undefined
         }
 
-        if (!patterns.reg.test(v.name))
+        if (!(v instanceof MemoryCell))
             return undefined
 
         return (v as MemoryCell).value
@@ -190,7 +199,12 @@ export class Memory {
 
 	define(name: string, value: string | number) {
         if (typeof value === "string")
+        {
+            if (!isNumber(value))
+                throw Execution.error(this.#scope.position, "")
+
             value = parseInt(value)
+        }
 
 		this.aliases[name] = new ConstantCell(value, this.#scope, name)
 	}

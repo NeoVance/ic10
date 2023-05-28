@@ -1,6 +1,6 @@
 import {Ic10Error} from "./ic10Error";
 import {Memory} from "./Memory";
-import {Device} from "./Device";
+import {Device, IcHash} from "./Device";
 import {Slot} from "./Slot";
 
 export const regexes = {
@@ -76,6 +76,7 @@ export class InterpreterIc10 {
 	}
 	public settings: InterpreterIc10Settings;
 	public ignoreLine: Array<number>;
+    public device?: Device
 
 	constructor(code: string = '', settings: Partial<InterpreterIc10Settings> = {}) {
 		this.code       = code
@@ -111,7 +112,19 @@ export class InterpreterIc10 {
 		return this;
 	}
 
-	init(text: string): InterpreterIc10 {
+	init(text: string, device?: Device): InterpreterIc10 {
+        this.memory.reset()
+        if (device !== undefined) {
+            const ics = device.slots
+                .filter(s => s.has("OccupantHash") && s.get("OccupantHash") === IcHash )
+
+            if (ics.length === 1) {
+                this.device = device
+                this.memory.environ.db = device
+                device.name = "db"
+            }
+        }
+
 		this.lines     = text.split(/\r?\n/);
 		const commands = this.lines
 							 .map((line: string) => {
@@ -163,8 +176,22 @@ export class InterpreterIc10 {
 			}
 		}
 		this.position = 0
+        this.__updateDevice()
 		return this
 	}
+
+    __updateDevice() {
+        if (this.device === undefined)
+            return
+
+        if (this.device.has("LineNumber"))
+            this.device.set("LineNumber", this.position)
+
+        this.device.slots.forEach(slot => {
+            if (slot.has("LineNumber"))
+                slot.set("LineNumber", this.position)
+        })
+    }
 
 	stop(): InterpreterIc10 {
 		clearInterval(this.interval)
@@ -208,6 +235,7 @@ export class InterpreterIc10 {
 				if (command in this) {
 					// @ts-ignore
 					this[command](...args)
+                    this.__updateDevice()
 					this.__debug(command, args)
 				} else if (!isComment) {
 					throw Execution.error(this.position, 'Undefined function', command)

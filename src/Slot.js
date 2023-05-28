@@ -4,47 +4,36 @@ exports.Slot = void 0;
 const main_1 = require("./main");
 class Slot {
     number;
-    properties = {
-        Charge: 0,
-        ChargeRatio: 0,
-        Class: 0,
-        Damage: 0,
-        Efficiency: 0,
-        Growth: 0,
-        Health: 0,
-        Mature: 0,
-        MaxQuantity: 0,
-        OccupantHash: 0,
-        Occupied: 0,
-        PrefabHash: 0,
-        Pressure: 0,
-        PressureAir: 0,
-        PressureWaste: 0,
-        Quantity: 0,
-        Temperature: 0
-    };
+    properties;
     #scope;
-    constructor(scope, number) {
+    constructor(scope, number, properties) {
         this.#scope = scope;
         this.number = number;
+        this.properties = properties ?? {};
+    }
+    init(properties) {
+        this.properties = properties;
     }
     get scope() {
         return this.#scope;
     }
+    has(property) {
+        return property in this.properties;
+    }
     get(property) {
-        if (property in this.properties) {
+        if (this.has(property)) {
             return this.properties[property];
         }
         else {
             throw main_1.Execution.error(this.#scope.position, 'Unknown parameter', property);
         }
     }
-    set(op1, value) {
-        if (op1 in this.properties) {
-            this.properties[op1] = value;
+    set(property, value) {
+        if (this.has(property)) {
+            this.properties[property] = value;
         }
         else {
-            throw main_1.Execution.error(this.#scope.position, 'Unknown parameter', op1);
+            throw main_1.Execution.error(this.#scope.position, 'Unknown parameter', property);
         }
     }
 }

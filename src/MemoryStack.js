@@ -34,13 +34,6 @@ class MemoryStack extends MemoryCell_1.MemoryCell {
     getStack() {
         return this.#stack;
     }
-    get(variable = null) {
-        return this.value;
-    }
-    set(variable, value) {
-        this.value = value;
-        return this;
-    }
 }
 exports.MemoryStack = MemoryStack;
 //# sourceMappingURL=MemoryStack.js.map

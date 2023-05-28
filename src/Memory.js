@@ -33,6 +33,13 @@ class Memory {
     get scope() {
         return this.#scope;
     }
+    reset() {
+        for (let r of this.cells)
+            r.value = 0;
+        this.stack.getStack().fill(0);
+        this.aliases = {};
+        this.environ = new Environ_1.Environ(this.#scope);
+    }
     findRegister(name) {
         const mapping = {
             sp: "r16",
@@ -40,7 +47,7 @@ class Memory {
         };
         name = mapping[name] ?? name;
         if (typeof name === "string") {
-            if (Utils_1.patterns.reg.test(name)) {
+            if ((0, Utils_1.isRegister)(name)) {
                 let m = Utils_1.patterns.reg.exec(name);
                 if (!m)
                     throw main_1.Execution.error(this.#scope.position, 'Syntax error');
@@ -58,7 +65,7 @@ class Memory {
             }
             if (name in this.aliases) {
                 const mem = this.aliases[name];
-                if (Utils_1.patterns.reg.test(mem.name))
+                if ((0, Utils_1.isRegister)(mem.name))
                     return mem;
             }
             return undefined;
@@ -76,9 +83,9 @@ class Memory {
     findDevice(name) {
         if (typeof name === "number")
             name = `d${name}`;
-        if (Utils_1.patterns.dev.test(name))
+        if ((0, Utils_1.isSimplePort)(name))
             return this.environ.get(name);
-        if (Utils_1.patterns.recDev.test(name)) {
+        if ((0, Utils_1.isRecPort)(name)) {
             const m = Utils_1.patterns.recDev.exec(name);
             if (!m)
                 throw main_1.Execution.error(this.#scope.position, 'Syntax error');
@@ -89,7 +96,7 @@ class Memory {
         }
         if (name in this.aliases) {
             const mem = this.aliases[name];
-            if (Utils_1.patterns.dev.test(mem.name))
+            if ((0, Utils_1.isPort)(mem.name))
                 return mem;
         }
         return undefined;
@@ -113,7 +120,7 @@ class Memory {
                 return r.value;
             return undefined;
         }
-        if (!Utils_1.patterns.reg.test(v.name))
+        if (!(v instanceof MemoryCell_1.MemoryCell))
             return undefined;
         return v.value;
     }
@@ -137,8 +144,11 @@ class Memory {
         throw main_1.Execution.error(this.#scope.position, 'Invalid alias value');
     }
     define(name, value) {
-        if (typeof value === "string")
+        if (typeof value === "string") {
+            if (!(0, Utils_1.isNumber)(value))
+                throw main_1.Execution.error(this.#scope.position, "");
             value = parseInt(value);
+        }
         this.aliases[name] = new ConstantCell_1.ConstantCell(value, this.#scope, name);
     }
     toLog() {

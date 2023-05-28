@@ -1,4 +1,5 @@
 import InterpreterIc10 from "../src/main";
+import {Hardsuit} from "../src/devices/Hardsuit";
 
 const interpreterIc10 = new InterpreterIc10();
 
@@ -56,7 +57,7 @@ describe('test', () => {
             div heading heading 3.14
             mul heading heading 180
         `
-		interpreterIc10.init(code)
+		interpreterIc10.init(code, new Hardsuit(interpreterIc10, "db"))
 
         runWithoutLoop()
 	});
@@ -101,6 +102,10 @@ describe('test', () => {
         `
 
         interpreterIc10.init(code)
+        interpreterIc10.memory.environ.d1.init({
+            Setting: 0
+        })
+
         runWithoutLoop()
 
         expect(interpreterIc10.memory.getDevice('d1').get('Setting')).toBe(5)
@@ -111,6 +116,10 @@ describe('test', () => {
             s d0 Setting 8
         `
 		interpreterIc10.init(code)
+        interpreterIc10.memory.environ.d0.init({
+            Setting: 0
+        })
+
 		runWithoutLoop()
 
 		expect(interpreterIc10.memory.getDevice('d0').get('Setting')).toBe(8)
@@ -122,6 +131,10 @@ describe('test', () => {
             l r1 d0 Setting
         `
 		interpreterIc10.init(code)
+        interpreterIc10.memory.environ.d0.init({
+            Setting: 0
+        })
+
 		runWithoutLoop()
 
 		expect(interpreterIc10.memory.getRegister('r1').value).toBe(15)
@@ -135,7 +148,16 @@ describe('test', () => {
             l r3 d0 Activate
         `
 		interpreterIc10.init(code)
-		runWithoutLoop()
+        interpreterIc10.memory.environ.d0.init({
+            Activate: 1
+        })
+
+        runWithoutLoop()
+
+        expect(interpreterIc10.memory.getRegister("r0").value).toBe(0)
+        expect(interpreterIc10.memory.getRegister("r1").value).toBe(0)
+        expect(interpreterIc10.memory.getRegister("r2").value).toBe(0.1)
+        expect(interpreterIc10.memory.getRegister("r3").value).toBe(1)
 	});
 
 	test('example2',  () => {
@@ -166,6 +188,11 @@ describe('test', () => {
                 j ra
         `
 		interpreterIc10.init(code)
+        interpreterIc10.memory.environ.d0.init({
+            Setting: 0,
+            Vertical: 0
+        })
+
         interpreterIc10.runUntil(s => s !== true, 100)
 
         expect(interpreterIc10.memory.environ.d0.properties.Setting).toBe(5)

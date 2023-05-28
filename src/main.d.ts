@@ -52,9 +52,11 @@ export declare class InterpreterIc10 {
     };
     settings: InterpreterIc10Settings;
     ignoreLine: Array<number>;
+    device?: Device;
     constructor(code?: string, settings?: Partial<InterpreterIc10Settings>);
     setSettings(settings?: Partial<InterpreterIc10Settings>): InterpreterIc10;
-    init(text: string): InterpreterIc10;
+    init(text: string, device?: Device): InterpreterIc10;
+    __updateDevice(): void;
     stop(): InterpreterIc10;
     run(): Promise<unknown>;
     prepareLine(line?: number, isDebugger?: boolean): ReturnCode | true;

@@ -1,8 +1,5 @@
 import InterpreterIc10, {Execution} from "./main";
 import {MemoryCell}                 from "./MemoryCell";
-import {Device}                     from "./Device";
-import {DeviceProperties}           from "./DeviceProperties";
-import {Slot}                       from "./Slot";
 
 export class MemoryStack extends MemoryCell {
     declare public value: number
@@ -40,14 +37,5 @@ export class MemoryStack extends MemoryCell {
 
 	getStack() {
 		return this.#stack
-	}
-
-	get(variable: any = null): Device | number | DeviceProperties | Slot[] {
-		return this.value
-	}
-
-	set(variable: any, value: number) {
-		this.value = value
-		return this
 	}
 }
