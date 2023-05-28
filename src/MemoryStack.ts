@@ -7,7 +7,7 @@ export class MemoryStack extends MemoryCell {
     readonly #stack: number[]
 
 	constructor(scope: InterpreterIc10, size: number, name: string) {
-		super(scope, name)
+		super(name)
 		this.#scope = scope
         this.#stack = Array(size).fill(0)
 		this.value  = 0

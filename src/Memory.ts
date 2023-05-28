@@ -25,7 +25,7 @@ export class Memory {
 			if (i === 16) {
 				this.cells[i] = this.stack
 			} else {
-				this.cells[i] = new MemoryCell(scope, n)
+				this.cells[i] = new MemoryCell(n)
 			}
             this.cells[i].value = 0
 		}
@@ -217,7 +217,7 @@ export class Memory {
             value = parseInt(value)
         }
 
-		this.aliases[name] = new ConstantCell(value, this.#scope, name)
+		this.aliases[name] = new ConstantCell(value, name)
 	}
 
 	toLog() {
