@@ -876,8 +876,8 @@ export class InterpreterIc10 {
         //TODO: check all devices in the network
         for (let i = 0; i <= 5; i++) {
             const d = this.memory.getDevice('d' + i);
-            //TODO: add filter for name
-            if (d.hash == hash) {
+
+            if (d.hash == hash && (name === undefined || d.nameHash === name)) {
                 devices.push(d)
             }
         }

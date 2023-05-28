@@ -8,6 +8,7 @@ export const IcHash = hashStr("ItemIntegratedCircuit10")
 export class Device {
 	public hash: number;
     public name: string;
+    public nameHash?: number;
 	public properties: Partial<DeviceFields>
     public slots: Slot[]
 	readonly #scope: InterpreterIc10
