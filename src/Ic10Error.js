@@ -27,4 +27,4 @@ class Ic10Error extends Error {
     }
 }
 exports.Ic10Error = Ic10Error;
-//# sourceMappingURL=ic10Error.js.map
+//# sourceMappingURL=Ic10Error.js.map
