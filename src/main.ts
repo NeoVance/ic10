@@ -1,4 +1,4 @@
-import {Ic10Error} from "./ic10Error";
+import {Ic10Error} from "./Ic10Error";
 import {Memory} from "./Memory";
 import {Device, IcHash} from "./Device";
 import {Slot} from "./Slot";
