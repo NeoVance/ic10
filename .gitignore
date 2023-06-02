@@ -11,7 +11,7 @@ pids
 *.pid
 *.seed
 *.pid.lock
-tools
+tools/*
 !tools/gulpfile.js
 !tools/ajax.js
 !tools/package.json
