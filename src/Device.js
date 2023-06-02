@@ -4,6 +4,7 @@ exports.Device = exports.IcHash = void 0;
 const main_1 = require("./main");
 const Slot_1 = require("./Slot");
 const Utils_1 = require("./Utils");
+const DeviceOutput_1 = require("./DeviceOutput");
 exports.IcHash = (0, Utils_1.hashStr)("ItemIntegratedCircuit10");
 class Device {
     hash;
@@ -12,6 +13,7 @@ class Device {
     properties;
     slots;
     #scope;
+    outputs = {};
     constructor(scope, name, slotCount, fields) {
         this.name = name;
         this.#scope = scope;
@@ -60,6 +62,13 @@ class Device {
         if (s === undefined)
             throw main_1.Execution.error(this.#scope.position, 'Unknown Slot', slot);
         s.set(property, value);
+    }
+    getChanel(channel) {
+        const ch = String(channel);
+        const o = this.outputs[ch];
+        if (o === undefined)
+            this.outputs[ch] = new DeviceOutput_1.DeviceOutput(this, this.#scope);
+        return this.outputs[ch];
     }
 }
 exports.Device = Device;

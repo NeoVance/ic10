@@ -1,33 +1,35 @@
 import {DeviceFields} from "./DeviceProperties";
-import InterpreterIc10, {Execution}     from "./main";
-import {Slot}                       from "./Slot";
+import InterpreterIc10, {Execution} from "./main";
+import {Slot} from "./Slot";
 import {hashStr} from "./Utils";
+import {DeviceOutput} from "./DeviceOutput";
 
 export const IcHash = hashStr("ItemIntegratedCircuit10")
 
 export class Device {
-	public hash: number;
+    public hash: number;
     public name: string;
     public nameHash?: number;
-	public properties: Partial<DeviceFields>
+    public properties: Partial<DeviceFields>
     public slots: Slot[]
-	readonly #scope: InterpreterIc10
+    readonly #scope: InterpreterIc10
+    public outputs: { [key: `${number}`]: DeviceOutput } = {}
 
-	constructor(scope: InterpreterIc10, name: string, slotCount?: number, fields?: Partial<DeviceFields>) {
+    constructor(scope: InterpreterIc10, name: string, slotCount?: number, fields?: Partial<DeviceFields>) {
         this.name = name
-		this.#scope     = scope;
-		this.hash       = 0
-		this.#scope     = scope
-		this.properties = fields ?? {}
+        this.#scope = scope;
+        this.hash = 0
+        this.#scope = scope
+        this.properties = fields ?? {}
         this.slots = Array(slotCount ?? 0).fill(0).map((_, i) => new Slot(scope, i))
 
         if (this.properties.PrefabHash !== undefined)
             this.hash = this.properties.PrefabHash
-	}
+    }
 
-	get scope(): InterpreterIc10 {
-		return this.#scope;
-	}
+    get scope(): InterpreterIc10 {
+        return this.#scope;
+    }
 
     init(properties: Partial<DeviceFields>) {
         this.properties = properties
@@ -37,18 +39,18 @@ export class Device {
         return (variable in this.properties)
     }
 
-	get(variable: string): number  {
-		if (variable == 'hash') {
-			return this.hash
-		}
+    get(variable: string): number {
+        if (variable == 'hash') {
+            return this.hash
+        }
 
-		if (!this.has(variable))
+        if (!this.has(variable))
             throw Execution.error(this.#scope.position, 'Unknown variable', variable)
 
         return (this.properties as Record<string, number>)[variable]
-	}
+    }
 
-	set(variable: string, value: number): Device {
+    set(variable: string, value: number): Device {
         if (!this.has(variable))
             throw Execution.error(this.#scope.position, 'Unknown variable', variable);
 
@@ -57,13 +59,12 @@ export class Device {
         if (this.properties.PrefabHash !== undefined)
             this.hash = this.properties.PrefabHash
 
-		return this
-	}
+        return this
+    }
 
     getSlot(slot: number): Slot
     getSlot(slot: number, property: string): number
-
-	getSlot(slot: number, property?: string): Slot | number {
+    getSlot(slot: number, property?: string): Slot | number {
         const s = this.slots[slot]
 
         if (s === undefined)
@@ -73,15 +74,23 @@ export class Device {
             return s
 
         return s.get(property)
-	}
+    }
 
     setSlot(slot: number, property: string, value: number): void
-	setSlot(slot: number, property: string, value: number) {
+    setSlot(slot: number, property: string, value: number) {
         const s = this.slots[slot]
 
         if (s === undefined)
             throw Execution.error(this.#scope.position, 'Unknown Slot', slot)
 
         s.set(property, value)
+    }
+
+    getChanel(channel: number): DeviceOutput {
+        const ch = String(channel) as `${number}`;
+        const o: DeviceOutput = this.outputs[ch]
+        if (o === undefined)
+            this.outputs[ch] = new DeviceOutput(this, this.#scope)
+        return this.outputs[ch]
     }
 }
