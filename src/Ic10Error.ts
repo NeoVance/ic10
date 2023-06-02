@@ -7,7 +7,7 @@ export class Ic10Error extends Error {
 	public className: string;
 	public obj: any;
 
-	constructor(caller: any, code: number, message: string, obj: any, lvl: number = 0) {
+	constructor(caller: any, code: number, message: string, obj: any, lvl: number = 0,public loc?:{start:number,len:number}) {
         super(message);
         this.message      = message;
 		this.code         = code;
@@ -27,6 +27,8 @@ export class Ic10Error extends Error {
 	}
 }
 
+
+// Class for vsCode code analyser
 export class Ic10DiagnosticError extends Ic10Error {
 
 }

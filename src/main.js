@@ -17,11 +17,11 @@ const modes = {
     Maximum: 3
 };
 exports.Execution = {
-    error(code, message, obj = null) {
-        return new Ic10Error_1.Ic10Error('--', code, message, obj, 0);
+    error(code, message, obj = null, loc) {
+        return new Ic10Error_1.Ic10Error('--', code, message, obj, 0, loc);
     },
-    Ic10DiagnosticError(code, message, obj = null) {
-        return new Ic10Error_1.Ic10DiagnosticError('--', code, message, obj, 0);
+    Ic10DiagnosticError(code, message, obj = null, loc) {
+        return new Ic10Error_1.Ic10DiagnosticError('--', code, message, obj, 0, loc);
     },
     display: function (e) {
         if (e instanceof Ic10Error_1.Ic10Error) {

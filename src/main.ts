@@ -20,11 +20,11 @@ const modes = {
 export type ReturnCode = "hcf" | "end" | "die"
 
 export var Execution = {
-    error(code: number, message: string, obj: any = null) {
-        return new Ic10Error('--', code, message, obj, 0)
+    error(code: number, message: string, obj: any = null,loc?:{start:number,len:number}) {
+        return new Ic10Error('--', code, message, obj, 0,loc)
     },
-    Ic10DiagnosticError(code: number, message: string, obj: any = null) {
-        return new Ic10DiagnosticError('--', code, message, obj, 0)
+    Ic10DiagnosticError(code: number, message: string, obj: any = null,loc?:{start:number,len:number}) {
+        return new Ic10DiagnosticError('--', code, message, obj, 0,loc)
     },
     display: function (e: { code: any; message: any; lvl: any; obj: any; }) {
         if (e instanceof Ic10Error) {

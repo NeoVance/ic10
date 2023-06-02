@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Ic10DiagnosticError = exports.Ic10Error = void 0;
 class Ic10Error extends Error {
+    loc;
     message;
     code;
     functionName;
@@ -9,8 +10,9 @@ class Ic10Error extends Error {
     line;
     className;
     obj;
-    constructor(caller, code, message, obj, lvl = 0) {
+    constructor(caller, code, message, obj, lvl = 0, loc) {
         super(message);
+        this.loc = loc;
         this.message = message;
         this.code = code;
         this.obj = obj;
