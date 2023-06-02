@@ -10,3 +10,5 @@ export declare class Ic10Error extends Error {
     getCode(): number;
     getMessage(): string;
 }
+export declare class Ic10DiagnosticError extends Ic10Error {
+}

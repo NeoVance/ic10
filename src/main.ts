@@ -1,4 +1,4 @@
-import {Ic10Error} from "./Ic10Error";
+import {Ic10DiagnosticError, Ic10Error} from "./Ic10Error";
 import {Memory} from "./Memory";
 import {Device, IcHash} from "./Device";
 import {Slot} from "./Slot";
@@ -22,6 +22,9 @@ export type ReturnCode = "hcf" | "end" | "die"
 export var Execution = {
     error(code: number, message: string, obj: any = null) {
         return new Ic10Error('--', code, message, obj, 0)
+    },
+    Ic10DiagnosticError(code: number, message: string, obj: any = null) {
+        return new Ic10DiagnosticError('--', code, message, obj, 0)
     },
     display: function (e: { code: any; message: any; lvl: any; obj: any; }) {
         if (e instanceof Ic10Error) {
@@ -277,14 +280,14 @@ export class InterpreterIc10 {
 
     define(alias: string, value: number | string) {
 		if(isChannel(alias.toLowerCase()) || isSlotParameter(alias.toLowerCase()) || isDeviceParameter(alias.toLowerCase()) || isConst(alias.toLowerCase())){
-			throw Execution.error(this.position, 'Incorrect constant. Is system keyworld', alias)
+			throw Execution.Ic10DiagnosticError(this.position, 'Incorrect constant. Is system keyworld', alias)
 		}
         this.memory.define(alias, value)
     }
 
     alias(alias: string , target: string) {
 		if(isChannel(alias.toLowerCase()) || isSlotParameter(alias.toLowerCase()) || isDeviceParameter(alias.toLowerCase()) || isConst(alias.toLowerCase())){
-			throw Execution.error(this.position, 'Incorrect alias. Is system keyworld', alias)
+			throw Execution.Ic10DiagnosticError(this.position, 'Incorrect alias. Is system keyworld', alias)
 		}
         this.memory.alias(alias, target)
     }
@@ -428,7 +431,7 @@ export class InterpreterIc10 {
         const line = this.memory.getValue(target);
 
         if (isNaN(line))
-            throw Execution.error(this.position, 'Incorrect jump target', [target, this.labels])
+            throw Execution.Ic10DiagnosticError(this.position, 'Incorrect jump target', [target, this.labels])
 
         return line
     }
@@ -875,7 +878,7 @@ export class InterpreterIc10 {
                 return Math.max(...values)
         }
 
-        throw Execution.error(this.position, "Unknown batch mode", mode)
+        throw Execution.Ic10DiagnosticError(this.position, "Unknown batch mode", mode)
     }
 
     __getDevices(hash: number, name?: number) {
@@ -898,11 +901,11 @@ export class InterpreterIc10 {
         const a = this.memory.getDeviceOrDeviceOutput(device)
         if (a instanceof Device) {
             if (!isDeviceParameter(property)) {
-                throw Execution.error(this.position, `Wrong 3 argument (${property}). Must be "Device parameter"`,property)
+                throw Execution.Ic10DiagnosticError(this.position, `Wrong 3 argument (${property}). Must be "Device parameter"`,property)
             }
         } else if (a instanceof DeviceOutput) {
             if (!isChannel(property)) {
-                throw Execution.error(this.position, `Wrong 3 argument (${property}). Must be "Channel"`,property)
+                throw Execution.Ic10DiagnosticError(this.position, `Wrong 3 argument (${property}). Must be "Channel"`,property)
             }
         }
         r.value = a.get(property)
@@ -922,11 +925,11 @@ export class InterpreterIc10 {
 		const a = this.memory.getDeviceOrDeviceOutput(device)
 		if (a instanceof Device) {
 			if (!isDeviceParameter(property)) {
-				throw Execution.error(this.position, `Wrong 2 argument (${property}). Must be "Device parameter"`,property)
+				throw Execution.Ic10DiagnosticError(this.position, `Wrong 2 argument (${property}). Must be "Device parameter"`,property)
 			}
 		} else if (a instanceof DeviceOutput) {
 			if (!isChannel(property)) {
-				throw Execution.error(this.position, `Wrong 2 argument (${property}). Must be "Channel"`,property)
+				throw Execution.Ic10DiagnosticError(this.position, `Wrong 2 argument (${property}). Must be "Channel"`,property)
 			}
 		}
 		a.set(property, this.memory.getValue(value))
@@ -944,14 +947,14 @@ export class InterpreterIc10 {
         const values = devices.map(d => d.get(property) as number)
 
         if (values.length === 0)
-            throw Execution.error(this.position, 'Can`t find Device wich hash:', hash)
+            throw Execution.Ic10DiagnosticError(this.position, 'Can`t find Device wich hash:', hash)
 
         this.memory.getRegister(register).value = this.__transformBatch(values, mode)
     }
 
     lr(register: string, device: string, mode: string, property: string) {
         //TODO: well, we don't have reagents so we need to do it later
-        throw Execution.error(this.position, "lr not implemented yet")
+        throw Execution.Ic10DiagnosticError(this.position, "lr not implemented yet")
     }
 
     sb(deviceHash: string, property: string, value: string) {

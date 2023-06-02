@@ -1,9 +1,10 @@
-import { Ic10Error } from "./Ic10Error";
+import { Ic10DiagnosticError, Ic10Error } from "./Ic10Error";
 import { Memory } from "./Memory";
 import { Device } from "./Device";
 export type ReturnCode = "hcf" | "end" | "die";
 export declare var Execution: {
     error(code: number, message: string, obj?: any): Ic10Error;
+    Ic10DiagnosticError(code: number, message: string, obj?: any): Ic10DiagnosticError;
     display: (e: {
         code: any;
         message: any;

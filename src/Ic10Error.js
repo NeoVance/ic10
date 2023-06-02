@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Ic10Error = void 0;
+exports.Ic10DiagnosticError = exports.Ic10Error = void 0;
 class Ic10Error extends Error {
     message;
     code;
@@ -27,4 +27,7 @@ class Ic10Error extends Error {
     }
 }
 exports.Ic10Error = Ic10Error;
+class Ic10DiagnosticError extends Ic10Error {
+}
+exports.Ic10DiagnosticError = Ic10DiagnosticError;
 //# sourceMappingURL=Ic10Error.js.map

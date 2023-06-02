@@ -26,3 +26,7 @@ export class Ic10Error extends Error {
 		return this.message
 	}
 }
+
+export class Ic10DiagnosticError extends Ic10Error {
+
+}

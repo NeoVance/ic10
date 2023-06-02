@@ -20,6 +20,9 @@ exports.Execution = {
     error(code, message, obj = null) {
         return new Ic10Error_1.Ic10Error('--', code, message, obj, 0);
     },
+    Ic10DiagnosticError(code, message, obj = null) {
+        return new Ic10Error_1.Ic10DiagnosticError('--', code, message, obj, 0);
+    },
     display: function (e) {
         if (e instanceof Ic10Error_1.Ic10Error) {
             const string = `(${e.code}) - ${e.message}:`;
@@ -244,13 +247,13 @@ class InterpreterIc10 {
     }
     define(alias, value) {
         if ((0, icTypes_1.isChannel)(alias.toLowerCase()) || (0, icTypes_1.isSlotParameter)(alias.toLowerCase()) || (0, icTypes_1.isDeviceParameter)(alias.toLowerCase()) || (0, icTypes_1.isConst)(alias.toLowerCase())) {
-            throw exports.Execution.error(this.position, 'Incorrect constant. Is system keyworld', alias);
+            throw exports.Execution.Ic10DiagnosticError(this.position, 'Incorrect constant. Is system keyworld', alias);
         }
         this.memory.define(alias, value);
     }
     alias(alias, target) {
         if ((0, icTypes_1.isChannel)(alias.toLowerCase()) || (0, icTypes_1.isSlotParameter)(alias.toLowerCase()) || (0, icTypes_1.isDeviceParameter)(alias.toLowerCase()) || (0, icTypes_1.isConst)(alias.toLowerCase())) {
-            throw exports.Execution.error(this.position, 'Incorrect alias. Is system keyworld', alias);
+            throw exports.Execution.Ic10DiagnosticError(this.position, 'Incorrect alias. Is system keyworld', alias);
         }
         this.memory.alias(alias, target);
     }
@@ -356,7 +359,7 @@ class InterpreterIc10 {
             return this.labels[target];
         const line = this.memory.getValue(target);
         if (isNaN(line))
-            throw exports.Execution.error(this.position, 'Incorrect jump target', [target, this.labels]);
+            throw exports.Execution.Ic10DiagnosticError(this.position, 'Incorrect jump target', [target, this.labels]);
         return line;
     }
     j(target) {
@@ -690,7 +693,7 @@ class InterpreterIc10 {
             case modes.Maximum:
                 return Math.max(...values);
         }
-        throw exports.Execution.error(this.position, "Unknown batch mode", mode);
+        throw exports.Execution.Ic10DiagnosticError(this.position, "Unknown batch mode", mode);
     }
     __getDevices(hash, name) {
         const devices = [];
@@ -707,12 +710,12 @@ class InterpreterIc10 {
         const a = this.memory.getDeviceOrDeviceOutput(device);
         if (a instanceof Device_1.Device) {
             if (!(0, icTypes_1.isDeviceParameter)(property)) {
-                throw exports.Execution.error(this.position, `Wrong 3 argument (${property}). Must be "Device parameter"`, property);
+                throw exports.Execution.Ic10DiagnosticError(this.position, `Wrong 3 argument (${property}). Must be "Device parameter"`, property);
             }
         }
         else if (a instanceof DeviceOutput_1.DeviceOutput) {
             if (!(0, icTypes_1.isChannel)(property)) {
-                throw exports.Execution.error(this.position, `Wrong 3 argument (${property}). Must be "Channel"`, property);
+                throw exports.Execution.Ic10DiagnosticError(this.position, `Wrong 3 argument (${property}). Must be "Channel"`, property);
             }
         }
         r.value = a.get(property);
@@ -729,12 +732,12 @@ class InterpreterIc10 {
         const a = this.memory.getDeviceOrDeviceOutput(device);
         if (a instanceof Device_1.Device) {
             if (!(0, icTypes_1.isDeviceParameter)(property)) {
-                throw exports.Execution.error(this.position, `Wrong 2 argument (${property}). Must be "Device parameter"`, property);
+                throw exports.Execution.Ic10DiagnosticError(this.position, `Wrong 2 argument (${property}). Must be "Device parameter"`, property);
             }
         }
         else if (a instanceof DeviceOutput_1.DeviceOutput) {
             if (!(0, icTypes_1.isChannel)(property)) {
-                throw exports.Execution.error(this.position, `Wrong 2 argument (${property}). Must be "Channel"`, property);
+                throw exports.Execution.Ic10DiagnosticError(this.position, `Wrong 2 argument (${property}). Must be "Channel"`, property);
             }
         }
         a.set(property, this.memory.getValue(value));
@@ -747,11 +750,11 @@ class InterpreterIc10 {
         const devices = this.__getDevices(hash);
         const values = devices.map(d => d.get(property));
         if (values.length === 0)
-            throw exports.Execution.error(this.position, 'Can`t find Device wich hash:', hash);
+            throw exports.Execution.Ic10DiagnosticError(this.position, 'Can`t find Device wich hash:', hash);
         this.memory.getRegister(register).value = this.__transformBatch(values, mode);
     }
     lr(register, device, mode, property) {
-        throw exports.Execution.error(this.position, "lr not implemented yet");
+        throw exports.Execution.Ic10DiagnosticError(this.position, "lr not implemented yet");
     }
     sb(deviceHash, property, value) {
         const hash = this.memory.getValue(deviceHash);
