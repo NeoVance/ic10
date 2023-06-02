@@ -1,4 +1,4 @@
-import { Ic10Error } from "./ic10Error";
+import { Ic10Error } from "./Ic10Error";
 import { Memory } from "./Memory";
 import { Device } from "./Device";
 export type ReturnCode = "hcf" | "end" | "die";
@@ -55,7 +55,7 @@ export declare class InterpreterIc10 {
     runUntil(cond: (status: true | ReturnCode) => boolean, maxIterations?: number): number;
     __issetLabel(x: string): boolean;
     define(alias: string, value: number | string): void;
-    alias(alias: string | number, target: string): void;
+    alias(alias: string, target: string): void;
     __op<Args extends number[]>(op: (...args: Args) => number, register: string, ...args: {
         [K in keyof Args]: string;
     }): void;

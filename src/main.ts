@@ -1,11 +1,13 @@
-import {Ic10Error} from "./ic10Error";
+import {Ic10Error} from "./Ic10Error";
 import {Memory} from "./Memory";
 import {Device, IcHash} from "./Device";
 import {Slot} from "./Slot";
+import {isChannel, isConst, isDeviceParameter,isSlotParameter} from "./icTypes";
+import {DeviceOutput} from "./DeviceOutput";
 
 const regexes = {
-	strStart: new RegExp("^\".+$"),
-	strEnd  : new RegExp(".+\"$"),
+    strStart: new RegExp("^\".+$"),
+    strEnd: new RegExp(".+\"$"),
 }
 
 const modes = {
@@ -18,33 +20,33 @@ const modes = {
 export type ReturnCode = "hcf" | "end" | "die"
 
 export var Execution = {
-	error(code: number, message: string, obj: any = null) {
-		return new Ic10Error('--', code, message, obj, 0)
-	},
-	display: function (e: { code: any; message: any; lvl: any; obj: any; }) {
-		if (e instanceof Ic10Error) {
-			const string = `(${e.code}) - ${e.message}:`;
-			switch (e.lvl) {
-				case 0:
-					console.error('ERROR ' + string, e.obj)
-					break;
-				case 1:
-					console.warn('WARN ' + string, e.obj)
-					break;
-				case 2:
-					console.info('INFO ' + string, e.obj)
-					break;
-				case 3:
-				default:
-					console.log('LOG ' + string, e.obj)
-					break;
-			}
-			return string
-		} else {
-			console.log(e)
-			return e;
-		}
-	}
+    error(code: number, message: string, obj: any = null) {
+        return new Ic10Error('--', code, message, obj, 0)
+    },
+    display: function (e: { code: any; message: any; lvl: any; obj: any; }) {
+        if (e instanceof Ic10Error) {
+            const string = `(${e.code}) - ${e.message}:`;
+            switch (e.lvl) {
+                case 0:
+                    console.error('ERROR ' + string, e.obj)
+                    break;
+                case 1:
+                    console.warn('WARN ' + string, e.obj)
+                    break;
+                case 2:
+                    console.info('INFO ' + string, e.obj)
+                    break;
+                case 3:
+                default:
+                    console.log('LOG ' + string, e.obj)
+                    break;
+            }
+            return string
+        } else {
+            console.log(e)
+            return e;
+        }
+    }
 }
 
 export type InterpreterIc10Settings = {
@@ -57,62 +59,62 @@ export type InterpreterIc10Settings = {
 
 // noinspection SpellCheckingInspection
 export class InterpreterIc10 {
-	public code: string
-	public commands: { command: string | undefined, args: string[] }[] = []
-	public lines: string[]                                             = []
-	public memory: Memory
-	public position: number                                            = 0
-	public interval: any
-	public labels: { [key: string]: number }                           = {}
-	public constants: {}
-	public output: {
-		debug: string,
-		log: string,
-		error: string,
-	}
-	public settings: InterpreterIc10Settings;
-	public ignoreLine: Array<number>;
+    public code: string
+    public commands: { command: string | undefined, args: string[] }[] = []
+    public lines: string[] = []
+    public memory: Memory
+    public position: number = 0
+    public interval: any
+    public labels: { [key: string]: number } = {}
+    public constants: {}
+    public output: {
+        debug: string,
+        log: string,
+        error: string,
+    }
+    public settings: InterpreterIc10Settings;
+    public ignoreLine: Array<number>;
     public device?: Device
 
-	constructor(code: string = '', settings: Partial<InterpreterIc10Settings> = {}) {
-		this.code       = code
-		this.memory     = new Memory(this)
-		this.constants  = {}
-		this.labels     = {}
-		this.ignoreLine = []
-		this.settings   = Object.assign({
-											debug            : true,
-											tickTime         : 100,
-											debugCallback    : (a: string, b: any) => {
-												this.output.debug = a + ' ' + JSON.stringify(b)
-											},
-											logCallback      : (a: string, b: any[]) => {
-												this.output.log = a + ' ' + b.join('')
-											},
-											executionCallback: (e: Ic10Error) => {
-												this.output.error = <string>Execution.display(e)
-											},
-										}, settings)
-		if (code) {
-			this.init(code)
-		}
-		this.output = {
-			debug: '',
-			log  : '',
-			error: '',
-		}
-	}
+    constructor(code: string = '', settings: Partial<InterpreterIc10Settings> = {}) {
+        this.code = code
+        this.memory = new Memory(this)
+        this.constants = {}
+        this.labels = {}
+        this.ignoreLine = []
+        this.settings = Object.assign({
+            debug: true,
+            tickTime: 100,
+            debugCallback: (a: string, b: any) => {
+                this.output.debug = a + ' ' + JSON.stringify(b)
+            },
+            logCallback: (a: string, b: any[]) => {
+                this.output.log = a + ' ' + b.join('')
+            },
+            executionCallback: (e: Ic10Error) => {
+                this.output.error = <string>Execution.display(e)
+            },
+        }, settings)
+        if (code) {
+            this.init(code)
+        }
+        this.output = {
+            debug: '',
+            log: '',
+            error: '',
+        }
+    }
 
-	setSettings(settings: Partial<InterpreterIc10Settings> = {}): InterpreterIc10 {
-		this.settings = Object.assign(this.settings, settings)
-		return this;
-	}
+    setSettings(settings: Partial<InterpreterIc10Settings> = {}): InterpreterIc10 {
+        this.settings = Object.assign(this.settings, settings)
+        return this;
+    }
 
-	init(text: string, device?: Device): InterpreterIc10 {
+    init(text: string, device?: Device): InterpreterIc10 {
         this.memory.reset()
         if (device !== undefined) {
             const ics = device.slots
-                .filter(s => s.has("OccupantHash") && s.get("OccupantHash") === IcHash )
+                .filter(s => s.has("OccupantHash") && s.get("OccupantHash") === IcHash)
 
             if (ics.length === 1) {
                 this.device = device
@@ -121,60 +123,60 @@ export class InterpreterIc10 {
             }
         }
 
-		this.lines     = text.split(/\r?\n/);
-		const commands = this.lines
-							 .map((line: string) => {
-								 const args    = line.trim().split(/ +/)
-								 const command = args.shift()
-								 return {command, args}
-							 });
-		for (const commandsKey in this.lines) {
-			if (commands.hasOwnProperty(commandsKey)) {
-				let command = commands[commandsKey]
-				const newArgs: Record<string, string> = {};
-				let mode = 0;
-				let argNumber = 0;
-				for (let argsKey in command.args) {
-					if (command.args.hasOwnProperty(argsKey)) {
-						let arg = command.args[argsKey]
-						if (arg.startsWith("#"))
-							break;
+        this.lines = text.split(/\r?\n/);
+        const commands = this.lines
+            .map((line: string) => {
+                const args = line.trim().split(/ +/)
+                const command = args.shift()
+                return {command, args}
+            });
+        for (const commandsKey in this.lines) {
+            if (commands.hasOwnProperty(commandsKey)) {
+                let command = commands[commandsKey]
+                const newArgs: Record<string, string> = {};
+                let mode = 0;
+                let argNumber = 0;
+                for (let argsKey in command.args) {
+                    if (command.args.hasOwnProperty(argsKey)) {
+                        let arg = command.args[argsKey]
+                        if (arg.startsWith("#"))
+                            break;
 
-						if (mode === 0)
-							argNumber++
+                        if (mode === 0)
+                            argNumber++
 
-						if (regexes.strStart.test(arg))
-							mode = 1
+                        if (regexes.strStart.test(arg))
+                            mode = 1
 
-						if (argNumber in newArgs)
-							newArgs[argNumber] += ' ' + arg
-						else
-							newArgs[argNumber] = arg
+                        if (argNumber in newArgs)
+                            newArgs[argNumber] += ' ' + arg
+                        else
+                            newArgs[argNumber] = arg
 
-						if (regexes.strEnd.test(arg))
-							mode = 0
-					}
-				}
-				commands[commandsKey].args = Object.values(newArgs)
-			} else
-				commands.push({command: '', args: []})
-		}
-		this.commands = commands
-		this.position = 0
-		while (this.position < this.commands.length) {
-			let {command, args} = this.commands[this.position]
-			this.position++
-			if (command?.match(/^\w+:$/)) {
-				let label = command.replace(":", "")
-				// @ts-ignore
-				this.labels[command.replace(":", "")] = this.position
-				this.memory.define(label, this.position)
-			}
-		}
-		this.position = 0
+                        if (regexes.strEnd.test(arg))
+                            mode = 0
+                    }
+                }
+                commands[commandsKey].args = Object.values(newArgs)
+            } else
+                commands.push({command: '', args: []})
+        }
+        this.commands = commands
+        this.position = 0
+        while (this.position < this.commands.length) {
+            let {command, args} = this.commands[this.position]
+            this.position++
+            if (command?.match(/^\w+:$/)) {
+                let label = command.replace(":", "")
+                // @ts-ignore
+                this.labels[command.replace(":", "")] = this.position
+                this.memory.define(label, this.position)
+            }
+        }
+        this.position = 0
         this.__updateDevice()
-		return this
-	}
+        return this
+    }
 
     __updateDevice() {
         if (this.device === undefined)
@@ -189,74 +191,74 @@ export class InterpreterIc10 {
         })
     }
 
-	stop(): InterpreterIc10 {
-		clearInterval(this.interval)
-		return this;
-	}
+    stop(): InterpreterIc10 {
+        clearInterval(this.interval)
+        return this;
+    }
 
-	async run() {
-		return new Promise((resolve) => {
-			this.interval = setInterval(() => {
-				const why = this.prepareLine();
-				if (why !== true) {
-					this.settings.debugCallback.call(this, why, [])
-					clearInterval(this.interval)
-				}
-			}, this.settings.tickTime)
-			resolve(this)
-		})
-	}
+    async run() {
+        return new Promise((resolve) => {
+            this.interval = setInterval(() => {
+                const why = this.prepareLine();
+                if (why !== true) {
+                    this.settings.debugCallback.call(this, why, [])
+                    clearInterval(this.interval)
+                }
+            }, this.settings.tickTime)
+            resolve(this)
+        })
+    }
 
-	prepareLine(line = -1, isDebugger = false): ReturnCode | true {
-		if (line >= 0) {
-			this.position = line;
-		}
-		if (!(this.position in this.commands)) {
-			return 'end';
-		}
-		let {command, args} = this.commands[this.position]
-		this.position++
-		let isComment = true
-		if (command && command != '' && !command.trim().endsWith(":")) {
-			isComment = command.startsWith("#")
-			for (const argsKey in args) {
-				let a = parseFloat(args[argsKey])
-				if (!isNaN(a)) {
-					args[argsKey] = String(a)
-				}
-			}
-			try {
-				if (command === "#die") return 'die'
-				command = command.replace("#", "_")
-				if (command in this) {
-					// @ts-ignore
-					this[command](...args)
+    prepareLine(line = -1, isDebugger = false): ReturnCode | true {
+        if (line >= 0) {
+            this.position = line;
+        }
+        if (!(this.position in this.commands)) {
+            return 'end';
+        }
+        let {command, args} = this.commands[this.position]
+        this.position++
+        let isComment = true
+        if (command && command != '' && !command.trim().endsWith(":")) {
+            isComment = command.startsWith("#")
+            for (const argsKey in args) {
+                let a = parseFloat(args[argsKey])
+                if (!isNaN(a)) {
+                    args[argsKey] = String(a)
+                }
+            }
+            try {
+                if (command === "#die") return 'die'
+                command = command.replace("#", "_")
+                if (command in this) {
+                    // @ts-ignore
+                    this[command](...args)
                     this.__updateDevice()
-					this.__debug(command, args)
-				} else if (!isComment) {
-					throw Execution.error(this.position, 'Undefined function', command)
-				}
-			} catch (e) {
+                    this.__debug(command, args)
+                } else if (!isComment) {
+                    throw Execution.error(this.position, 'Undefined function', command)
+                }
+            } catch (e) {
                 if (e instanceof Ic10Error)
-    				this.settings.executionCallback.call(this, e)
+                    this.settings.executionCallback.call(this, e)
                 else
                     throw e
-			}
-		}
-		if (command === "hcf")
+            }
+        }
+        if (command === "hcf")
             return 'hcf'
 
-		if (isComment) {
-			this.ignoreLine.push(this.position)
-		}
-		if (!isDebugger) {
-			return isComment && this.position < this.commands.length
-				   ? this.prepareLine()
-				   : this.position < this.commands.length ? true : 'end'
-		} else {
-			return this.position < this.commands.length ? true : 'end'
-		}
-	}
+        if (isComment) {
+            this.ignoreLine.push(this.position)
+        }
+        if (!isDebugger) {
+            return isComment && this.position < this.commands.length
+                ? this.prepareLine()
+                : this.position < this.commands.length ? true : 'end'
+        } else {
+            return this.position < this.commands.length ? true : 'end'
+        }
+    }
 
     runUntil(cond: (status: true | ReturnCode) => boolean, maxIterations: number = 0) {
         let status: ReturnCode | true = true
@@ -269,17 +271,23 @@ export class InterpreterIc10 {
         return n
     }
 
-	__issetLabel(x: string) {
-		return x in this.labels
-	}
+    __issetLabel(x: string) {
+        return x in this.labels
+    }
 
-	define(alias: string, value: number | string) {
-		this.memory.define(alias, value)
-	}
+    define(alias: string, value: number | string) {
+		if(isChannel(alias.toLowerCase()) || isSlotParameter(alias.toLowerCase()) || isDeviceParameter(alias.toLowerCase()) || isConst(alias.toLowerCase())){
+			throw Execution.error(this.position, 'Incorrect constant. Is system keyworld', alias)
+		}
+        this.memory.define(alias, value)
+    }
 
-	alias(alias: string | number, target: string) {
-		this.memory.alias(alias, target)
-	}
+    alias(alias: string , target: string) {
+		if(isChannel(alias.toLowerCase()) || isSlotParameter(alias.toLowerCase()) || isDeviceParameter(alias.toLowerCase()) || isConst(alias.toLowerCase())){
+			throw Execution.error(this.position, 'Incorrect alias. Is system keyworld', alias)
+		}
+        this.memory.alias(alias, target)
+    }
 
     __op<Args extends number[]>(op: (...args: Args) => number, register: string, ...args: { [K in keyof Args]: string }) {
         const r = this.memory.getRegister(register)
@@ -289,41 +297,41 @@ export class InterpreterIc10 {
         r.value = op(...inputs)
     }
 
-	move(register: string, value: string) {
+    move(register: string, value: string) {
         this.__op(v => v, register, value)
-	}
+    }
 
-	__move(register: string, value: string) {
-		this.move(register, value)
-	}
+    __move(register: string, value: string) {
+        this.move(register, value)
+    }
 
-	add(register: string, a: string, b: string) {
+    add(register: string, a: string, b: string) {
         this.__op((a, b) => a + b, register, a, b)
-	}
+    }
 
-	sub(register: string, a: string, b: string) {
+    sub(register: string, a: string, b: string) {
         this.__op((a, b) => a - b, register, a, b)
-	}
+    }
 
-	mul(register: string, a: string, b: string) {
+    mul(register: string, a: string, b: string) {
         this.__op((a, b) => a * b, register, a, b)
-	}
+    }
 
-	div(register: string, a: string, b: string) {
+    div(register: string, a: string, b: string) {
         this.__op((a, b) => Number(a / b) || 0, register, a, b)
-	}
+    }
 
-	mod(register: string, a: string, b: string) {
+    mod(register: string, a: string, b: string) {
         this.__op((a, b) => a % b, register, a, b)
-	}
+    }
 
-	sqrt(register: string, v: string) {
+    sqrt(register: string, v: string) {
         this.__op(Math.sqrt, register, v)
-	}
+    }
 
-	round(register: string, v: string) {
+    round(register: string, v: string) {
         this.__op(Math.round, register, v)
-	}
+    }
 
     trunc(register: string, v: string) {
         this.__op(Math.trunc, register, v)
@@ -337,9 +345,9 @@ export class InterpreterIc10 {
         this.__op(Math.floor, register, v)
     }
 
-	max(register: string, a: string, b: string) {
+    max(register: string, a: string, b: string) {
         this.__op(Math.max, register, a, b)
-	}
+    }
 
     minx(register: string, a: string, b: string) {
         this.__op(Math.min, register, a, b)
@@ -349,17 +357,17 @@ export class InterpreterIc10 {
         this.__op(Math.abs, register, v)
     }
 
-	log(register: string, v: string) {
+    log(register: string, v: string) {
         this.__op(Math.log, register, v)
-	}
+    }
 
     exp(register: string, v: string) {
         this.__op(Math.exp, register, v)
     }
 
-	rand(register: string, v: string) {
+    rand(register: string, v: string) {
         this.__op(_ => Math.random(), register, v)
-	}
+    }
 
     sin(register: string, v: string) {
         this.__op(Math.sin, register, v)
@@ -385,24 +393,24 @@ export class InterpreterIc10 {
         this.__op(Math.atan, register, v)
     }
 
-	atan2(register: string, a: string, b: string) {
+    atan2(register: string, a: string, b: string) {
         this.__op(Math.atan2, register, a, b)
-	}
+    }
 
-	yield() {
-	}
+    yield() {
+    }
 
-	sleep(s: number) {
+    sleep(s: number) {
         //TODO: yield for s * x ticks
-	}
+    }
 
-	select(register: string, a: string, b: string, c: string) {
+    select(register: string, a: string, b: string, c: string) {
         this.__op((a, b, c) => a ? b : c, register, a, b, c)
-	}
+    }
 
-	hcf() {
-		console.log("Die Mother Fucker Die!!!!!")
-	}
+    hcf() {
+        console.log("Die Mother Fucker Die!!!!!")
+    }
 
     __jump(line: number) {
         this.position = line
@@ -425,62 +433,62 @@ export class InterpreterIc10 {
         return line
     }
 
-	j(target: string) {
+    j(target: string) {
         this.__jump(this.__getJumpTarget(target))
     }
 
-	jr(offset: string) {
+    jr(offset: string) {
         const d = this.memory.getValue(offset)
 
         if (Math.abs(d) < 0.001)
             throw Execution.error(this.position, "Infinite loop detected", offset)
 
         this.__jump(this.position + d - 1)
-	}
+    }
 
-	jal(target: string) {
+    jal(target: string) {
         this.__call(this.__getJumpTarget(target))
-	}
+    }
 
-	__eq(a: number, b: number = 0) {
-		return a == b
-	}
+    __eq(a: number, b: number = 0) {
+        return a == b
+    }
 
-	__ge(a: number, b: number = 0) {
-		return a >= b
-	}
+    __ge(a: number, b: number = 0) {
+        return a >= b
+    }
 
-	__gt(a: number, b: number = 0) {
-		return a > b
-	}
+    __gt(a: number, b: number = 0) {
+        return a > b
+    }
 
-	__le(a: number, b: number = 0) {
-		return a <= b
-	}
+    __le(a: number, b: number = 0) {
+        return a <= b
+    }
 
-	__lt(a: number, b: number = 0) {
-		return a < b
-	}
+    __lt(a: number, b: number = 0) {
+        return a < b
+    }
 
-	__ne(a: number, b: number = 0) {
-		return a != b
-	}
+    __ne(a: number, b: number = 0) {
+        return a != b
+    }
 
-	__ap(x: number, y: number, c: number = 0) {
-		return !this.__na(x, y, c)
-	}
+    __ap(x: number, y: number, c: number = 0) {
+        return !this.__na(x, y, c)
+    }
 
-	__na(x: number, y: number, c: number = 0) {
-		return Math.abs(x - y) > c * Math.max(Math.abs(x), Math.abs(y))
-	}
+    __na(x: number, y: number, c: number = 0) {
+        return Math.abs(x - y) > c * Math.max(Math.abs(x), Math.abs(y))
+    }
 
-	__dse(d: string) {
+    __dse(d: string) {
         return this.memory.findDevice(d) !== undefined
-	}
+    }
 
-	__dns(d: string) {
-		return !this.__dse(d)
-	}
+    __dns(d: string) {
+        return !this.__dse(d)
+    }
 
     __nan(v: number) {
         return isNaN(this.memory.getValue(v))
@@ -498,77 +506,77 @@ export class InterpreterIc10 {
         r.value = op(...inputs) ? 1 : 0
     }
 
-	seq(register: string, a: string, b: string) {
+    seq(register: string, a: string, b: string) {
         this.__sOp(this.__eq.bind(this), register, a, b)
-	}
+    }
 
-	seqz(register: string, a: string) {
+    seqz(register: string, a: string) {
         this.__sOp(this.__eq.bind(this), register, a)
-	}
+    }
 
-	sge(register: string, a: string, b: string) {
+    sge(register: string, a: string, b: string) {
         this.__sOp(this.__ge.bind(this), register, a, b)
-	}
+    }
 
-	sgez(register: string, a: string) {
+    sgez(register: string, a: string) {
         this.__sOp(this.__ge.bind(this), register, a)
-	}
+    }
 
-	sgt(register: string, a: string, b: string) {
-		this.__sOp(this.__gt.bind(this), register, a, b)
-	}
+    sgt(register: string, a: string, b: string) {
+        this.__sOp(this.__gt.bind(this), register, a, b)
+    }
 
-	sgtz(register: string, a: string) {
+    sgtz(register: string, a: string) {
         this.__sOp(this.__gt.bind(this), register, a)
-	}
+    }
 
-	sle(register: string, a: string, b: string) {
+    sle(register: string, a: string, b: string) {
         this.__sOp(this.__le.bind(this), register, a, b)
-	}
+    }
 
-	slez(register: string, a: string) {
+    slez(register: string, a: string) {
         this.__sOp(this.__le.bind(this), register, a)
-	}
+    }
 
-	slt(register: string, a: string, b: string) {
+    slt(register: string, a: string, b: string) {
         this.__sOp(this.__lt.bind(this), register, a, b)
-	}
+    }
 
-	sltz(register: string, a: string) {
+    sltz(register: string, a: string) {
         this.__sOp(this.__lt.bind(this), register, a)
-	}
+    }
 
-	sne(register: string, a: string, b: string) {
+    sne(register: string, a: string, b: string) {
         this.__sOp(this.__ne.bind(this), register, a, b)
-	}
+    }
 
-	snez(register: string, a: string) {
+    snez(register: string, a: string) {
         this.__sOp(this.__ne.bind(this), register, a)
-	}
+    }
 
-	sap(register: string, x: string, y: string, c: string) {
+    sap(register: string, x: string, y: string, c: string) {
         this.__sOp(this.__ap.bind(this), register, x, y, c)
-	}
+    }
 
-	sapz(register: string, x: string, y: string) {
+    sapz(register: string, x: string, y: string) {
         this.__sOp(this.__ap.bind(this), register, x, y)
-	}
+    }
 
-	sna(register: string, x: string, y: string, c: string) {
+    sna(register: string, x: string, y: string, c: string) {
         this.__sOp(this.__na.bind(this), register, x, y, c)
-	}
+    }
 
-	snaz(register: string, x: string, y: string) {
+    snaz(register: string, x: string, y: string) {
         this.__sOp(this.__na.bind(this), register, x, y)
-	}
+    }
 
-	sdse(register: string, d: string) {
+    sdse(register: string, d: string) {
         this.memory.getRegister(register).value = Number(this.__dse(d))
-	}
+    }
 
-	sdns(register: string, d: string) {
+    sdns(register: string, d: string) {
         this.memory.getRegister(register).value = Number(this.__dns(d))
-	}
+    }
 
     snan(register: string, v: string) {
         this.__sOp(this.__nan.bind(this), register, v)
@@ -605,251 +613,251 @@ export class InterpreterIc10 {
         this.jal(line)
     }
 
-	beq(a: string, b: string, line: string) {
+    beq(a: string, b: string, line: string) {
         this.__bOp(this.__eq.bind(this), line, a, b)
-	}
+    }
 
-	beqz(a: string, line: string) {
+    beqz(a: string, line: string) {
         this.__bOp(this.__eq.bind(this), line, a)
-	}
+    }
 
-	bge(a: string, b: string, line: string) {
+    bge(a: string, b: string, line: string) {
         this.__bOp(this.__ge.bind(this), line, a, b)
-	}
+    }
 
-	bgez(a: string, line: string) {
+    bgez(a: string, line: string) {
         this.__bOp(this.__ge.bind(this), line, a)
-	}
+    }
 
-	bgt(a: string, b: string, line: string) {
+    bgt(a: string, b: string, line: string) {
         this.__bOp(this.__gt.bind(this), line, a, b)
-	}
+    }
 
-	bgtz(a: string, line: string) {
+    bgtz(a: string, line: string) {
         this.__bOp(this.__gt.bind(this), line, a)
-	}
+    }
 
-	ble(a: string, b: string, line: string) {
+    ble(a: string, b: string, line: string) {
         this.__bOp(this.__le.bind(this), line, a, b)
-	}
+    }
 
-	blez(a: string, line: string) {
+    blez(a: string, line: string) {
         this.__bOp(this.__le.bind(this), line, a)
-	}
+    }
 
-	blt(a: string, b: string, line: string) {
+    blt(a: string, b: string, line: string) {
         this.__bOp(this.__lt.bind(this), line, a, b)
-	}
+    }
 
-	bltz(a: string, line: string) {
+    bltz(a: string, line: string) {
         this.__bOp(this.__lt.bind(this), line, a)
-	}
+    }
 
-	bne(a: string, b: string, line: string) {
+    bne(a: string, b: string, line: string) {
         this.__bOp(this.__ne.bind(this), line, a, b)
-	}
+    }
 
-	bnez(a: string, line: string) {
+    bnez(a: string, line: string) {
         this.__bOp(this.__ne.bind(this), line, a)
-	}
+    }
 
-	bap(x: string, y: string, c: string, line: string) {
-		this.__bOp(this.__ap.bind(this), line, x, y, c)
-	}
+    bap(x: string, y: string, c: string, line: string) {
+        this.__bOp(this.__ap.bind(this), line, x, y, c)
+    }
 
-	bapz(x: string, y: string, line: string) {
+    bapz(x: string, y: string, line: string) {
         this.__bOp(this.__ap.bind(this), line, x, y)
-	}
+    }
 
-	bna(x: string, y: string, c: string, line: string) {
+    bna(x: string, y: string, c: string, line: string) {
         this.__bOp(this.__na.bind(this), line, x, y, c)
-	}
+    }
 
-	bnaz(x: string, y: string, line: string) {
+    bnaz(x: string, y: string, line: string) {
         this.__bOp(this.__na.bind(this), line, x, y)
-	}
+    }
 
-	bdse(d: string, line: string) {
+    bdse(d: string, line: string) {
         if (this.__dse(d))
             this.j(line)
-	}
+    }
 
-	bdns(d: string, line: string) {
-		if (this.__dns(d))
+    bdns(d: string, line: string) {
+        if (this.__dns(d))
             this.j(line)
-	}
+    }
 
     bnan(v: string, line: string) {
         this.__bOp(this.__nan.bind(this), line, v)
     }
 
-	breq(a: string, b: string, offset: string) {
+    breq(a: string, b: string, offset: string) {
         this.__bROp(this.__eq.bind(this), offset, a, b)
-	}
+    }
 
-	breqz(a: string, offset: string) {
+    breqz(a: string, offset: string) {
         this.__bROp(this.__eq.bind(this), offset, a)
-	}
+    }
 
-	brge(a: string, b: string, offset: string) {
+    brge(a: string, b: string, offset: string) {
         this.__bROp(this.__ge.bind(this), offset, a)
-	}
+    }
 
-	brgez(a: string, offset: string) {
+    brgez(a: string, offset: string) {
         this.__bROp(this.__ge.bind(this), offset, a)
-	}
+    }
 
-	brgt(a: string, b: string, offset: string) {
+    brgt(a: string, b: string, offset: string) {
         this.__bROp(this.__gt.bind(this), offset, a, b)
-	}
+    }
 
-	brgtz(a: string, offset: string) {
+    brgtz(a: string, offset: string) {
         this.__bROp(this.__gt.bind(this), offset, a)
-	}
+    }
 
-	brle(a: string, b: string, offset: string) {
+    brle(a: string, b: string, offset: string) {
         this.__bROp(this.__le.bind(this), offset, a, b)
-	}
+    }
 
-	brlez(a: string, offset: string) {
+    brlez(a: string, offset: string) {
         this.__bROp(this.__le.bind(this), offset, a)
-	}
+    }
 
-	brlt(a: string, b: string, offset: string) {
+    brlt(a: string, b: string, offset: string) {
         this.__bROp(this.__lt.bind(this), offset, a, b)
-	}
+    }
 
-	brltz(a: string, offset: string) {
+    brltz(a: string, offset: string) {
         this.__bROp(this.__lt.bind(this), offset, a)
-	}
+    }
 
-	brne(a: string, b: string, offset: string) {
+    brne(a: string, b: string, offset: string) {
         this.__bROp(this.__ne.bind(this), offset, a, b)
-	}
+    }
 
-	brnez(a: string, offset: string) {
+    brnez(a: string, offset: string) {
         this.__bROp(this.__ne.bind(this), offset, a)
-	}
+    }
 
-	brap(x: string, y: string, c: string, offset: string) {
-		this.__bROp(this.__ap.bind(this), offset, x, y, c)
-	}
+    brap(x: string, y: string, c: string, offset: string) {
+        this.__bROp(this.__ap.bind(this), offset, x, y, c)
+    }
 
-	brapz(x: string, y: string, offset: string) {
+    brapz(x: string, y: string, offset: string) {
         this.__bROp(this.__ap.bind(this), offset, x, y)
-	}
+    }
 
-	brna(x: string, y: string, c: string, offset: string) {
+    brna(x: string, y: string, c: string, offset: string) {
         this.__bROp(this.__na.bind(this), offset, x, y, c)
-	}
+    }
 
-	brnaz(x: string, y: string, offset: string) {
+    brnaz(x: string, y: string, offset: string) {
         this.__bROp(this.__ap.bind(this), offset, x, y)
-	}
+    }
 
-	brdse(d: string, offset: string) {
-		if (this.__dse(d)) {
-			this.jr(offset)
-		}
-	}
+    brdse(d: string, offset: string) {
+        if (this.__dse(d)) {
+            this.jr(offset)
+        }
+    }
 
-	brdns(d: string, offset: string) {
-		if (this.__dns(d)) {
-			this.jr(offset)
-		}
-	}
+    brdns(d: string, offset: string) {
+        if (this.__dns(d)) {
+            this.jr(offset)
+        }
+    }
 
     brnan(v: string, offset: string) {
         this.__bROp(this.__nan.bind(this), offset, v)
     }
 
-	beqal(a: string, b: string, line: string) {
+    beqal(a: string, b: string, line: string) {
         this.__bCOp(this.__eq.bind(this), line, a, b)
-	}
+    }
 
-	beqzal(a: string, line: string) {
+    beqzal(a: string, line: string) {
         this.__bCOp(this.__eq.bind(this), line, a)
-	}
+    }
 
-	bgeal(a: string, b: string, line: string) {
+    bgeal(a: string, b: string, line: string) {
         this.__bCOp(this.__ge.bind(this), line, a, b)
-	}
+    }
 
-	bgezal(a: string, line: string) {
+    bgezal(a: string, line: string) {
         this.__bCOp(this.__ge.bind(this), line, a)
-	}
+    }
 
-	bgtal(a: string, b: string, line: string) {
+    bgtal(a: string, b: string, line: string) {
         this.__bCOp(this.__gt.bind(this), line, a, b)
-	}
+    }
 
-	bgtzal(a: string, line: string) {
+    bgtzal(a: string, line: string) {
         this.__bCOp(this.__gt.bind(this), line, a)
-	}
+    }
 
-	bleal(a: string, b: string, line: string) {
+    bleal(a: string, b: string, line: string) {
         this.__bCOp(this.__le.bind(this), line, a, b)
-	}
+    }
 
-	blezal(a: string, line: string) {
+    blezal(a: string, line: string) {
         this.__bCOp(this.__le.bind(this), line, a)
-	}
+    }
 
-	bltal(a: string, b: string, line: string) {
+    bltal(a: string, b: string, line: string) {
         this.__bCOp(this.__lt.bind(this), line, a, b)
-	}
+    }
 
-	bltzal(a: string, line: string) {
+    bltzal(a: string, line: string) {
         this.__bCOp(this.__lt.bind(this), line, a)
-	}
+    }
 
-	bneal(a: string, b: string, line: string) {
+    bneal(a: string, b: string, line: string) {
         this.__bCOp(this.__ne.bind(this), line, a, b)
-	}
+    }
 
-	bnezal(a: string, line: string) {
+    bnezal(a: string, line: string) {
         this.__bCOp(this.__ne.bind(this), line, a)
-	}
+    }
 
-	bapal(x: string, y: string, c: string, line: string) {
+    bapal(x: string, y: string, c: string, line: string) {
         this.__bCOp(this.__ap.bind(this), line, x, y, c)
-	}
+    }
 
-	bapzal(x: string, y: string, line: string) {
+    bapzal(x: string, y: string, line: string) {
         this.__bCOp(this.__ap.bind(this), line, x, y)
-	}
+    }
 
-	bnaal(x: string, y: string, c: string, line: string) {
+    bnaal(x: string, y: string, c: string, line: string) {
         this.__bCOp(this.__na.bind(this), line, x, y, c)
-	}
+    }
 
-	bnazal(x: string, y: string, line: string) {
+    bnazal(x: string, y: string, line: string) {
         this.__bCOp(this.__na.bind(this), line, x, y)
-	}
+    }
 
-	bdseal(d: string, line: string) {
-		if (this.__dse(d)) {
-			this.jal(line)
-		}
-	}
+    bdseal(d: string, line: string) {
+        if (this.__dse(d)) {
+            this.jal(line)
+        }
+    }
 
-	bdnsal(d: string, line: string) {
-		if (this.__dns(d)) {
-			this.jal(line)
-		}
-	}
+    bdnsal(d: string, line: string) {
+        if (this.__dns(d)) {
+            this.jal(line)
+        }
+    }
 
-	push(a: string) {
+    push(a: string) {
         this.memory.stack.push(this.memory.getValue(a))
-	}
+    }
 
-	pop(register: string) {
+    pop(register: string) {
         this.memory.getRegister(register).value = this.memory.stack.pop()
-	}
+    }
 
-	peek(register: string) {
+    peek(register: string) {
         this.memory.getRegister(register).value = this.memory.stack.peek()
-	}
+    }
 
     __transformBatch(values: number[], mode: string) {
         const modeMapping: Record<string, number | undefined> = modes
@@ -864,7 +872,7 @@ export class InterpreterIc10 {
             case modes.Minimum:
                 return Math.min(...values)
             case modes.Maximum:
-                return  Math.max(...values)
+                return Math.max(...values)
         }
 
         throw Execution.error(this.position, "Unknown batch mode", mode)
@@ -887,7 +895,17 @@ export class InterpreterIc10 {
 
     l(register: string, device: string, property: string) {
         const r = this.memory.getRegister(register)
-        r.value = this.memory.getDevice(device).get(property)
+        const a = this.memory.getDeviceOrDeviceOutput(device)
+        if (a instanceof Device) {
+            if (!isDeviceParameter(property)) {
+                throw Execution.error(this.position, `Wrong 3 argument (${property}). Must be "Device parameter"`,property)
+            }
+        } else if (a instanceof DeviceOutput) {
+            if (!isChannel(property)) {
+                throw Execution.error(this.position, `Wrong 3 argument (${property}). Must be "Channel"`,property)
+            }
+        }
+        r.value = a.get(property)
     }
 
     __l(register: string, device: string, property: string) {
@@ -901,39 +919,48 @@ export class InterpreterIc10 {
     }
 
     s(device: string, property: string, value: string) {
-        const d = this.memory.getDevice(device)
-        d.set(property, this.memory.getValue(value))
+		const a = this.memory.getDeviceOrDeviceOutput(device)
+		if (a instanceof Device) {
+			if (!isDeviceParameter(property)) {
+				throw Execution.error(this.position, `Wrong 2 argument (${property}). Must be "Device parameter"`,property)
+			}
+		} else if (a instanceof DeviceOutput) {
+			if (!isChannel(property)) {
+				throw Execution.error(this.position, `Wrong 2 argument (${property}). Must be "Channel"`,property)
+			}
+		}
+		a.set(property, this.memory.getValue(value))
     }
 
     __s(device: string, property: string, value: string) {
         this.s(device, property, value)
     }
 
-	lb(register: string, deviceHash: string, property: string, mode: string) {
-		const hash   = this.memory.getValue(deviceHash)
+    lb(register: string, deviceHash: string, property: string, mode: string) {
+        const hash = this.memory.getValue(deviceHash)
 
         const devices = this.__getDevices(hash)
 
         const values = devices.map(d => d.get(property) as number)
 
-		if (values.length === 0)
-			throw Execution.error(this.position, 'Can`t find Device wich hash:', hash)
+        if (values.length === 0)
+            throw Execution.error(this.position, 'Can`t find Device wich hash:', hash)
 
         this.memory.getRegister(register).value = this.__transformBatch(values, mode)
-	}
+    }
 
-	lr(register: string, device: string, mode: string, property: string) {
+    lr(register: string, device: string, mode: string, property: string) {
         //TODO: well, we don't have reagents so we need to do it later
         throw Execution.error(this.position, "lr not implemented yet")
-	}
+    }
 
-	sb(deviceHash: string, property: string, value: string) {
-		const hash = this.memory.getValue(deviceHash)
+    sb(deviceHash: string, property: string, value: string) {
+        const hash = this.memory.getValue(deviceHash)
         const v = this.memory.getValue(value)
         const devices = this.__getDevices(hash)
 
         devices.forEach(d => d.set(property, v))
-	}
+    }
 
     lbn(targetRegister: string, deviceHash: string, nameHash: string, property: string, batchMode: string) {
         const hash = this.memory.getValue(deviceHash);
@@ -995,31 +1022,32 @@ export class InterpreterIc10 {
         devices.map(d => (d.getSlot(slot) as Slot).set(property, v))
     }
 
-	and(register: string, a: string, b: string) {
+    and(register: string, a: string, b: string) {
         this.__op((a, b) => a && b, register, a, b)
-	}
+    }
 
-	or(register: string, a: string, b: string) {
-		this.__op((a, b) => a || b, register, a, b)
-	}
+    or(register: string, a: string, b: string) {
+        this.__op((a, b) => a || b, register, a, b)
+    }
 
-	xor(register: string, a: string, b: string) {
-		this.__op((a, b) => a ^ b, register, a ,b)
-	}
+    xor(register: string, a: string, b: string) {
+        this.__op((a, b) => a ^ b, register, a, b)
+    }
 
-	nor(register: string, a: string, b: string) {
-		this.__op((a, b) => Number(!(a || b)), register, a, b)
-	}
+    nor(register: string, a: string, b: string) {
+        this.__op((a, b) => Number(!(a || b)), register, a, b)
+    }
 
-	_debug(...args: string[]){
-		this._log(...args)
-	}
-	_log(...args: string[]) {
-		const out = [];
-		try {
-			for (const argumentsKey in args) {
-				if (args.hasOwnProperty(argumentsKey)) {
-					let key = args[argumentsKey];
+    _debug(...args: string[]) {
+        this._log(...args)
+    }
+
+    _log(...args: string[]) {
+        const out = [];
+        try {
+            for (const argumentsKey in args) {
+                if (args.hasOwnProperty(argumentsKey)) {
+                    let key = args[argumentsKey];
 
                     try {
                         const value = this.memory.findValue(key)
@@ -1028,7 +1056,8 @@ export class InterpreterIc10 {
                             out.push(`${key} = ${value};`)
                             break
                         }
-                    } catch {}
+                    } catch {
+                    }
 
                     let keys = key.split('.');
                     try {
@@ -1057,60 +1086,61 @@ export class InterpreterIc10 {
                         // @ts-ignore
                         out.push(key + ' ' + e.message + '; ')
                     }
-				}
-			}
-			this.settings.logCallback.call(this, `Log[${this.position}]: `, out)
-		} catch (e) {
-			console.debug(e)
-		}
-	}
+                }
+            }
+            this.settings.logCallback.call(this, `Log[${this.position}]: `, out)
+        } catch (e) {
+            console.debug(e)
+        }
+    }
 
-	_d0(op1: any) {
-		this.__d('d0', arguments)
-	}
+    _d0(op1: any) {
+        this.__d('d0', arguments)
+    }
 
-	_d1(op1: any) {
-		this.__d('d1', arguments)
-	}
+    _d1(op1: any) {
+        this.__d('d1', arguments)
+    }
 
-	_d2(op1: any) {
-		this.__d('d2', arguments)
-	}
+    _d2(op1: any) {
+        this.__d('d2', arguments)
+    }
 
-	_d3(op1: any) {
-		this.__d('d3', arguments)
-	}
+    _d3(op1: any) {
+        this.__d('d3', arguments)
+    }
 
-	_d4(op1: any) {
-		this.__d('d4', arguments)
-	}
+    _d4(op1: any) {
+        this.__d('d4', arguments)
+    }
 
-	_d5(op1: any) {
-		this.__d('d5', arguments)
-	}
+    _d5(op1: any) {
+        this.__d('d5', arguments)
+    }
 
-	__d(device: string, args: any) {
-		const d = this.memory.getDevice(device);
-		switch (Object.keys(args).length) {
-			case 0:
-				throw Execution.error(this.position, 'missing arguments');
-			case 1:
+    __d(device: string, args: any) {
+        const d = this.memory.getDevice(device);
+        switch (Object.keys(args).length) {
+            case 0:
+                throw Execution.error(this.position, 'missing arguments');
+            case 1:
                 d.hash = args[0];
                 break;
-			case 2:
+            case 2:
                 d.set(args[0], args[1]);
                 break;
-			case 3:
+            case 3:
                 d.setSlot(args[0], args[1], args[2]);
         }
 
-	}
+    }
 
-	__debug(p: string, iArguments: string[]) {
-		if (this.settings.debug) {
-			this.settings.debugCallback.call(this, ...arguments)
-		}
-	}
+    __debug(p: string, iArguments: string[]) {
+        if (this.settings.debug) {
+            this.settings.debugCallback.call(this, ...arguments)
+        }
+    }
 }
 
 export default InterpreterIc10;
+

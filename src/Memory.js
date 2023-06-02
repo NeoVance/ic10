@@ -107,6 +107,26 @@ class Memory {
             throw main_1.Execution.error(this.#scope.position, 'Unknown device', name);
         return device;
     }
+    getDeviceOrDeviceOutput(name) {
+        try {
+            return this.getDevice(name);
+        }
+        catch (e) {
+            if (typeof name === "number")
+                throw e;
+            return this.getDeviceOutput(name);
+        }
+    }
+    getDeviceOutput(name) {
+        const [device, output] = name.split(':');
+        if (!output) {
+            throw main_1.Execution.error(this.#scope.position, 'empty output', name);
+        }
+        if (isNaN(parseInt(output))) {
+            throw main_1.Execution.error(this.#scope.position, 'Invalid output', name);
+        }
+        return this.getDevice(device).getChanel(parseInt(output));
+    }
     findValue(value) {
         if (typeof value === "number")
             return value;

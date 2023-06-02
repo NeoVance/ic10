@@ -1,9 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InterpreterIc10 = exports.Execution = void 0;
-const ic10Error_1 = require("./ic10Error");
+const Ic10Error_1 = require("./Ic10Error");
 const Memory_1 = require("./Memory");
 const Device_1 = require("./Device");
+const icTypes_1 = require("./icTypes");
+const DeviceOutput_1 = require("./DeviceOutput");
 const regexes = {
     strStart: new RegExp("^\".+$"),
     strEnd: new RegExp(".+\"$"),
@@ -16,10 +18,10 @@ const modes = {
 };
 exports.Execution = {
     error(code, message, obj = null) {
-        return new ic10Error_1.Ic10Error('--', code, message, obj, 0);
+        return new Ic10Error_1.Ic10Error('--', code, message, obj, 0);
     },
     display: function (e) {
-        if (e instanceof ic10Error_1.Ic10Error) {
+        if (e instanceof Ic10Error_1.Ic10Error) {
             const string = `(${e.code}) - ${e.message}:`;
             switch (e.lvl) {
                 case 0:
@@ -208,7 +210,7 @@ class InterpreterIc10 {
                 }
             }
             catch (e) {
-                if (e instanceof ic10Error_1.Ic10Error)
+                if (e instanceof Ic10Error_1.Ic10Error)
                     this.settings.executionCallback.call(this, e);
                 else
                     throw e;
@@ -241,9 +243,15 @@ class InterpreterIc10 {
         return x in this.labels;
     }
     define(alias, value) {
+        if ((0, icTypes_1.isChannel)(alias.toLowerCase()) || (0, icTypes_1.isSlotParameter)(alias.toLowerCase()) || (0, icTypes_1.isDeviceParameter)(alias.toLowerCase()) || (0, icTypes_1.isConst)(alias.toLowerCase())) {
+            throw exports.Execution.error(this.position, 'Incorrect constant. Is system keyworld', alias);
+        }
         this.memory.define(alias, value);
     }
     alias(alias, target) {
+        if ((0, icTypes_1.isChannel)(alias.toLowerCase()) || (0, icTypes_1.isSlotParameter)(alias.toLowerCase()) || (0, icTypes_1.isDeviceParameter)(alias.toLowerCase()) || (0, icTypes_1.isConst)(alias.toLowerCase())) {
+            throw exports.Execution.error(this.position, 'Incorrect alias. Is system keyworld', alias);
+        }
         this.memory.alias(alias, target);
     }
     __op(op, register, ...args) {
@@ -696,7 +704,18 @@ class InterpreterIc10 {
     }
     l(register, device, property) {
         const r = this.memory.getRegister(register);
-        r.value = this.memory.getDevice(device).get(property);
+        const a = this.memory.getDeviceOrDeviceOutput(device);
+        if (a instanceof Device_1.Device) {
+            if (!(0, icTypes_1.isDeviceParameter)(property)) {
+                throw exports.Execution.error(this.position, `Wrong 3 argument (${property}). Must be "Device parameter"`, property);
+            }
+        }
+        else if (a instanceof DeviceOutput_1.DeviceOutput) {
+            if (!(0, icTypes_1.isChannel)(property)) {
+                throw exports.Execution.error(this.position, `Wrong 3 argument (${property}). Must be "Channel"`, property);
+            }
+        }
+        r.value = a.get(property);
     }
     __l(register, device, property) {
         this.l(register, device, property);
@@ -707,8 +726,18 @@ class InterpreterIc10 {
         r.value = d.getSlot(this.memory.getValue(slot), property);
     }
     s(device, property, value) {
-        const d = this.memory.getDevice(device);
-        d.set(property, this.memory.getValue(value));
+        const a = this.memory.getDeviceOrDeviceOutput(device);
+        if (a instanceof Device_1.Device) {
+            if (!(0, icTypes_1.isDeviceParameter)(property)) {
+                throw exports.Execution.error(this.position, `Wrong 2 argument (${property}). Must be "Device parameter"`, property);
+            }
+        }
+        else if (a instanceof DeviceOutput_1.DeviceOutput) {
+            if (!(0, icTypes_1.isChannel)(property)) {
+                throw exports.Execution.error(this.position, `Wrong 2 argument (${property}). Must be "Channel"`, property);
+            }
+        }
+        a.set(property, this.memory.getValue(value));
     }
     __s(device, property, value) {
         this.s(device, property, value);
@@ -802,7 +831,8 @@ class InterpreterIc10 {
                             break;
                         }
                     }
-                    catch { }
+                    catch {
+                    }
                     let keys = key.split('.');
                     try {
                         let environ = Object.keys(this.memory.environ);

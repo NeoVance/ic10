@@ -4,6 +4,7 @@ import { RegisterCell } from "./RegisterCell";
 import { MemoryStack } from "./MemoryStack";
 import { Device } from "./Device";
 import { ValueCell } from "./ValueCell";
+import { DeviceOutput } from "./DeviceOutput";
 export declare class Memory {
     #private;
     cells: Array<RegisterCell>;
@@ -17,6 +18,8 @@ export declare class Memory {
     getRegister(name: string | number): RegisterCell;
     findDevice(name: string | number): Device | undefined;
     getDevice(name: string | number): Device;
+    getDeviceOrDeviceOutput(name: string | number): Device | DeviceOutput;
+    getDeviceOutput(name: string): DeviceOutput;
     findValue(value: string | number): number | undefined;
     getValue(value: string | number): number;
     alias(name: string | number, link: string): Memory;

@@ -1,40 +1,41 @@
 import InterpreterIc10, {Execution} from "./main";
-import {Environ}                             from "./Environ";
-import {RegisterCell}                          from "./RegisterCell";
-import {MemoryStack}                         from "./MemoryStack";
-import {Device}                              from "./Device";
-import {ConstantCell}                        from "./ConstantCell";
+import {Environ} from "./Environ";
+import {RegisterCell} from "./RegisterCell";
+import {MemoryStack} from "./MemoryStack";
+import {Device} from "./Device";
+import {ConstantCell} from "./ConstantCell";
 import {hashStr, isHash, isNumber, isPort, isRecPort, isRegister, isSimplePort, patterns} from "./Utils";
 import {ValueCell} from "./ValueCell";
+import {DeviceOutput} from "./DeviceOutput";
 
 export class Memory {
-	public cells: Array<RegisterCell>
+    public cells: Array<RegisterCell>
     public stack: MemoryStack
-	public environ: Environ
-	public aliases: Record<string, ValueCell | Device>
-	readonly #scope: InterpreterIc10;
+    public environ: Environ
+    public aliases: Record<string, ValueCell | Device>
+    readonly #scope: InterpreterIc10;
 
-	constructor(scope: InterpreterIc10) {
-		this.#scope  = scope;
-		this.cells   = new Array<RegisterCell>(18)
-		this.environ = new Environ(scope)
+    constructor(scope: InterpreterIc10) {
+        this.#scope = scope;
+        this.cells = new Array<RegisterCell>(18)
+        this.environ = new Environ(scope)
         this.stack = new MemoryStack(scope, 512, "r16")
-		this.aliases = {}
+        this.aliases = {}
 
-		for (let i = 0; i < 18; i++) {
+        for (let i = 0; i < 18; i++) {
             const n = `r${i}`
-			if (i === 16) {
-				this.cells[i] = this.stack
-			} else {
-				this.cells[i] = new RegisterCell(n)
-			}
+            if (i === 16) {
+                this.cells[i] = this.stack
+            } else {
+                this.cells[i] = new RegisterCell(n)
+            }
             this.cells[i].value = 0
-		}
-	}
+        }
+    }
 
-	get scope(): InterpreterIc10 | null {
-		return this.#scope;
-	}
+    get scope(): InterpreterIc10 | null {
+        return this.#scope;
+    }
 
     reset() {
         for (let r of this.cells)
@@ -53,8 +54,7 @@ export class Memory {
 
         name = mapping[name] ?? name
 
-        if (typeof name === "string")
-        {
+        if (typeof name === "string") {
             if (isRegister(name)) {
                 let m = patterns.reg.exec(name)
 
@@ -67,7 +67,7 @@ export class Memory {
                 const index: number = parseInt(indexStr)
 
                 let cell = this.cells[index]
-                for (let i = 0; i<prefix.length; ++i) {
+                for (let i = 0; i < prefix.length; ++i) {
                     cell = this.cells[cell.value]
 
                     if (cell === undefined)
@@ -110,8 +110,7 @@ export class Memory {
         if (isSimplePort(name))
             return this.environ.get(name)
 
-        if (isRecPort(name))
-        {
+        if (isRecPort(name)) {
             const m = patterns.recDev.exec(name)
 
             if (!m)
@@ -144,6 +143,27 @@ export class Memory {
         return device
     }
 
+    getDeviceOrDeviceOutput(name: string | number): Device | DeviceOutput {
+        try {
+            return this.getDevice(name)
+        } catch (e) {
+            if (typeof name === "number")
+                throw e;
+            return this.getDeviceOutput(name)
+        }
+    }
+
+    getDeviceOutput(name: string): DeviceOutput {
+        const [device, output] = name.split(':')
+        if (!output) {
+            throw Execution.error(this.#scope.position, 'empty output', name)
+        }
+        if (isNaN(parseInt(output))) {
+            throw Execution.error(this.#scope.position, 'Invalid output', name)
+        }
+        return this.getDevice(device).getChanel(parseInt(output))
+    }
+
     findValue(value: string | number): number | undefined {
         if (typeof value === "number")
             return value
@@ -165,8 +185,7 @@ export class Memory {
 
         const v = this.aliases[value]
 
-        if (!v)
-        {
+        if (!v) {
             const r = this.findRegister(value)
 
             if (r)
@@ -190,11 +209,10 @@ export class Memory {
         return v
     }
 
-	alias(name: string | number, link: string): Memory {
+    alias(name: string | number, link: string): Memory {
         const register = this.findRegister(link)
 
-        if (register !== undefined)
-        {
+        if (register !== undefined) {
             this.aliases[name] = register
             return this
         }
@@ -206,31 +224,30 @@ export class Memory {
             return this
         }
 
-		throw Execution.error(this.#scope.position, 'Invalid alias value')
-	}
+        throw Execution.error(this.#scope.position, 'Invalid alias value')
+    }
 
-	define(name: string, value: string | number) {
-        if (typeof value === "string")
-        {
+    define(name: string, value: string | number) {
+        if (typeof value === "string") {
             if (!isNumber(value))
                 throw Execution.error(this.#scope.position, "")
 
             value = parseInt(value)
         }
 
-		this.aliases[name] = new ConstantCell(value, name)
-	}
+        this.aliases[name] = new ConstantCell(value, name)
+    }
 
-	toLog() {
-		const out: { [key: string]: any } = {};
-		for (let i = 0; i < 18; i++) {
-			if (i === 16) {
-				out['r' + i] = this.cells[i].value
-			} else {
-				out['r' + i] = this.cells[i].value
-				out['stack'] = this.cells[i].value
-			}
-		}
-		return out
-	}
+    toLog() {
+        const out: { [key: string]: any } = {};
+        for (let i = 0; i < 18; i++) {
+            if (i === 16) {
+                out['r' + i] = this.cells[i].value
+            } else {
+                out['r' + i] = this.cells[i].value
+                out['stack'] = this.cells[i].value
+            }
+        }
+        return out
+    }
 }

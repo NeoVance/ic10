@@ -1,6 +1,7 @@
-import InterpreterIc10 from "../src/main";
+import InterpreterIc10, {Execution} from "../src/main";
 import {Hardsuit} from "../src/devices/Hardsuit";
 import {hashStr} from "../src/Utils";
+import {Ic10Error} from "../src/Ic10Error";
 
 const interpreterIc10 = new InterpreterIc10();
 
@@ -33,20 +34,20 @@ const runWithoutLoop = () => {
 
 describe('test', () => {
 
-	test('alias and move', () => {
-		interpret`
+    test('alias and move', () => {
+        interpret`
             alias heading r2
             move heading 10
         `
 
         runWithoutLoop()
 
-		expect(interpreterIc10.memory.getRegister('heading').value).toBe(10)
+        expect(interpreterIc10.memory.getRegister('heading').value).toBe(10)
         expect(interpreterIc10.memory.getRegister('r2').value).toBe(10)
-	})
+    })
 
-	test('example code', () => {
-		const code = ic10`
+    test('example code', () => {
+        const code = ic10`
             alias velocityRelativeX r0
             alias velocityRelativeZ r1
             alias heading r2
@@ -58,13 +59,13 @@ describe('test', () => {
             div heading heading 3.14
             mul heading heading 180
         `
-		interpreterIc10.init(code, new Hardsuit(interpreterIc10, "db"))
+        interpreterIc10.init(code, new Hardsuit(interpreterIc10, "db"))
 
         runWithoutLoop()
-	})
+    })
 
-	test('stack', () => {
-		const code = ic10`
+    test('stack', () => {
+        const code = ic10`
             move r0 1
             move r1 2
             push r0
@@ -73,7 +74,7 @@ describe('test', () => {
             push 32
             push r17
         `
-		interpreterIc10.init(code)
+        interpreterIc10.init(code)
 
         runWithoutLoop()
 
@@ -82,19 +83,19 @@ describe('test', () => {
         const expectedValues = [1, 2, 7, 32, 0]
 
         expectedValues.forEach((v, i) => expect(stack[i]).toBe(v))
-	})
+    })
 
-	test('rr_n', () => {
-		const code = ic10`
+    test('rr_n', () => {
+        const code = ic10`
             move r0 2
             move r2 4
             move rr0 10
         `
-		interpreterIc10.init(code)
+        interpreterIc10.init(code)
         runWithoutLoop()
 
-		expect(interpreterIc10.memory.getRegister('r2').value).toBe(10)
-	})
+        expect(interpreterIc10.memory.getRegister('r2').value).toBe(10)
+    })
 
     test('dr_n', () => {
         const code = ic10`
@@ -112,43 +113,43 @@ describe('test', () => {
         expect(interpreterIc10.memory.getDevice('d1').get('Setting')).toBe(5)
     })
 
-	test('write into device', () => {
-		const code = ic10`
+    test('write into device', () => {
+        const code = ic10`
             s d0 Setting 8
         `
-		interpreterIc10.init(code)
+        interpreterIc10.init(code)
         interpreterIc10.memory.environ.d0.init({
             Setting: 0
         })
 
-		runWithoutLoop()
+        runWithoutLoop()
 
-		expect(interpreterIc10.memory.getDevice('d0').get('Setting')).toBe(8)
-	})
+        expect(interpreterIc10.memory.getDevice('d0').get('Setting')).toBe(8)
+    })
 
-	test('read from device', () => {
-		const code = ic10`
+    test('read from device', () => {
+        const code = ic10`
             s d0 Setting 15
             l r1 d0 Setting
         `
-		interpreterIc10.init(code)
+        interpreterIc10.init(code)
         interpreterIc10.memory.environ.d0.init({
             Setting: 0
         })
 
-		runWithoutLoop()
+        runWithoutLoop()
 
-		expect(interpreterIc10.memory.getRegister('r1').value).toBe(15)
-	})
+        expect(interpreterIc10.memory.getRegister('r1').value).toBe(15)
+    })
 
-	test('float', () => {
-		const code = ic10`
+    test('float', () => {
+        const code = ic10`
             move r0 0
             move r1 0
             move r2 0.1
             l r3 d0 Activate
         `
-		interpreterIc10.init(code)
+        interpreterIc10.init(code)
         interpreterIc10.memory.environ.d0.init({
             Activate: 1
         })
@@ -159,10 +160,10 @@ describe('test', () => {
         expect(interpreterIc10.memory.getRegister("r1").value).toBe(0)
         expect(interpreterIc10.memory.getRegister("r2").value).toBe(0.1)
         expect(interpreterIc10.memory.getRegister("r3").value).toBe(1)
-	})
+    })
 
-	test('example2',  () => {
-		const code = ic10`
+    test('example2', () => {
+        const code = ic10`
                 move r0 5
                 slt r15 r0 5
                 beqz r15 if0exit
@@ -188,7 +189,7 @@ describe('test', () => {
                 s d0 Vertical a
                 j ra
         `
-		interpreterIc10.init(code)
+        interpreterIc10.init(code)
         interpreterIc10.memory.environ.d0.init({
             Setting: 0,
             Vertical: 0
@@ -197,7 +198,7 @@ describe('test', () => {
         interpreterIc10.runUntil(s => s !== true, 100)
 
         expect(interpreterIc10.memory.environ.d0.properties.Setting).toBe(5)
-	})
+    })
 
     test('hash', () => {
         interpret`
@@ -206,5 +207,29 @@ describe('test', () => {
         runWithoutLoop()
 
         expect(interpreterIc10.memory.getDevice("db").get("Setting")).toBe(hashStr("test"))
+    })
+
+    test('chanel', () => {
+        interpret`
+            s db:4 Channel0 HASH("test")
+            l r0 db:4 Channel0
+        `
+        runWithoutLoop()
+
+        expect(interpreterIc10.memory.getRegister("r0").value).toBe(hashStr("test"))
+    })
+
+    test('define error', () => {
+        try {
+            interpret`
+            define PI 4
+        `
+            runWithoutLoop()
+            throw Execution.error(0, "Error")
+        } catch (e: any) {
+            expect(e.getMessage()).toBe('Incorrect constant. Is system keyworld')
+        }
+
+
     })
 })

@@ -7,7 +7,7 @@ ic10 interpiter
 typescript :
 ```typescript
 
-import {ic10Error,InterpreterIc10} from "./main";
+import {Ic10Error,InterpreterIc10} from "./main";
 var fs = require('fs')
 var code = fs.readFileSync(".ic10", "utf8")
 var settings = {
@@ -18,7 +18,7 @@ var settings = {
   logCallback: function () {
     console.log(...arguments)
   },
-  executionCallback: function (e: ic10Error) {
+  executionCallback: function (e: Ic10Error) {
   },
 }
 var interpreterIc10 = new InterpreterIc10(code, settings)
