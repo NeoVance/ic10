@@ -15,4 +15,6 @@ export declare class DeviceOutput {
     Channel8: number;
     get(property: string): number;
     set(property: string, value: number): DeviceOutput;
+    isEmpty(): boolean;
+    toArray(): number[];
 }

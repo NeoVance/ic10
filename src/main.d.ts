@@ -26,7 +26,7 @@ export declare var Execution: {
 export type InterpreterIc10Settings = {
     debug: boolean;
     debugCallback: Function;
-    logCallback: Function;
+    logCallback: (s: string, out: string[]) => void;
     executionCallback: (err: Ic10Error) => void;
     tickTime: number;
 };

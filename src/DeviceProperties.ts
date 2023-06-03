@@ -1,87 +1,11 @@
-import InterpreterIc10 from "./main";
-import {Slot}          from "./Slot";
+import {TypeDeviceParameter} from "./icTypes";
 
-export interface DeviceFields {
-	Activate: number
-	AirRelease: number
-	Bpm: number
-	Charge: number
-	ClearMemory: number
-	CollectableGoods: number
-	Color: number
-	Combustion: number
-	CompletionRatio: number
-	CurrentResearchPodType: number
-	ElevatorLevel: number
-	ElevatorSpeed: number
-	Error: number
-	ExportCount: number
-	Filtration: number
-	ForceWrite: number
-	Fuel: number
-	Harvest: number
-	Horizontal: number
-	HorizontalRatio: number
-	Idle: number
-	ImportCount: number
-    LineNumber: number
-	Lock: number
-	ManualResearchRequiredPod: number
-	Maximum: number
-	MineablesInQueue: number
-	MineablesInVicinity: number
-	Mode: number
-	NextWeatherEventTime: number
-	On: number
-	Open: number
-	Output: number
-	Plant: number
-	PositionX: number
-	PositionY: number
-	PositionZ: number
-	Power: number
-	PowerActual: number
-	PowerGeneration: number
-	PowerPotential: number
-	PowerRequired: number
-	PrefabHash: number
-	Pressure: number
-	PressureExternal: number
-	PressureSetting: number
-	Quantity: number
-	Ratio: number
-	RatioCarbonDioxide: number
-	RatioNitrogen: number
-	RatioNitrousOxide: number
-	RatioOxygen: number
-	RatioPollutant: number
-	RatioVolatiles: number
-	RatioWater: number
-	Reagents: number
-	RecipeHash: number
-	RequestHash: number
-	RequiredPower: number
-	ReturnFuelCost: number
-	Setting: number
-	SettingInput: number
-	SettingOutput: number
-	SignalID: number
-	SignalStrength: number
-	SolarAngle: number
-    SoundAlert: number
-	TargetX: number
-	TargetY: number
-	TargetZ: number
-	Temperature: number
-	TemperatureExternal: number
-	TemperatureSetting: number
-	Time: number
-	TotalMoles: number
-	VelocityMagnitude: number
-	VelocityRelativeX: number
-	VelocityRelativeY: number
-	VelocityRelativeZ: number
-	Vertical: number
-	VerticalRatio: number
-	Volume: number
+export type DeviceFieldsType = {
+    [key in TypeDeviceParameter|string]: number;
+};
+
+export class DeviceFields implements Partial<DeviceFieldsType> {
+    [x: string]: number | undefined;
+	On = 0;
+    Setting = 0;
 }

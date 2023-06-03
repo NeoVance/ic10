@@ -2,7 +2,7 @@ import {Ic10DiagnosticError, Ic10Error} from "./Ic10Error";
 import {Memory} from "./Memory";
 import {Device, IcHash} from "./Device";
 import {Slot} from "./Slot";
-import {isChannel, isConst, isDeviceParameter,isSlotParameter} from "./icTypes";
+import {isChannel, isConst, isDeviceParameter, isSlotParameter} from "./icTypes";
 import {DeviceOutput} from "./DeviceOutput";
 
 const regexes = {
@@ -20,11 +20,11 @@ const modes = {
 export type ReturnCode = "hcf" | "end" | "die"
 
 export var Execution = {
-    error(code: number, message: string, obj: any = null,loc?:{start:number,len:number}) {
-        return new Ic10Error('--', code, message, obj, 0,loc)
+    error(code: number, message: string, obj: any = null, loc?: { start: number, len: number }) {
+        return new Ic10Error('--', code, message, obj, 0, loc)
     },
-    Ic10DiagnosticError(code: number, message: string, obj: any = null,loc?:{start:number,len:number}) {
-        return new Ic10DiagnosticError('--', code, message, obj, 0,loc)
+    Ic10DiagnosticError(code: number, message: string, obj: any = null, loc?: { start: number, len: number }) {
+        return new Ic10DiagnosticError('--', code, message, obj, 0, loc)
     },
     display: function (e: { code: any; message: any; lvl: any; obj: any; }) {
         if (e instanceof Ic10Error) {
@@ -55,7 +55,7 @@ export var Execution = {
 export type InterpreterIc10Settings = {
     debug: boolean;
     debugCallback: Function;
-    logCallback: Function;
+    logCallback: (s:string,out:string[] )=>void;
     executionCallback: (err: Ic10Error) => void;
     tickTime: number;
 }
@@ -213,6 +213,9 @@ export class InterpreterIc10 {
     }
 
     prepareLine(line = -1, isDebugger = false): ReturnCode | true {
+        if (line === 0) {
+            this.memory.environ.db.properties.Error = 0// why not :)
+        }
         if (line >= 0) {
             this.position = line;
         }
@@ -242,6 +245,7 @@ export class InterpreterIc10 {
                     throw Execution.error(this.position, 'Undefined function', command)
                 }
             } catch (e) {
+                this.memory.environ.db.properties.Error = 1// why not :)
                 if (e instanceof Ic10Error)
                     this.settings.executionCallback.call(this, e)
                 else
@@ -277,26 +281,28 @@ export class InterpreterIc10 {
     __issetLabel(x: string) {
         return x in this.labels
     }
+
     /*
     * @define@
     * [en] Set a name for the constant
     * [ru] Задать имя для константы
     */
     define(alias: string, value: number | string) {
-		if(isChannel(alias.toLowerCase()) || isSlotParameter(alias.toLowerCase()) || isDeviceParameter(alias.toLowerCase()) || isConst(alias.toLowerCase())){
-			throw Execution.Ic10DiagnosticError(this.position, 'Incorrect constant. Is system keyworld', alias)
-		}
+        if (isChannel(alias.toLowerCase()) || isSlotParameter(alias.toLowerCase()) || isDeviceParameter(alias.toLowerCase()) || isConst(alias.toLowerCase())) {
+            throw Execution.Ic10DiagnosticError(this.position, 'Incorrect constant. Is system keyworld', alias)
+        }
         this.memory.define(alias, value)
     }
+
     /*
     * @alias@
     * [en] Specify an alias for a register or data channel
     * [ru] Задат псевдоним для регистра или канала данных
     */
-    alias(alias: string , target: string) {
-		if(isChannel(alias.toLowerCase()) || isSlotParameter(alias.toLowerCase()) || isDeviceParameter(alias.toLowerCase()) || isConst(alias.toLowerCase())){
-			throw Execution.Ic10DiagnosticError(this.position, 'Incorrect alias. Is system keyworld', alias)
-		}
+    alias(alias: string, target: string) {
+        if (isChannel(alias.toLowerCase()) || isSlotParameter(alias.toLowerCase()) || isDeviceParameter(alias.toLowerCase()) || isConst(alias.toLowerCase())) {
+            throw Execution.Ic10DiagnosticError(this.position, 'Incorrect alias. Is system keyworld', alias)
+        }
         this.memory.alias(alias, target)
     }
 
@@ -307,21 +313,22 @@ export class InterpreterIc10 {
 
         r.value = op(...inputs)
     }
+
     /*
     * @move@
     * [en] Value assignment
     * [ru] Присвоение значения
     */
     move(register: string, value: string) {
-        if(isChannel(register.toLowerCase()) || isSlotParameter(register.toLowerCase()) || isDeviceParameter(register.toLowerCase()) || isConst(register.toLowerCase())){
+        if (isChannel(register.toLowerCase()) || isSlotParameter(register.toLowerCase()) || isDeviceParameter(register.toLowerCase()) || isConst(register.toLowerCase())) {
             throw Execution.Ic10DiagnosticError(this.position, 'Incorrect register. Is system keyworld', register)
         }
-        if(isChannel(value.toLowerCase()) || isSlotParameter(value.toLowerCase()) || isDeviceParameter(value.toLowerCase()) || isConst(value.toLowerCase())){
+        if (isChannel(value.toLowerCase()) || isSlotParameter(value.toLowerCase()) || isDeviceParameter(value.toLowerCase()) || isConst(value.toLowerCase())) {
             throw Execution.Ic10DiagnosticError(this.position, 'Incorrect value. Is system keyworld', value)
         }
         try {
             this.__op(v => v, register, value)
-        }catch (e) {
+        } catch (e) {
             throw Execution.Ic10DiagnosticError(this.position, 'Incorrect register. Not a register', register)
         }
     }
@@ -329,6 +336,7 @@ export class InterpreterIc10 {
     __move(register: string, value: string) {
         this.move(register, value)
     }
+
     /*
     * @add@
     * [en] Sum
@@ -337,6 +345,7 @@ export class InterpreterIc10 {
     add(register: string, a: string, b: string) {
         this.__op((a, b) => a + b, register, a, b)
     }
+
     /*
     * @sub@
     * [en] Difference
@@ -345,6 +354,7 @@ export class InterpreterIc10 {
     sub(register: string, a: string, b: string) {
         this.__op((a, b) => a - b, register, a, b)
     }
+
     /*
     * @mul@
     * [en] Work
@@ -353,6 +363,7 @@ export class InterpreterIc10 {
     mul(register: string, a: string, b: string) {
         this.__op((a, b) => a * b, register, a, b)
     }
+
     /*
     * @div@
     * [en] Division
@@ -361,6 +372,7 @@ export class InterpreterIc10 {
     div(register: string, a: string, b: string) {
         this.__op((a, b) => Number(a / b) || 0, register, a, b)
     }
+
     /*
     * @mod@
     * [en] Remainder of integer division of op2 by op3 (the result is not equivalent to the % operator, and will be positive for any signs of op2 and op3)
@@ -369,6 +381,7 @@ export class InterpreterIc10 {
     mod(register: string, a: string, b: string) {
         this.__op((a, b) => a % b, register, a, b)
     }
+
     /*
     * @sqrt@
     * [en] Square root
@@ -377,6 +390,7 @@ export class InterpreterIc10 {
     sqrt(register: string, v: string) {
         this.__op(Math.sqrt, register, v)
     }
+
     /*
     * @round@
     * [en] Rounding to nearest integer
@@ -385,6 +399,7 @@ export class InterpreterIc10 {
     round(register: string, v: string) {
         this.__op(Math.round, register, v)
     }
+
     /*
     * @trunc@
     * [en] The integer part of number
@@ -393,6 +408,7 @@ export class InterpreterIc10 {
     trunc(register: string, v: string) {
         this.__op(Math.trunc, register, v)
     }
+
     /*
     * @ceil@
     * [en] Round up to nearest integer
@@ -401,6 +417,7 @@ export class InterpreterIc10 {
     ceil(register: string, v: string) {
         this.__op(Math.ceil, register, v)
     }
+
     /*
     * @floor@
     * [en] Rounding down to nearest integer
@@ -409,6 +426,7 @@ export class InterpreterIc10 {
     floor(register: string, v: string) {
         this.__op(Math.floor, register, v)
     }
+
     /*
     * @max@
     * [en] Maximum of two
@@ -417,12 +435,14 @@ export class InterpreterIc10 {
     max(register: string, a: string, b: string) {
         this.__op(Math.max, register, a, b)
     }
+
     /*
     * @minx@
     */
     minx(register: string, a: string, b: string) {
         this.__op(Math.min, register, a, b)
     }
+
     /*
     * @abs@
     * [en] The absolute value of the number
@@ -431,6 +451,7 @@ export class InterpreterIc10 {
     abs(register: string, v: string) {
         this.__op(Math.abs, register, v)
     }
+
     /*
     * @log@
     * [en] natural logarithm
@@ -439,6 +460,7 @@ export class InterpreterIc10 {
     log(register: string, v: string) {
         this.__op(Math.log, register, v)
     }
+
     /*
     * @exp@
     * [en] Exhibitor
@@ -447,6 +469,7 @@ export class InterpreterIc10 {
     exp(register: string, v: string) {
         this.__op(Math.exp, register, v)
     }
+
     /*
     * @rand@
     * [en] Random value from 0 to 1 inclusive
@@ -455,6 +478,7 @@ export class InterpreterIc10 {
     rand(register: string, v: string) {
         this.__op(_ => Math.random(), register, v)
     }
+
     /*
     * @sin@
     * [en] Sinus*
@@ -463,6 +487,7 @@ export class InterpreterIc10 {
     sin(register: string, v: string) {
         this.__op(Math.sin, register, v)
     }
+
     /*
     * @cos@
     * [en] Cosine*
@@ -471,6 +496,7 @@ export class InterpreterIc10 {
     cos(register: string, v: string) {
         this.__op(Math.cos, register, v)
     }
+
     /*
     * @tan@
     * [en] Tangent*
@@ -479,6 +505,7 @@ export class InterpreterIc10 {
     tan(register: string, v: string) {
         this.__op(Math.tan, register, v)
     }
+
     /*
     * @asin@
     * [en] Arcsine*
@@ -487,6 +514,7 @@ export class InterpreterIc10 {
     asin(register: string, v: string) {
         this.__op(Math.asin, register, v)
     }
+
     /*
     * @acos@
     * [en] Arccosine*
@@ -495,6 +523,7 @@ export class InterpreterIc10 {
     acos(register: string, v: string) {
         this.__op(Math.acos, register, v)
     }
+
     /*
     * @atan@
     * [en] Arctangent*
@@ -503,6 +532,7 @@ export class InterpreterIc10 {
     atan(register: string, v: string) {
         this.__op(Math.atan, register, v)
     }
+
     /*
     * @atan2@
     * [en] Arc tangent with 2 arguments
@@ -511,6 +541,7 @@ export class InterpreterIc10 {
     atan2(register: string, a: string, b: string) {
         this.__op(Math.atan2, register, a, b)
     }
+
     /*
     * @yield@
     * [en] Pausing the program until the next tick
@@ -518,6 +549,7 @@ export class InterpreterIc10 {
     */
     yield() {
     }
+
     /*
     * @sleep@
     * [en] Pause the program for op1 seconds
@@ -526,6 +558,7 @@ export class InterpreterIc10 {
     sleep(s: number) {
         //TODO: yield for s * x ticks
     }
+
     /*
     * @select@
     * [en] Ternary select. If op2 is true then op1 := op3, otherwise op1 := op4
@@ -534,6 +567,7 @@ export class InterpreterIc10 {
     select(register: string, a: string, b: string, c: string) {
         this.__op((a, b, c) => a ? b : c, register, a, b, c)
     }
+
     /*
     * @hcf@
     * [en] Stop work and burn the microprocessor
@@ -563,6 +597,7 @@ export class InterpreterIc10 {
 
         return line
     }
+
     /*
     * @j@
     * [en] Jump to the specified line
@@ -571,6 +606,7 @@ export class InterpreterIc10 {
     j(target: string) {
         this.__jump(this.__getJumpTarget(target))
     }
+
     /*
     * @jr@
     * [en] Relative jump to +op1
@@ -584,6 +620,7 @@ export class InterpreterIc10 {
 
         this.__jump(this.position + d - 1)
     }
+
     /*
     * @jal@
     * [en] Jump to op1, writing the address of the next line to ra
@@ -648,6 +685,7 @@ export class InterpreterIc10 {
 
         r.value = op(...inputs) ? 1 : 0
     }
+
     /*
     * @seq@
     * [en] If op2 = op3, then one, otherwise zero
@@ -656,6 +694,7 @@ export class InterpreterIc10 {
     seq(register: string, a: string, b: string) {
         this.__sOp(this.__eq.bind(this), register, a, b)
     }
+
     /*
     * @seqz@
     * [en] If op2 = 0, then one, otherwise zero
@@ -664,6 +703,7 @@ export class InterpreterIc10 {
     seqz(register: string, a: string) {
         this.__sOp(this.__eq.bind(this), register, a)
     }
+
     /*
     * @sge@
     * [en] If op2 op3, then one, otherwise zero
@@ -672,6 +712,7 @@ export class InterpreterIc10 {
     sge(register: string, a: string, b: string) {
         this.__sOp(this.__ge.bind(this), register, a, b)
     }
+
     /*
     * @sgez@
     * [en] If op2 0, then one, otherwise zero
@@ -680,6 +721,7 @@ export class InterpreterIc10 {
     sgez(register: string, a: string) {
         this.__sOp(this.__ge.bind(this), register, a)
     }
+
     /*
     * @sgt@
     * [en] If op2 > op3, then one, otherwise zero
@@ -688,6 +730,7 @@ export class InterpreterIc10 {
     sgt(register: string, a: string, b: string) {
         this.__sOp(this.__gt.bind(this), register, a, b)
     }
+
     /*
     * @sgtz@
     * [en] If op2 > 0, then one, otherwise zero
@@ -696,6 +739,7 @@ export class InterpreterIc10 {
     sgtz(register: string, a: string) {
         this.__sOp(this.__gt.bind(this), register, a)
     }
+
     /*
     * @sle@
     * [en] If op2 op3, then one, otherwise zero
@@ -704,6 +748,7 @@ export class InterpreterIc10 {
     sle(register: string, a: string, b: string) {
         this.__sOp(this.__le.bind(this), register, a, b)
     }
+
     /*
     * @slez@
     * [en] If op2 0, then one, otherwise zero
@@ -712,6 +757,7 @@ export class InterpreterIc10 {
     slez(register: string, a: string) {
         this.__sOp(this.__le.bind(this), register, a)
     }
+
     /*
     * @slt@
     * [en] If op2 < op3, then one, otherwise zero
@@ -720,6 +766,7 @@ export class InterpreterIc10 {
     slt(register: string, a: string, b: string) {
         this.__sOp(this.__lt.bind(this), register, a, b)
     }
+
     /*
     * @sltz@
     * [en] If op2 < 0, then one, otherwise zero
@@ -728,6 +775,7 @@ export class InterpreterIc10 {
     sltz(register: string, a: string) {
         this.__sOp(this.__lt.bind(this), register, a)
     }
+
     /*
     * @sne@
     * [en] If op2 op3, then one, otherwise zero
@@ -736,6 +784,7 @@ export class InterpreterIc10 {
     sne(register: string, a: string, b: string) {
         this.__sOp(this.__ne.bind(this), register, a, b)
     }
+
     /*
     * @snez@
     * [en] If op2 0, then one, otherwise zero
@@ -744,6 +793,7 @@ export class InterpreterIc10 {
     snez(register: string, a: string) {
         this.__sOp(this.__ne.bind(this), register, a)
     }
+
     /*
     * @sap@
     * [en] If op2 op3 with precision op4, then one, otherwise zero
@@ -752,6 +802,7 @@ export class InterpreterIc10 {
     sap(register: string, x: string, y: string, c: string) {
         this.__sOp(this.__ap.bind(this), register, x, y, c)
     }
+
     /*
     * @sapz@
     * [en] If op2 0 with precision op3, then one, otherwise zero
@@ -760,6 +811,7 @@ export class InterpreterIc10 {
     sapz(register: string, x: string, y: string) {
         this.__sOp(this.__ap.bind(this), register, x, y)
     }
+
     /*
     * @sna@
     * [en] If op2 op3 with precision op4, then one, otherwise zero
@@ -768,6 +820,7 @@ export class InterpreterIc10 {
     sna(register: string, x: string, y: string, c: string) {
         this.__sOp(this.__na.bind(this), register, x, y, c)
     }
+
     /*
     * @snaz@
     * [en] If op2 0 with precision op3, then one, otherwise zero
@@ -776,6 +829,7 @@ export class InterpreterIc10 {
     snaz(register: string, x: string, y: string) {
         this.__sOp(this.__na.bind(this), register, x, y)
     }
+
     /*
     * @sdse@
     * [en] If channel op2 is set to one, otherwise zero
@@ -784,6 +838,7 @@ export class InterpreterIc10 {
     sdse(register: string, d: string) {
         this.memory.getRegister(register).value = Number(this.__dse(d))
     }
+
     /*
     * @sdns@
     * [en] If channel op2 is not set to one, otherwise zero
@@ -792,6 +847,7 @@ export class InterpreterIc10 {
     sdns(register: string, d: string) {
         this.memory.getRegister(register).value = Number(this.__dns(d))
     }
+
     /*
     * @snan@
     * [en]
@@ -800,6 +856,7 @@ export class InterpreterIc10 {
     snan(register: string, v: string) {
         this.__sOp(this.__nan.bind(this), register, v)
     }
+
     /*
     * @snanz@
     * [en]
@@ -835,6 +892,7 @@ export class InterpreterIc10 {
 
         this.jal(line)
     }
+
     /*
     * @beq@
     * [en] Jump to op3 if op1 = op2
@@ -843,6 +901,7 @@ export class InterpreterIc10 {
     beq(a: string, b: string, line: string) {
         this.__bOp(this.__eq.bind(this), line, a, b)
     }
+
     /*
     * @beqz@
     * [en] Jump to op2 if op1 = 0
@@ -851,6 +910,7 @@ export class InterpreterIc10 {
     beqz(a: string, line: string) {
         this.__bOp(this.__eq.bind(this), line, a)
     }
+
     /*
     * @bge@
     * [en] Jump to op3 if op1 >= op2
@@ -859,6 +919,7 @@ export class InterpreterIc10 {
     bge(a: string, b: string, line: string) {
         this.__bOp(this.__ge.bind(this), line, a, b)
     }
+
     /*
     * @bgez@
     * [en] Jump to op2 if op1 >= 0
@@ -867,6 +928,7 @@ export class InterpreterIc10 {
     bgez(a: string, line: string) {
         this.__bOp(this.__ge.bind(this), line, a)
     }
+
     /*
     * @bgt@
     * [en] Jump to op3 if op1 > op2
@@ -875,6 +937,7 @@ export class InterpreterIc10 {
     bgt(a: string, b: string, line: string) {
         this.__bOp(this.__gt.bind(this), line, a, b)
     }
+
     /*
     * @bgtz@
     * [en] Jump to op2 if op1 > 0
@@ -883,6 +946,7 @@ export class InterpreterIc10 {
     bgtz(a: string, line: string) {
         this.__bOp(this.__gt.bind(this), line, a)
     }
+
     /*
     * @ble@
     * [en] Jump to op3 if op1 <= op2
@@ -891,6 +955,7 @@ export class InterpreterIc10 {
     ble(a: string, b: string, line: string) {
         this.__bOp(this.__le.bind(this), line, a, b)
     }
+
     /*
     * @blez@
     * [en] Jump to op2 if op1 <= 0
@@ -899,6 +964,7 @@ export class InterpreterIc10 {
     blez(a: string, line: string) {
         this.__bOp(this.__le.bind(this), line, a)
     }
+
     /*
     * @blt@
     * [en] Jump to op3 if op1 < op2
@@ -907,6 +973,7 @@ export class InterpreterIc10 {
     blt(a: string, b: string, line: string) {
         this.__bOp(this.__lt.bind(this), line, a, b)
     }
+
     /*
     * @bltz@
     * [en] Jump to op2 if op1 < 0
@@ -915,6 +982,7 @@ export class InterpreterIc10 {
     bltz(a: string, line: string) {
         this.__bOp(this.__lt.bind(this), line, a)
     }
+
     /*
     * @bne@
     * [en] Jump to op3 if op1 != op2
@@ -923,6 +991,7 @@ export class InterpreterIc10 {
     bne(a: string, b: string, line: string) {
         this.__bOp(this.__ne.bind(this), line, a, b)
     }
+
     /*
     * @bnez@
     * [en] Jump to op2 if op1 != 0
@@ -931,6 +1000,7 @@ export class InterpreterIc10 {
     bnez(a: string, line: string) {
         this.__bOp(this.__ne.bind(this), line, a)
     }
+
     /*
     * @bap@
     * [en] Jump to op4 if op1 op2 with precision op3
@@ -939,6 +1009,7 @@ export class InterpreterIc10 {
     bap(x: string, y: string, c: string, line: string) {
         this.__bOp(this.__ap.bind(this), line, x, y, c)
     }
+
     /*
     * @bapz@
     * [en] Jump to op3 if op1 0 with precision op2
@@ -947,6 +1018,7 @@ export class InterpreterIc10 {
     bapz(x: string, y: string, line: string) {
         this.__bOp(this.__ap.bind(this), line, x, y)
     }
+
     /*
     * @bna@
     * [en] Jump to op4 if op1 ~= op2 with precision op3
@@ -955,6 +1027,7 @@ export class InterpreterIc10 {
     bna(x: string, y: string, c: string, line: string) {
         this.__bOp(this.__na.bind(this), line, x, y, c)
     }
+
     /*
     * @bnaz@
     * [en] Jump to op3 if op1 ~= 0 with precision op2
@@ -963,6 +1036,7 @@ export class InterpreterIc10 {
     bnaz(x: string, y: string, line: string) {
         this.__bOp(this.__na.bind(this), line, x, y)
     }
+
     /*
     * @bdse@
     * [en] Jump to op2 if channel op1 is configured
@@ -972,6 +1046,7 @@ export class InterpreterIc10 {
         if (this.__dse(d))
             this.j(line)
     }
+
     /*
     * @bdns@
     * [en] Jump to op2 if op1 channel is not configured
@@ -981,6 +1056,7 @@ export class InterpreterIc10 {
         if (this.__dns(d))
             this.j(line)
     }
+
     /*
     * @bnan@
     * [en]
@@ -989,6 +1065,7 @@ export class InterpreterIc10 {
     bnan(v: string, line: string) {
         this.__bOp(this.__nan.bind(this), line, v)
     }
+
     /*
     * @breq@
     * [en] Relative jump to +op3 if op1 = op2
@@ -997,6 +1074,7 @@ export class InterpreterIc10 {
     breq(a: string, b: string, offset: string) {
         this.__bROp(this.__eq.bind(this), offset, a, b)
     }
+
     /*
     * @breqz@
     * [en] Relative jump to +op2 if op1 = 0
@@ -1005,6 +1083,7 @@ export class InterpreterIc10 {
     breqz(a: string, offset: string) {
         this.__bROp(this.__eq.bind(this), offset, a)
     }
+
     /*
     * @brge@
     * [en] Relative jump to +op3 if op1 >= op2
@@ -1013,6 +1092,7 @@ export class InterpreterIc10 {
     brge(a: string, b: string, offset: string) {
         this.__bROp(this.__ge.bind(this), offset, a)
     }
+
     /*
     * @brgez@
     * [en] Relative jump to +op2 if op1 >= 0
@@ -1021,6 +1101,7 @@ export class InterpreterIc10 {
     brgez(a: string, offset: string) {
         this.__bROp(this.__ge.bind(this), offset, a)
     }
+
     /*
     * @brgt@
     * [en] Relative jump to +op3 if op1 > op2
@@ -1029,6 +1110,7 @@ export class InterpreterIc10 {
     brgt(a: string, b: string, offset: string) {
         this.__bROp(this.__gt.bind(this), offset, a, b)
     }
+
     /*
     * @brgtz@
     * [en] Relative jump to +op2 if op1 > 0
@@ -1037,6 +1119,7 @@ export class InterpreterIc10 {
     brgtz(a: string, offset: string) {
         this.__bROp(this.__gt.bind(this), offset, a)
     }
+
     /*
     * @brle@
     * [en] Relative jump to +op3 if op1 <= op2
@@ -1045,6 +1128,7 @@ export class InterpreterIc10 {
     brle(a: string, b: string, offset: string) {
         this.__bROp(this.__le.bind(this), offset, a, b)
     }
+
     /*
     * @brlez@
     * [en] Relative jump to +op2 if op1 <= 0
@@ -1053,6 +1137,7 @@ export class InterpreterIc10 {
     brlez(a: string, offset: string) {
         this.__bROp(this.__le.bind(this), offset, a)
     }
+
     /*
     * @brlt@
     * [en] Relative jump to +op3 if op1 < op2
@@ -1061,6 +1146,7 @@ export class InterpreterIc10 {
     brlt(a: string, b: string, offset: string) {
         this.__bROp(this.__lt.bind(this), offset, a, b)
     }
+
     /*
     * @brltz@
     * [en] Relative jump to +op2 if op1 < 0
@@ -1069,6 +1155,7 @@ export class InterpreterIc10 {
     brltz(a: string, offset: string) {
         this.__bROp(this.__lt.bind(this), offset, a)
     }
+
     /*
     * @brne@
     * [en] Relative jump to +op3 if op1 != op2
@@ -1077,6 +1164,7 @@ export class InterpreterIc10 {
     brne(a: string, b: string, offset: string) {
         this.__bROp(this.__ne.bind(this), offset, a, b)
     }
+
     /*
     * @brnez@
     * [en] Relative jump to +op2 if op1 != 0
@@ -1085,6 +1173,7 @@ export class InterpreterIc10 {
     brnez(a: string, offset: string) {
         this.__bROp(this.__ne.bind(this), offset, a)
     }
+
     /*
     * @brap@
     * [en] Relative jump to +op4 if op1 op2 with precision op3
@@ -1093,6 +1182,7 @@ export class InterpreterIc10 {
     brap(x: string, y: string, c: string, offset: string) {
         this.__bROp(this.__ap.bind(this), offset, x, y, c)
     }
+
     /*
     * @brapz@
     * [en] Relative jump to +op3 if op1 0 with precision op2
@@ -1101,6 +1191,7 @@ export class InterpreterIc10 {
     brapz(x: string, y: string, offset: string) {
         this.__bROp(this.__ap.bind(this), offset, x, y)
     }
+
     /*
     * @brna@
     * [en] Relative jump to +op4 if op1 op2 with precision op3
@@ -1109,6 +1200,7 @@ export class InterpreterIc10 {
     brna(x: string, y: string, c: string, offset: string) {
         this.__bROp(this.__na.bind(this), offset, x, y, c)
     }
+
     /*
     * @brnaz@
     * [en] Relative jump to +op3 if op1 0 with precision op2
@@ -1117,6 +1209,7 @@ export class InterpreterIc10 {
     brnaz(x: string, y: string, offset: string) {
         this.__bROp(this.__ap.bind(this), offset, x, y)
     }
+
     /*
     * @brdse@
     * [en] Relative jump to +op2 if channel op1 is configured
@@ -1127,6 +1220,7 @@ export class InterpreterIc10 {
             this.jr(offset)
         }
     }
+
     /*
     * @brdns@
     * [en] Relative jump to +op2 if channel op1 is not configured
@@ -1137,6 +1231,7 @@ export class InterpreterIc10 {
             this.jr(offset)
         }
     }
+
     /*
     * @brnan@
     * [en]
@@ -1145,6 +1240,7 @@ export class InterpreterIc10 {
     brnan(v: string, offset: string) {
         this.__bROp(this.__nan.bind(this), offset, v)
     }
+
     /*
     * @beqal@
     * [en] Jump to op3 if op1 = op2, writing the address of the next line to ra
@@ -1153,6 +1249,7 @@ export class InterpreterIc10 {
     beqal(a: string, b: string, line: string) {
         this.__bCOp(this.__eq.bind(this), line, a, b)
     }
+
     /*
     * @beqzal@
     * [en] Jump to op2 if op1 = 0, writing the address of the next line to ra
@@ -1161,6 +1258,7 @@ export class InterpreterIc10 {
     beqzal(a: string, line: string) {
         this.__bCOp(this.__eq.bind(this), line, a)
     }
+
     /*
     * @bgeal@
     * [en] Jump to op3 if op1 >= op2, writing next line address to ra
@@ -1169,6 +1267,7 @@ export class InterpreterIc10 {
     bgeal(a: string, b: string, line: string) {
         this.__bCOp(this.__ge.bind(this), line, a, b)
     }
+
     /*
     * @bgezal@
     * [en] Jump to op2 if op1 >= 0, writing next line address to ra
@@ -1177,6 +1276,7 @@ export class InterpreterIc10 {
     bgezal(a: string, line: string) {
         this.__bCOp(this.__ge.bind(this), line, a)
     }
+
     /*
     * @bgtal@
     * [en] Jump to op3 if op1 > op2, writing next line address to ra
@@ -1185,6 +1285,7 @@ export class InterpreterIc10 {
     bgtal(a: string, b: string, line: string) {
         this.__bCOp(this.__gt.bind(this), line, a, b)
     }
+
     /*
     * @bgtzal@
     * [en] Jump to op2 if op1 > 0, writing the address of the next line to ra
@@ -1193,6 +1294,7 @@ export class InterpreterIc10 {
     bgtzal(a: string, line: string) {
         this.__bCOp(this.__gt.bind(this), line, a)
     }
+
     /*
     * @bleal@
     * [en] Jump to op3 if op1 <= op2, writing next line address to ra
@@ -1201,6 +1303,7 @@ export class InterpreterIc10 {
     bleal(a: string, b: string, line: string) {
         this.__bCOp(this.__le.bind(this), line, a, b)
     }
+
     /*
     * @blezal@
     * [en] Jump to op2 if op1 <= 0, writing the address of the next line to ra
@@ -1209,6 +1312,7 @@ export class InterpreterIc10 {
     blezal(a: string, line: string) {
         this.__bCOp(this.__le.bind(this), line, a)
     }
+
     /*
     * @bltal@
     * [en] Jump to op3 if op1 < op2, writing the address of the next line to ra
@@ -1217,6 +1321,7 @@ export class InterpreterIc10 {
     bltal(a: string, b: string, line: string) {
         this.__bCOp(this.__lt.bind(this), line, a, b)
     }
+
     /*
     * @bltzal@
     * [en] Jump to op2 if op1 < 0, writing the address of the next line to ra
@@ -1225,6 +1330,7 @@ export class InterpreterIc10 {
     bltzal(a: string, line: string) {
         this.__bCOp(this.__lt.bind(this), line, a)
     }
+
     /*
     * @bneal@
     * [en] Jump to op3 if op1 != op2, writing next line address to ra
@@ -1233,6 +1339,7 @@ export class InterpreterIc10 {
     bneal(a: string, b: string, line: string) {
         this.__bCOp(this.__ne.bind(this), line, a, b)
     }
+
     /*
     * @bnezal@
     * [en] Jump to op2 if op1 != 0, writing the address of the next line to ra
@@ -1241,6 +1348,7 @@ export class InterpreterIc10 {
     bnezal(a: string, line: string) {
         this.__bCOp(this.__ne.bind(this), line, a)
     }
+
     /*
     * @bapal@
     * [en] Jump to op4 if op1 op2 with precision op3, writing the address of the next line to ra
@@ -1249,6 +1357,7 @@ export class InterpreterIc10 {
     bapal(x: string, y: string, c: string, line: string) {
         this.__bCOp(this.__ap.bind(this), line, x, y, c)
     }
+
     /*
     * @bapzal@
     * [en] Jump to op3 if op1 0 with precision op2, writing the address of the next line to ra
@@ -1257,6 +1366,7 @@ export class InterpreterIc10 {
     bapzal(x: string, y: string, line: string) {
         this.__bCOp(this.__ap.bind(this), line, x, y)
     }
+
     /*
     * @bnaal@
     * [en] Jump to op4 if op1 ~= op2 with precision op3, writing next line address to ra
@@ -1265,6 +1375,7 @@ export class InterpreterIc10 {
     bnaal(x: string, y: string, c: string, line: string) {
         this.__bCOp(this.__na.bind(this), line, x, y, c)
     }
+
     /*
     * @bnazal@
     * [en] Jump to op3 if op1 ~= 0 with precision op2, writing next line address to ra
@@ -1273,6 +1384,7 @@ export class InterpreterIc10 {
     bnazal(x: string, y: string, line: string) {
         this.__bCOp(this.__na.bind(this), line, x, y)
     }
+
     /*
     * @bdseal@
     * [en] Jump to op2 if channel op1 is configured with next line address written to ra
@@ -1283,6 +1395,7 @@ export class InterpreterIc10 {
             this.jal(line)
         }
     }
+
     /*
     * @bdnsal@
     * [en] Jump to op2 if channel op1 is not configured, writing next line address to ra
@@ -1293,6 +1406,7 @@ export class InterpreterIc10 {
             this.jal(line)
         }
     }
+
     /*
     * @push@
     * [en] Push op1 onto the stack
@@ -1301,6 +1415,7 @@ export class InterpreterIc10 {
     push(a: string) {
         this.memory.stack.push(this.memory.getValue(a))
     }
+
     /*
     * @pop@
     * [en] Pop a value from the stack and write to op1
@@ -1309,6 +1424,7 @@ export class InterpreterIc10 {
     pop(register: string) {
         this.memory.getRegister(register).value = this.memory.stack.pop()
     }
+
     /*
     * @peek@
     * [en] Push the top value off the stack into op1 without moving the stack
@@ -1351,6 +1467,7 @@ export class InterpreterIc10 {
 
         return devices
     }
+
     /*
     * @l@
     * [en] Reading the value of parameter op3 from port op2
@@ -1361,11 +1478,11 @@ export class InterpreterIc10 {
         const a = this.memory.getDeviceOrDeviceOutput(device)
         if (a instanceof Device) {
             if (!isDeviceParameter(property)) {
-                throw Execution.Ic10DiagnosticError(this.position, `Wrong 3 argument (${property}). Must be "Device parameter"`,property)
+                throw Execution.Ic10DiagnosticError(this.position, `Wrong 3 argument (${property}). Must be "Device parameter"`, property)
             }
         } else if (a instanceof DeviceOutput) {
             if (!isChannel(property)) {
-                throw Execution.Ic10DiagnosticError(this.position, `Wrong 3 argument (${property}). Must be "Channel"`,property)
+                throw Execution.Ic10DiagnosticError(this.position, `Wrong 3 argument (${property}). Must be "Channel"`, property)
             }
         }
         r.value = a.get(property)
@@ -1374,6 +1491,7 @@ export class InterpreterIc10 {
     __l(register: string, device: string, property: string) {
         this.l(register, device, property)
     }
+
     /*
     * @ls@
     * [en] Read value op4 from slot op3 of port op2
@@ -1384,27 +1502,30 @@ export class InterpreterIc10 {
         const d = this.memory.getDevice(device)
         r.value = d.getSlot(this.memory.getValue(slot), property) as number
     }
+
     /*
     * @s@
     * [en] Writing a value to the op2 parameter of port op1
     * [ru] Запись значения в параметр op2 порта op1
     */
     s(device: string, property: string, value: string) {
-		const a = this.memory.getDeviceOrDeviceOutput(device)
-		if (a instanceof Device) {
-			if (!isDeviceParameter(property)) {
-				throw Execution.Ic10DiagnosticError(this.position, `Wrong 2 argument (${property}). Must be "Device parameter"`,property)
-			}
-		} else if (a instanceof DeviceOutput) {
-			if (!isChannel(property)) {
-				throw Execution.Ic10DiagnosticError(this.position, `Wrong 2 argument (${property}). Must be "Channel"`,property)
-			}
-		}
-		a.set(property, this.memory.getValue(value))
+        const a = this.memory.getDeviceOrDeviceOutput(device)
+        if (a instanceof Device) {
+            if (!isDeviceParameter(property)) {
+                throw Execution.Ic10DiagnosticError(this.position, `Wrong 2 argument (${property}). Must be "Device parameter"`, property)
+            }
+        } else if (a instanceof DeviceOutput) {
+            if (!isChannel(property)) {
+                throw Execution.Ic10DiagnosticError(this.position, `Wrong 2 argument (${property}). Must be "Channel"`, property)
+            }
+        }
+        a.set(property, this.memory.getValue(value))
     }
+
     __s(device: string, property: string, value: string) {
         this.s(device, property, value)
     }
+
     /*
     * @lb@
     * [en] Batch read in op1 from all devices with hash op2 of parameter op3 in op4 mode
@@ -1422,6 +1543,7 @@ export class InterpreterIc10 {
 
         this.memory.getRegister(register).value = this.__transformBatch(values, mode)
     }
+
     /*
     * @lr@
     * [en] Read reagent value op4 in op3 mode from port op2
@@ -1431,6 +1553,7 @@ export class InterpreterIc10 {
         //TODO: well, we don't have reagents so we need to do it later
         throw Execution.Ic10DiagnosticError(this.position, "lr not implemented yet")
     }
+
     /*
     * @sb@
     * [en] Batch write to all devices with hash op1 to parameter op2 of value op3
@@ -1443,6 +1566,7 @@ export class InterpreterIc10 {
 
         devices.forEach(d => d.set(property, v))
     }
+
     /*
     * @lbn@
     * [en]
@@ -1459,6 +1583,7 @@ export class InterpreterIc10 {
 
         this.memory.getRegister(targetRegister).value = this.__transformBatch(values, batchMode)
     }
+
     /*
     * @sbn@
     * [en]
@@ -1472,6 +1597,7 @@ export class InterpreterIc10 {
 
         devices.forEach(d => d.set(property, v))
     }
+
     /*
     * @lbs@
     * [en]
@@ -1486,6 +1612,7 @@ export class InterpreterIc10 {
 
         this.memory.getRegister(register).value = this.__transformBatch(values, batchMode)
     }
+
     /*
     * @lbns@
     * [en]
@@ -1501,6 +1628,7 @@ export class InterpreterIc10 {
 
         this.memory.getRegister(register).value = this.__transformBatch(values, batchMode)
     }
+
     /*
     * @ss@
     * [en]
@@ -1513,6 +1641,7 @@ export class InterpreterIc10 {
 
         (d.getSlot(slot) as Slot).set(property, v)
     }
+
     /*
     * @sbs@
     */
@@ -1525,6 +1654,7 @@ export class InterpreterIc10 {
 
         devices.map(d => (d.getSlot(slot) as Slot).set(property, v))
     }
+
     /*
     * @and@
     * [en] Logical AND, one if both op2 and op3 are true, zero otherwise
@@ -1533,6 +1663,7 @@ export class InterpreterIc10 {
     and(register: string, a: string, b: string) {
         this.__op((a, b) => a && b, register, a, b)
     }
+
     /*
     * @or@
     * [en] Logical OR, zero if both op2 and op3 are false, one otherwise
@@ -1541,6 +1672,7 @@ export class InterpreterIc10 {
     or(register: string, a: string, b: string) {
         this.__op((a, b) => a || b, register, a, b)
     }
+
     /*
     * @xor@
     * [en] XOR, one if one and only one of op2 and op3 is true, zero otherwise
@@ -1549,6 +1681,7 @@ export class InterpreterIc10 {
     xor(register: string, a: string, b: string) {
         this.__op((a, b) => a ^ b, register, a, b)
     }
+
     /*
     * @nor@
     * [en] Inverse OR, one if both op2 and op3 are false, zero otherwise

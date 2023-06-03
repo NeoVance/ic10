@@ -1,7 +1,6 @@
 import InterpreterIc10, {Execution} from "../src/main";
 import {Hardsuit} from "../src/devices/Hardsuit";
 import {hashStr} from "../src/Utils";
-import {Ic10Error} from "../src/Ic10Error";
 
 const interpreterIc10 = new InterpreterIc10();
 
@@ -231,5 +230,15 @@ describe('test', () => {
         }
 
 
+    })
+
+    test('log system', () => {
+        interpret`
+            move r0 4
+            #log r0
+        `
+        runWithoutLoop()
+        console.log(interpreterIc10.output.log)
+        expect(interpreterIc10.output.log.length > 0).toBe(true)
     })
 })

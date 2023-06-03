@@ -12,7 +12,8 @@ export class Memory {
     public cells: Array<RegisterCell>
     public stack: MemoryStack
     public environ: Environ
-    public aliases: Record<string, ValueCell | Device>
+    public aliases: Record<string, ValueCell | Device> = {}
+    public aliasesRevert: Record<string, string> = {}
     readonly #scope: InterpreterIc10;
 
     constructor(scope: InterpreterIc10) {
@@ -20,7 +21,6 @@ export class Memory {
         this.cells = new Array<RegisterCell>(18)
         this.environ = new Environ(scope)
         this.stack = new MemoryStack(scope, 512, "r16")
-        this.aliases = {}
 
         for (let i = 0; i < 18; i++) {
             const n = `r${i}`
@@ -161,7 +161,7 @@ export class Memory {
         if (isNaN(parseInt(output))) {
             throw Execution.error(this.#scope.position, 'Invalid output', name)
         }
-        return this.getDevice(device).getChanel(parseInt(output))
+        return this.getDevice(device).getChannel(parseInt(output))
     }
 
     findValue(value: string | number): number | undefined {
@@ -214,6 +214,9 @@ export class Memory {
 
         if (register !== undefined) {
             this.aliases[name] = register
+            if (typeof name === "string") {
+                this.aliasesRevert[register.name] = name
+            }
             return this
         }
 
@@ -221,6 +224,9 @@ export class Memory {
 
         if (device !== undefined) {
             this.aliases[name] = device
+            if (typeof name === "string") {
+                this.aliasesRevert[device.name] = name
+            }
             return this
         }
 

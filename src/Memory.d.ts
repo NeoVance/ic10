@@ -11,6 +11,7 @@ export declare class Memory {
     stack: MemoryStack;
     environ: Environ;
     aliases: Record<string, ValueCell | Device>;
+    aliasesRevert: Record<string, string>;
     constructor(scope: InterpreterIc10);
     get scope(): InterpreterIc10 | null;
     reset(): void;

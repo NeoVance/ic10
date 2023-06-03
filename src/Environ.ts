@@ -1,6 +1,6 @@
 import InterpreterIc10 from "./main";
-import {Device}        from "./Device";
-import {IcHousing}          from "./devices/IcHousing";
+import {Device} from "./Device";
+import {IcHousing} from "./devices/IcHousing";
 
 export class Environ {
 	public d0: Device

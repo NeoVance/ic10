@@ -1,10 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Device = exports.IcHash = void 0;
+const DeviceProperties_1 = require("./DeviceProperties");
 const main_1 = require("./main");
 const Slot_1 = require("./Slot");
 const Utils_1 = require("./Utils");
 const DeviceOutput_1 = require("./DeviceOutput");
+const icTypes_1 = require("./icTypes");
 exports.IcHash = (0, Utils_1.hashStr)("ItemIntegratedCircuit10");
 class Device {
     hash;
@@ -19,7 +21,7 @@ class Device {
         this.#scope = scope;
         this.hash = 0;
         this.#scope = scope;
-        this.properties = fields ?? {};
+        this.properties = fields ?? new DeviceProperties_1.DeviceFields;
         this.slots = Array(slotCount ?? 0).fill(0).map((_, i) => new Slot_1.Slot(scope, i));
         if (this.properties.PrefabHash !== undefined)
             this.hash = this.properties.PrefabHash;
@@ -42,7 +44,7 @@ class Device {
         return this.properties[variable];
     }
     set(variable, value) {
-        if (!this.has(variable))
+        if (!(0, icTypes_1.isDeviceParameter)(variable))
             throw main_1.Execution.error(this.#scope.position, 'Unknown variable', variable);
         this.properties[variable] = value;
         if (this.properties.PrefabHash !== undefined)
@@ -63,7 +65,7 @@ class Device {
             throw main_1.Execution.error(this.#scope.position, 'Unknown Slot', slot);
         s.set(property, value);
     }
-    getChanel(channel) {
+    getChannel(channel) {
         const ch = String(channel);
         const o = this.outputs[ch];
         if (o === undefined)

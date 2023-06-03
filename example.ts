@@ -1,5 +1,5 @@
-import fs              from "fs";
-import {Ic10Error}                  from "./src/Ic10Error";
+import fs from "fs";
+import {Ic10Error} from "./src/Ic10Error";
 import InterpreterIc10, {Execution} from "./src/main";
 
 const code     = fs.readFileSync(".ic10", "utf8");

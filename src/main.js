@@ -182,6 +182,9 @@ class InterpreterIc10 {
         });
     }
     prepareLine(line = -1, isDebugger = false) {
+        if (line === 0) {
+            this.memory.environ.db.properties.Error = 0;
+        }
         if (line >= 0) {
             this.position = line;
         }
@@ -213,6 +216,7 @@ class InterpreterIc10 {
                 }
             }
             catch (e) {
+                this.memory.environ.db.properties.Error = 1;
                 if (e instanceof Ic10Error_1.Ic10Error)
                     this.settings.executionCallback.call(this, e);
                 else
@@ -263,7 +267,18 @@ class InterpreterIc10 {
         r.value = op(...inputs);
     }
     move(register, value) {
-        this.__op(v => v, register, value);
+        if ((0, icTypes_1.isChannel)(register.toLowerCase()) || (0, icTypes_1.isSlotParameter)(register.toLowerCase()) || (0, icTypes_1.isDeviceParameter)(register.toLowerCase()) || (0, icTypes_1.isConst)(register.toLowerCase())) {
+            throw exports.Execution.Ic10DiagnosticError(this.position, 'Incorrect register. Is system keyworld', register);
+        }
+        if ((0, icTypes_1.isChannel)(value.toLowerCase()) || (0, icTypes_1.isSlotParameter)(value.toLowerCase()) || (0, icTypes_1.isDeviceParameter)(value.toLowerCase()) || (0, icTypes_1.isConst)(value.toLowerCase())) {
+            throw exports.Execution.Ic10DiagnosticError(this.position, 'Incorrect value. Is system keyworld', value);
+        }
+        try {
+            this.__op(v => v, register, value);
+        }
+        catch (e) {
+            throw exports.Execution.Ic10DiagnosticError(this.position, 'Incorrect register. Not a register', register);
+        }
     }
     __move(register, value) {
         this.move(register, value);

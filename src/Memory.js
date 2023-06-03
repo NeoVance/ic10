@@ -11,14 +11,14 @@ class Memory {
     cells;
     stack;
     environ;
-    aliases;
+    aliases = {};
+    aliasesRevert = {};
     #scope;
     constructor(scope) {
         this.#scope = scope;
         this.cells = new Array(18);
         this.environ = new Environ_1.Environ(scope);
         this.stack = new MemoryStack_1.MemoryStack(scope, 512, "r16");
-        this.aliases = {};
         for (let i = 0; i < 18; i++) {
             const n = `r${i}`;
             if (i === 16) {
@@ -125,7 +125,7 @@ class Memory {
         if (isNaN(parseInt(output))) {
             throw main_1.Execution.error(this.#scope.position, 'Invalid output', name);
         }
-        return this.getDevice(device).getChanel(parseInt(output));
+        return this.getDevice(device).getChannel(parseInt(output));
     }
     findValue(value) {
         if (typeof value === "number")
@@ -161,11 +161,17 @@ class Memory {
         const register = this.findRegister(link);
         if (register !== undefined) {
             this.aliases[name] = register;
+            if (typeof name === "string") {
+                this.aliasesRevert[register.name] = name;
+            }
             return this;
         }
         const device = this.findDevice(link);
         if (device !== undefined) {
             this.aliases[name] = device;
+            if (typeof name === "string") {
+                this.aliasesRevert[device.name] = name;
+            }
             return this;
         }
         throw main_1.Execution.error(this.#scope.position, 'Invalid alias value');

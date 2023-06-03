@@ -1,4 +1,4 @@
-import { DeviceFields } from "./DeviceProperties";
+import { DeviceFieldsType } from "./DeviceProperties";
 import InterpreterIc10 from "./main";
 import { Slot } from "./Slot";
 import { DeviceOutput } from "./DeviceOutput";
@@ -8,19 +8,19 @@ export declare class Device {
     hash: number;
     name: string;
     nameHash?: number;
-    properties: Partial<DeviceFields>;
+    properties: Partial<DeviceFieldsType>;
     slots: Slot[];
     outputs: {
         [key: `${number}`]: DeviceOutput;
     };
-    constructor(scope: InterpreterIc10, name: string, slotCount?: number, fields?: Partial<DeviceFields>);
+    constructor(scope: InterpreterIc10, name: string, slotCount?: number, fields?: Partial<DeviceFieldsType>);
     get scope(): InterpreterIc10;
-    init(properties: Partial<DeviceFields>): void;
+    init(properties: Partial<DeviceFieldsType>): void;
     has(variable: string): boolean;
     get(variable: string): number;
     set(variable: string, value: number): Device;
     getSlot(slot: number): Slot;
     getSlot(slot: number, property: string): number;
     setSlot(slot: number, property: string, value: number): void;
-    getChanel(channel: number): DeviceOutput;
+    getChannel(channel: number): DeviceOutput;
 }

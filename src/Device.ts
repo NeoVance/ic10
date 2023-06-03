@@ -1,8 +1,9 @@
-import {DeviceFields} from "./DeviceProperties";
+import {DeviceFields, DeviceFieldsType} from "./DeviceProperties";
 import InterpreterIc10, {Execution} from "./main";
 import {Slot} from "./Slot";
 import {hashStr} from "./Utils";
 import {DeviceOutput} from "./DeviceOutput";
+import {isDeviceParameter} from "./icTypes";
 
 export const IcHash = hashStr("ItemIntegratedCircuit10")
 
@@ -10,17 +11,17 @@ export class Device {
     public hash: number;
     public name: string;
     public nameHash?: number;
-    public properties: Partial<DeviceFields>
+    public properties: Partial<DeviceFieldsType>
     public slots: Slot[]
     readonly #scope: InterpreterIc10
     public outputs: { [key: `${number}`]: DeviceOutput } = {}
 
-    constructor(scope: InterpreterIc10, name: string, slotCount?: number, fields?: Partial<DeviceFields>) {
+    constructor(scope: InterpreterIc10, name: string, slotCount?: number, fields?: Partial<DeviceFieldsType>) {
         this.name = name
         this.#scope = scope;
         this.hash = 0
         this.#scope = scope
-        this.properties = fields ?? {}
+        this.properties = fields ?? new DeviceFields
         this.slots = Array(slotCount ?? 0).fill(0).map((_, i) => new Slot(scope, i))
 
         if (this.properties.PrefabHash !== undefined)
@@ -31,7 +32,7 @@ export class Device {
         return this.#scope;
     }
 
-    init(properties: Partial<DeviceFields>) {
+    init(properties: Partial<DeviceFieldsType>) {
         this.properties = properties
     }
 
@@ -51,7 +52,7 @@ export class Device {
     }
 
     set(variable: string, value: number): Device {
-        if (!this.has(variable))
+        if (!isDeviceParameter(variable))
             throw Execution.error(this.#scope.position, 'Unknown variable', variable);
 
         (this.properties as Record<string, number>)[variable] = value
@@ -86,7 +87,7 @@ export class Device {
         s.set(property, value)
     }
 
-    getChanel(channel: number): DeviceOutput {
+    getChannel(channel: number): DeviceOutput {
         const ch = String(channel) as `${number}`;
         const o: DeviceOutput = this.outputs[ch]
         if (o === undefined)

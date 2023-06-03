@@ -1,5 +1,5 @@
 import InterpreterIc10, {Execution} from "./main";
-import {RegisterCell}                 from "./RegisterCell";
+import {RegisterCell} from "./RegisterCell";
 
 export class MemoryStack extends RegisterCell {
     declare public value: number
