@@ -279,6 +279,8 @@ export class InterpreterIc10 {
     }
     /*
     * @define@
+    * [en] Set a name for the constant
+    * [ru] Задать имя для константы	 
     */
     define(alias: string, value: number | string) {
 		if(isChannel(alias.toLowerCase()) || isSlotParameter(alias.toLowerCase()) || isDeviceParameter(alias.toLowerCase()) || isConst(alias.toLowerCase())){
@@ -288,6 +290,8 @@ export class InterpreterIc10 {
     }
     /*
     * @alias@
+    * [en] Specify an alias for a register or data channel
+    * [ru] Задат псевдоним для регистра или канала данных
     */
     alias(alias: string , target: string) {
 		if(isChannel(alias.toLowerCase()) || isSlotParameter(alias.toLowerCase()) || isDeviceParameter(alias.toLowerCase()) || isConst(alias.toLowerCase())){
@@ -305,6 +309,8 @@ export class InterpreterIc10 {
     }
     /*
     * @move@
+    * [en] Value assignment
+    * [ru] Присвоение значения
     */
     move(register: string, value: string) {
         this.__op(v => v, register, value)
@@ -315,66 +321,88 @@ export class InterpreterIc10 {
     }
     /*
     * @add@
+    * [en] Sum
+    * [ru] Сумма
     */
     add(register: string, a: string, b: string) {
         this.__op((a, b) => a + b, register, a, b)
     }
     /*
     * @sub@
+    * [en] Difference
+    * [ru] Разность
     */
     sub(register: string, a: string, b: string) {
         this.__op((a, b) => a - b, register, a, b)
     }
     /*
     * @mul@
+    * [en] Work
+    * [ru] Произведение
     */
     mul(register: string, a: string, b: string) {
         this.__op((a, b) => a * b, register, a, b)
     }
     /*
     * @div@
+    * [en] Division
+    * [ru] Деление
     */
     div(register: string, a: string, b: string) {
         this.__op((a, b) => Number(a / b) || 0, register, a, b)
     }
     /*
     * @mod@
+    * [en] Remainder of integer division of op2 by op3 (the result is not equivalent to the % operator, and will be positive for any signs of op2 and op3)
+    * [ru] Остаток от целочисленного деления op2 на op3 (результат не эквивалентен оператору %, и будет положителен при любых знаках op2 и op3)
     */
     mod(register: string, a: string, b: string) {
         this.__op((a, b) => a % b, register, a, b)
     }
     /*
     * @sqrt@
+    * [en] Square root
+    * [ru] Квадратный корень
     */
     sqrt(register: string, v: string) {
         this.__op(Math.sqrt, register, v)
     }
     /*
     * @round@
+    * [en] Rounding to nearest integer
+    * [ru] Округление к ближайшему целому
     */
     round(register: string, v: string) {
         this.__op(Math.round, register, v)
     }
     /*
     * @trunc@
+    * [en] The integer part of number
+    * [ru] Целая часть числа
     */
     trunc(register: string, v: string) {
         this.__op(Math.trunc, register, v)
     }
     /*
     * @ceil@
+    * [en] Round up to nearest integer
+    * [ru] Округление до ближайшего целого вверх
     */
     ceil(register: string, v: string) {
         this.__op(Math.ceil, register, v)
     }
     /*
     * @floor@
+    * [en] Rounding down to nearest integer
+    * [ru] Округление до ближайшего целого вниз
     */
     floor(register: string, v: string) {
         this.__op(Math.floor, register, v)
     }
     /*
     * @max@
+    * [en] Maximum of two
+    * [ru] Максимальное из двух
     */
     max(register: string, a: string, b: string) {
         this.__op(Math.max, register, a, b)
@@ -387,89 +415,119 @@ export class InterpreterIc10 {
     }
     /*
     * @abs@
+    * [en] The absolute value of the number
+    * [ru] Абсолютная величина числа
     */
     abs(register: string, v: string) {
         this.__op(Math.abs, register, v)
     }
     /*
     * @log@
+    * [en] natural logarithm
+    * [ru] Натуральный логарифм
     */
     log(register: string, v: string) {
         this.__op(Math.log, register, v)
     }
     /*
     * @exp@
+    * [en] Exhibitor
+    * [ru] Экспонента
     */
     exp(register: string, v: string) {
         this.__op(Math.exp, register, v)
     }
     /*
     * @rand@
+    * [en] Random value from 0 to 1 inclusive
+    * [ru] Случайная величина от 0 до 1 включительно
     */
     rand(register: string, v: string) {
         this.__op(_ => Math.random(), register, v)
     }
     /*
     * @sin@
+    * [en] Sinus*
+    * [ru] Синус*
     */
     sin(register: string, v: string) {
         this.__op(Math.sin, register, v)
     }
     /*
     * @cos@
+    * [en] Cosine*
+    * [ru] Косинус*
     */
     cos(register: string, v: string) {
         this.__op(Math.cos, register, v)
     }
     /*
     * @tan@
+    * [en] Tangent*
+    * [ru] Тангенс*
     */
     tan(register: string, v: string) {
         this.__op(Math.tan, register, v)
     }
     /*
     * @asin@
+    * [en] Arcsine*
+    * [ru] Арксинус*
     */
     asin(register: string, v: string) {
         this.__op(Math.asin, register, v)
     }
     /*
     * @acos@
+    * [en] Arccosine*
+    * [ru] Арккосинус*
     */
     acos(register: string, v: string) {
         this.__op(Math.acos, register, v)
     }
     /*
     * @atan@
+    * [en] Arctangent*
+    * [ru] Арктангенс*
     */
     atan(register: string, v: string) {
         this.__op(Math.atan, register, v)
     }
     /*
     * @atan2@
+    * [en] Arc tangent with 2 arguments
+    * [ru] Арктангенс с 2 аргументами
     */
     atan2(register: string, a: string, b: string) {
         this.__op(Math.atan2, register, a, b)
     }
     /*
     * @yield@
+    * [en] Pausing the program until the next tick
+    * [ru] Приостановка программы до следующего тика
     */
     yield() {
     }
     /*
     * @sleep@
+    * [en] Pause the program for op1 seconds
+    * [ru] Приостановка программы на op1 секунд
     */
     sleep(s: number) {
         //TODO: yield for s * x ticks
     }
     /*
     * @select@
+    * [en] Ternary select. If op2 is true then op1 := op3, otherwise op1 := op4
+    * [ru] Тернарный select. Если op2 истинно, то op1 := op3, иначе op1 := op4
     */
     select(register: string, a: string, b: string, c: string) {
         this.__op((a, b, c) => a ? b : c, register, a, b, c)
     }
     /*
     * @hcf@
+    * [en] Stop work and burn the microprocessor
+    * [ru] Остановить работу и сжечь микропроцессор
     */
     hcf() {
         console.log("Die Mother Fucker Die!!!!!")
@@ -497,12 +555,16 @@ export class InterpreterIc10 {
     }
     /*
     * @j@
+    * [en] Jump to the specified line
+    * [ru] Переход на указанную строку
     */
     j(target: string) {
         this.__jump(this.__getJumpTarget(target))
     }
     /*
     * @jr@
+    * [en] Relative jump to +op1
+    * [ru] Относительный переход на +op1
     */
     jr(offset: string) {
         const d = this.memory.getValue(offset)
@@ -514,6 +576,8 @@ export class InterpreterIc10 {
     }
     /*
     * @jal@
+    * [en] Jump to op1, writing the address of the next line to ra
+    * [ru] Переход на op1 с записью адреса следующей строки в ra
     */
     jal(target: string) {
         this.__call(this.__getJumpTarget(target))
@@ -576,120 +640,160 @@ export class InterpreterIc10 {
     }
     /*
     * @seq@
+    * [en] If op2 = op3, then one, otherwise zero
+    * [ru] Если op2 = op3, то единица, иначе ноль
     */
     seq(register: string, a: string, b: string) {
         this.__sOp(this.__eq.bind(this), register, a, b)
     }
     /*
     * @seqz@
+    * [en] If op2 = 0, then one, otherwise zero
+    * [ru] Если op2 = 0, то единица, иначе ноль
     */
     seqz(register: string, a: string) {
         this.__sOp(this.__eq.bind(this), register, a)
     }
     /*
     * @sge@
+    * [en] If op2 op3, then one, otherwise zero
+    * [ru] Если op2 op3, то единица, иначе ноль
     */
     sge(register: string, a: string, b: string) {
         this.__sOp(this.__ge.bind(this), register, a, b)
     }
     /*
     * @sgez@
+    * [en] If op2 0, then one, otherwise zero
+    * [ru] Если op2 0, то единица, иначе ноль
     */
     sgez(register: string, a: string) {
         this.__sOp(this.__ge.bind(this), register, a)
     }
     /*
     * @sgt@
+    * [en] If op2 > op3, then one, otherwise zero
+    * [ru] Если op2 > op3, то единица, иначе ноль
     */
     sgt(register: string, a: string, b: string) {
         this.__sOp(this.__gt.bind(this), register, a, b)
     }
     /*
     * @sgtz@
+    * [en] If op2 > 0, then one, otherwise zero
+    * [ru] Если op2 > 0, то единица, иначе ноль
     */
     sgtz(register: string, a: string) {
         this.__sOp(this.__gt.bind(this), register, a)
     }
     /*
     * @sle@
+    * [en] If op2 op3, then one, otherwise zero
+    * [ru] Если op2 op3, то единица, иначе ноль
     */
     sle(register: string, a: string, b: string) {
         this.__sOp(this.__le.bind(this), register, a, b)
     }
     /*
     * @slez@
+    * [en] If op2 0, then one, otherwise zero
+    * [ru] Если op2 0, то единица, иначе ноль
     */
     slez(register: string, a: string) {
         this.__sOp(this.__le.bind(this), register, a)
     }
     /*
     * @slt@
+    * [en] If op2 < op3, then one, otherwise zero
+    * [ru] Если op2 < op3, то единица, иначе ноль
     */
     slt(register: string, a: string, b: string) {
         this.__sOp(this.__lt.bind(this), register, a, b)
     }
     /*
     * @sltz@
+    * [en] If op2 < 0, then one, otherwise zero
+    * [ru] Если op2 < 0, то единица, иначе ноль
     */
     sltz(register: string, a: string) {
         this.__sOp(this.__lt.bind(this), register, a)
     }
     /*
     * @sne@
+    * [en] If op2 op3, then one, otherwise zero
+    * [ru] Если op2 op3, то единица, иначе ноль
     */
     sne(register: string, a: string, b: string) {
         this.__sOp(this.__ne.bind(this), register, a, b)
     }
     /*
     * @snez@
+    * [en] If op2 0, then one, otherwise zero
+    * [ru] Если op2 0, то единица, иначе ноль
     */
     snez(register: string, a: string) {
         this.__sOp(this.__ne.bind(this), register, a)
     }
     /*
     * @sap@
+    * [en] If op2 op3 with precision op4, then one, otherwise zero
+    * [ru] Если op2 op3 с точностью op4, то единица, иначе ноль
     */
     sap(register: string, x: string, y: string, c: string) {
         this.__sOp(this.__ap.bind(this), register, x, y, c)
     }
     /*
     * @sapz@
+    * [en] If op2 0 with precision op3, then one, otherwise zero
+    * [ru] Если op2 0 с точностью op3, то единица, иначе ноль
     */
     sapz(register: string, x: string, y: string) {
         this.__sOp(this.__ap.bind(this), register, x, y)
     }
     /*
     * @sna@
+    * [en] If op2 op3 with precision op4, then one, otherwise zero
+    * [ru] Если op2 op3 с точностью op4, то единица, иначе ноль
     */
     sna(register: string, x: string, y: string, c: string) {
         this.__sOp(this.__na.bind(this), register, x, y, c)
     }
     /*
     * @snaz@
+    * [en] If op2 0 with precision op3, then one, otherwise zero
+    * [ru] Если op2 0 с точностью op3, то единица, иначе ноль
     */
     snaz(register: string, x: string, y: string) {
         this.__sOp(this.__na.bind(this), register, x, y)
     }
     /*
     * @sdse@
+    * [en] If channel op2 is set to one, otherwise zero
+    * [ru] Если канал op2 настроен на то единица, иначе ноль
     */
     sdse(register: string, d: string) {
         this.memory.getRegister(register).value = Number(this.__dse(d))
     }
     /*
     * @sdns@
+    * [en] If channel op2 is not set to one, otherwise zero
+    * [ru] Если канал op2 не настроен на то единица, иначе ноль
     */
     sdns(register: string, d: string) {
         this.memory.getRegister(register).value = Number(this.__dns(d))
     }
     /*
     * @snan@
+    * [en] 
+    * [ru] op1 равно 1, если op2 не имеет значения.
     */
     snan(register: string, v: string) {
         this.__sOp(this.__nan.bind(this), register, v)
     }
     /*
     * @snanz@
+    * [en] 
+    * [ru] op1 равно 0, если op2 не имеет значения.
     */
     snanz(register: string, v: string) {
         this.__sOp(this.__nanz.bind(this), register, v)
@@ -723,102 +827,136 @@ export class InterpreterIc10 {
     }
     /*
     * @beq@
+    * [en] Jump to op3 if op1 = op2
+    * [ru] Переход на op3, если op1 = op2
     */
     beq(a: string, b: string, line: string) {
         this.__bOp(this.__eq.bind(this), line, a, b)
     }
     /*
     * @beqz@
+    * [en] Jump to op2 if op1 = 0
+    * [ru] Переход на op2, если op1 = 0
     */
     beqz(a: string, line: string) {
         this.__bOp(this.__eq.bind(this), line, a)
     }
     /*
     * @bge@
+    * [en] Jump to op3 if op1 >= op2
+    * [ru] Переход на op3, если op1 >= op2
     */
     bge(a: string, b: string, line: string) {
         this.__bOp(this.__ge.bind(this), line, a, b)
     }
     /*
     * @bgez@
+    * [en] Jump to op2 if op1 >= 0
+    * [ru] Переход на op2, если op1 >= 0
     */
     bgez(a: string, line: string) {
         this.__bOp(this.__ge.bind(this), line, a)
     }
     /*
     * @bgt@
+    * [en] Jump to op3 if op1 > op2
+    * [ru] Переход на op3, если op1 > op2
     */
     bgt(a: string, b: string, line: string) {
         this.__bOp(this.__gt.bind(this), line, a, b)
     }
     /*
     * @bgtz@
+    * [en] Jump to op2 if op1 > 0
+    * [ru] Переход на op2, если op1 > 0
     */
     bgtz(a: string, line: string) {
         this.__bOp(this.__gt.bind(this), line, a)
     }
     /*
     * @ble@
+    * [en] Jump to op3 if op1 <= op2
+    * [ru] Переход на op3, если op1 <= op2
     */
     ble(a: string, b: string, line: string) {
         this.__bOp(this.__le.bind(this), line, a, b)
     }
     /*
     * @blez@
+    * [en] Jump to op2 if op1 <= 0
+    * [ru] Переход на op2, если op1 <= 0
     */
     blez(a: string, line: string) {
         this.__bOp(this.__le.bind(this), line, a)
     }
     /*
     * @blt@
+    * [en] Jump to op3 if op1 < op2
+    * [ru] Переход на op3, если op1 < op2
     */
     blt(a: string, b: string, line: string) {
         this.__bOp(this.__lt.bind(this), line, a, b)
     }
     /*
     * @bltz@
+    * [en] Jump to op2 if op1 < 0
+    * [ru] Переход на op2, если op1 < 0
     */
     bltz(a: string, line: string) {
         this.__bOp(this.__lt.bind(this), line, a)
     }
     /*
     * @bne@
+    * [en] Jump to op3 if op1 != op2
+    * [ru] Переход на op3, если op1 != op2
     */
     bne(a: string, b: string, line: string) {
         this.__bOp(this.__ne.bind(this), line, a, b)
     }
     /*
     * @bnez@
+    * [en] Jump to op2 if op1 != 0
+    * [ru] Переход на op2, если op1 != 0
     */
     bnez(a: string, line: string) {
         this.__bOp(this.__ne.bind(this), line, a)
     }
     /*
     * @bap@
+    * [en] Jump to op4 if op1 op2 with precision op3
+    * [ru] Переход на op4, если op1 op2 с точностью op3
     */
     bap(x: string, y: string, c: string, line: string) {
         this.__bOp(this.__ap.bind(this), line, x, y, c)
     }
     /*
     * @bapz@
+    * [en] Jump to op3 if op1 0 with precision op2
+    * [ru] Переход на op3, если op1 0 с точностью op2
     */
     bapz(x: string, y: string, line: string) {
         this.__bOp(this.__ap.bind(this), line, x, y)
     }
     /*
     * @bna@
+    * [en] Jump to op4 if op1 ~= op2 with precision op3
+    * [ru] Переход на op4, если op1 ~= op2 с точностью op3
     */
     bna(x: string, y: string, c: string, line: string) {
         this.__bOp(this.__na.bind(this), line, x, y, c)
     }
     /*
     * @bnaz@
+    * [en] Jump to op3 if op1 ~= 0 with precision op2
+    * [ru] Переход на op3, если op1 ~= 0 с точностью op2
     */
     bnaz(x: string, y: string, line: string) {
         this.__bOp(this.__na.bind(this), line, x, y)
     }
     /*
     * @bdse@
+    * [en] Jump to op2 if channel op1 is configured
+    * [ru] Переход на op2, если канал op1 настроен
     */
     bdse(d: string, line: string) {
         if (this.__dse(d))
@@ -826,6 +964,8 @@ export class InterpreterIc10 {
     }
     /*
     * @bdns@
+    * [en] Jump to op2 if op1 channel is not configured
+    * [ru] Переход на op2, если канал op1 не настроен
     */
     bdns(d: string, line: string) {
         if (this.__dns(d))
@@ -833,108 +973,144 @@ export class InterpreterIc10 {
     }
     /*
     * @bnan@
+    * [en] 
+    * [ru] Переход на op2, если op1 = nan
     */
     bnan(v: string, line: string) {
         this.__bOp(this.__nan.bind(this), line, v)
     }
     /*
     * @breq@
+    * [en] Relative jump to +op3 if op1 = op2
+    * [ru] Относительный переход на +op3, если op1 = op2
     */
     breq(a: string, b: string, offset: string) {
         this.__bROp(this.__eq.bind(this), offset, a, b)
     }
     /*
     * @breqz@
+    * [en] Relative jump to +op2 if op1 = 0
+    * [ru] Относительный переход на +op2, если op1 = 0
     */
     breqz(a: string, offset: string) {
         this.__bROp(this.__eq.bind(this), offset, a)
     }
     /*
     * @brge@
+    * [en] Relative jump to +op3 if op1 >= op2
+    * [ru] Относительный переход на +op3, если op1 >= op2
     */
     brge(a: string, b: string, offset: string) {
         this.__bROp(this.__ge.bind(this), offset, a)
     }
     /*
     * @brgez@
+    * [en] Relative jump to +op2 if op1 >= 0
+    * [ru] Относительный переход на +op2, если op1 >= 0
     */
     brgez(a: string, offset: string) {
         this.__bROp(this.__ge.bind(this), offset, a)
     }
     /*
     * @brgt@
+    * [en] Relative jump to +op3 if op1 > op2
+    * [ru] Относительный переход на +op3, если op1 > op2
     */
     brgt(a: string, b: string, offset: string) {
         this.__bROp(this.__gt.bind(this), offset, a, b)
     }
     /*
     * @brgtz@
+    * [en] Relative jump to +op2 if op1 > 0
+    * [ru] Относительный переход на +op2, если op1 > 0
     */
     brgtz(a: string, offset: string) {
         this.__bROp(this.__gt.bind(this), offset, a)
     }
     /*
     * @brle@
+    * [en] Relative jump to +op3 if op1 <= op2
+    * [ru] Относительный переход на +op3, если op1 <= op2
     */
     brle(a: string, b: string, offset: string) {
         this.__bROp(this.__le.bind(this), offset, a, b)
     }
     /*
     * @brlez@
+    * [en] Relative jump to +op2 if op1 <= 0
+    * [ru] Относительный переход на +op2, если op1 <= 0
     */
     brlez(a: string, offset: string) {
         this.__bROp(this.__le.bind(this), offset, a)
     }
     /*
     * @brlt@
+    * [en] Relative jump to +op3 if op1 < op2
+    * [ru] Относительный переход на +op3, если op1 < op2
     */
     brlt(a: string, b: string, offset: string) {
         this.__bROp(this.__lt.bind(this), offset, a, b)
     }
     /*
     * @brltz@
+    * [en] Relative jump to +op2 if op1 < 0
+    * [ru] Относительный переход на +op2, если op1 < 0
     */
     brltz(a: string, offset: string) {
         this.__bROp(this.__lt.bind(this), offset, a)
     }
     /*
     * @brne@
+    * [en] Relative jump to +op3 if op1 != op2
+    * [ru] Относительный переход на +op3, если op1 != op2
     */
     brne(a: string, b: string, offset: string) {
         this.__bROp(this.__ne.bind(this), offset, a, b)
     }
     /*
     * @brnez@
+    * [en] Relative jump to +op2 if op1 != 0
+    * [ru] Относительный переход на +op2, если op1 != 0
     */
     brnez(a: string, offset: string) {
         this.__bROp(this.__ne.bind(this), offset, a)
     }
     /*
     * @brap@
+    * [en] Relative jump to +op4 if op1 op2 with precision op3
+    * [ru] Относительный переход на +op4, если op1 op2 с точностью op3
     */
     brap(x: string, y: string, c: string, offset: string) {
         this.__bROp(this.__ap.bind(this), offset, x, y, c)
     }
     /*
     * @brapz@
+    * [en] Relative jump to +op3 if op1 0 with precision op2
+    * [ru] Относительный переход на +op3, если op1 0 с точностью op2
     */
     brapz(x: string, y: string, offset: string) {
         this.__bROp(this.__ap.bind(this), offset, x, y)
     }
     /*
     * @brna@
+    * [en] Relative jump to +op4 if op1 op2 with precision op3
+    * [ru] Относительный переход на +op4, если op1 op2 с точностью op3
     */
     brna(x: string, y: string, c: string, offset: string) {
         this.__bROp(this.__na.bind(this), offset, x, y, c)
     }
     /*
     * @brnaz@
+    * [en] Relative jump to +op3 if op1 0 with precision op2
+    * [ru] Относительный переход на +op3, если op1 0 с точностью op2
     */
     brnaz(x: string, y: string, offset: string) {
         this.__bROp(this.__ap.bind(this), offset, x, y)
     }
     /*
     * @brdse@
+    * [en] Relative jump to +op2 if channel op1 is configured
+    * [ru] Относительный переход на +op2, если канал op1 настроен
     */
     brdse(d: string, offset: string) {
         if (this.__dse(d)) {
@@ -943,6 +1119,8 @@ export class InterpreterIc10 {
     }
     /*
     * @brdns@
+    * [en] Relative jump to +op2 if channel op1 is not configured
+    * [ru] Относительный переход на +op2, если канал op1 не настроен
     */
     brdns(d: string, offset: string) {
         if (this.__dns(d)) {
@@ -951,108 +1129,144 @@ export class InterpreterIc10 {
     }
     /*
     * @brnan@
+    * [en] 
+    * [ru] Относительный переход на +op2, если op1 = nan
     */
     brnan(v: string, offset: string) {
         this.__bROp(this.__nan.bind(this), offset, v)
     }
     /*
     * @beqal@
+    * [en] Jump to op3 if op1 = op2, writing the address of the next line to ra
+    * [ru] Переход на op3, если op1 = op2 с записью адреса следующей строки в ra
     */
     beqal(a: string, b: string, line: string) {
         this.__bCOp(this.__eq.bind(this), line, a, b)
     }
     /*
     * @beqzal@
+    * [en] Jump to op2 if op1 = 0, writing the address of the next line to ra
+    * [ru] Переход на op2, если op1 = 0 с записью адреса следующей строки в ra
     */
     beqzal(a: string, line: string) {
         this.__bCOp(this.__eq.bind(this), line, a)
     }
     /*
     * @bgeal@
+    * [en] Jump to op3 if op1 >= op2, writing next line address to ra
+    * [ru] Переход на op3, если op1 >= op2 с записью адреса следующей строки в ra
     */
     bgeal(a: string, b: string, line: string) {
         this.__bCOp(this.__ge.bind(this), line, a, b)
     }
     /*
     * @bgezal@
+    * [en] Jump to op2 if op1 >= 0, writing next line address to ra
+    * [ru] Переход на op2, если op1 >= 0 с записью адреса следующей строки в ra
     */
     bgezal(a: string, line: string) {
         this.__bCOp(this.__ge.bind(this), line, a)
     }
     /*
     * @bgtal@
+    * [en] Jump to op3 if op1 > op2, writing next line address to ra
+    * [ru] Переход на op3, если op1 > op2 с записью адреса следующей строки в ra
     */
     bgtal(a: string, b: string, line: string) {
         this.__bCOp(this.__gt.bind(this), line, a, b)
     }
     /*
     * @bgtzal@
+    * [en] Jump to op2 if op1 > 0, writing the address of the next line to ra
+    * [ru] Переход на op2, если op1 > 0 с записью адреса следующей строки в ra
     */
     bgtzal(a: string, line: string) {
         this.__bCOp(this.__gt.bind(this), line, a)
     }
     /*
     * @bleal@
+    * [en] Jump to op3 if op1 <= op2, writing next line address to ra
+    * [ru] Переход на op3, если op1 <= op2 с записью адреса следующей строки в ra
     */
     bleal(a: string, b: string, line: string) {
         this.__bCOp(this.__le.bind(this), line, a, b)
     }
     /*
     * @blezal@
+    * [en] Jump to op2 if op1 <= 0, writing the address of the next line to ra
+    * [ru] Переход на op2, если op1 <= 0 с записью адреса следующей строки в ra
     */
     blezal(a: string, line: string) {
         this.__bCOp(this.__le.bind(this), line, a)
     }
     /*
     * @bltal@
+    * [en] Jump to op3 if op1 < op2, writing the address of the next line to ra
+    * [ru] Переход на op3, если op1 < op2 с записью адреса следующей строки в ra
     */
     bltal(a: string, b: string, line: string) {
         this.__bCOp(this.__lt.bind(this), line, a, b)
     }
     /*
     * @bltzal@
+    * [en] Jump to op2 if op1 < 0, writing the address of the next line to ra
+    * [ru] Переход на op2, если op1 < 0 с записью адреса следующей строки в ra
     */
     bltzal(a: string, line: string) {
         this.__bCOp(this.__lt.bind(this), line, a)
     }
     /*
     * @bneal@
+    * [en] Jump to op3 if op1 != op2, writing next line address to ra
+    * [ru] Переход на op3, если op1 != op2 с записью адреса следующей строки в ra
     */
     bneal(a: string, b: string, line: string) {
         this.__bCOp(this.__ne.bind(this), line, a, b)
     }
     /*
     * @bnezal@
+    * [en] Jump to op2 if op1 != 0, writing the address of the next line to ra
+    * [ru] Переход на op2, если op1 != 0 с записью адреса следующей строки в ra
     */
     bnezal(a: string, line: string) {
         this.__bCOp(this.__ne.bind(this), line, a)
     }
     /*
     * @bapal@
+    * [en] Jump to op4 if op1 op2 with precision op3, writing the address of the next line to ra
+    * [ru] Переход на op4, если op1 op2 с точностью op3 с записью адреса следующей строки в ra
     */
     bapal(x: string, y: string, c: string, line: string) {
         this.__bCOp(this.__ap.bind(this), line, x, y, c)
     }
     /*
     * @bapzal@
+    * [en] Jump to op3 if op1 0 with precision op2, writing the address of the next line to ra
+    * [ru] Переход на op3, если op1 0 с точностью op2 с записью адреса следующей строки в ra
     */
     bapzal(x: string, y: string, line: string) {
         this.__bCOp(this.__ap.bind(this), line, x, y)
     }
     /*
     * @bnaal@
+    * [en] Jump to op4 if op1 ~= op2 with precision op3, writing next line address to ra
+    * [ru] Переход на op4, если op1 ~= op2 с точностью op3 с записью адреса следующей строки в ra
     */
     bnaal(x: string, y: string, c: string, line: string) {
         this.__bCOp(this.__na.bind(this), line, x, y, c)
     }
     /*
     * @bnazal@
+    * [en] Jump to op3 if op1 ~= 0 with precision op2, writing next line address to ra
+    * [ru] Переход на op3, если op1 ~= 0 с точностью op2 с записью адреса следующей строки в ra
     */
     bnazal(x: string, y: string, line: string) {
         this.__bCOp(this.__na.bind(this), line, x, y)
     }
     /*
     * @bdseal@
+    * [en] Jump to op2 if channel op1 is configured with next line address written to ra
+    * [ru] Переход на op2, если канал op1 настроен с записью адреса следующей строки в ra
     */
     bdseal(d: string, line: string) {
         if (this.__dse(d)) {
@@ -1061,6 +1275,8 @@ export class InterpreterIc10 {
     }
     /*
     * @bdnsal@
+    * [en] Jump to op2 if channel op1 is not configured, writing next line address to ra
+    * [ru] Переход на op2, если канал op1 не настроен с записью адреса следующей строки в ra
     */
     bdnsal(d: string, line: string) {
         if (this.__dns(d)) {
@@ -1069,18 +1285,24 @@ export class InterpreterIc10 {
     }
     /*
     * @push@
+    * [en] Push op1 onto the stack
+    * [ru] Положить op1 на стек
     */
     push(a: string) {
         this.memory.stack.push(this.memory.getValue(a))
     }
     /*
     * @pop@
+    * [en] Pop a value from the stack and write to op1
+    * [ru] Снять значение со стека и записать в op1
     */
     pop(register: string) {
         this.memory.getRegister(register).value = this.memory.stack.pop()
     }
     /*
     * @peek@
+    * [en] Push the top value off the stack into op1 without moving the stack
+    * [ru] Записать в op1 верхнее значение со стека не двигая стек
     */
     peek(register: string) {
         this.memory.getRegister(register).value = this.memory.stack.peek()
@@ -1169,6 +1391,8 @@ export class InterpreterIc10 {
     }
     /*
     * @lb@
+    * [en] Batch read in op1 from all devices with hash op2 of parameter op3 in op4 mode
+    * [ru] Пакетное чтение в op1 из всех устройств с хешем op2 параметра op3 в режиме op4
     */
     lb(register: string, deviceHash: string, property: string, mode: string) {
         const hash = this.memory.getValue(deviceHash)
@@ -1184,6 +1408,8 @@ export class InterpreterIc10 {
     }
     /*
     * @lr@
+    * [en] Read reagent value op4 in op3 mode from port op2
+    * [ru] Чтение значения реагента op4 в режиме op3 из порта op2
     */
     lr(register: string, device: string, mode: string, property: string) {
         //TODO: well, we don't have reagents so we need to do it later
@@ -1191,6 +1417,8 @@ export class InterpreterIc10 {
     }
     /*
     * @sb@
+    * [en] Batch write to all devices with hash op1 to parameter op2 of value op3
+    * [ru] Пакетная запись во все устройства с хешем op1 в параметр op2 значения op3
     */
     sb(deviceHash: string, property: string, value: string) {
         const hash = this.memory.getValue(deviceHash)
@@ -1201,6 +1429,8 @@ export class InterpreterIc10 {
     }
     /*
     * @lbn@
+    * [en] 
+    * [ru] Чтение c устройства по хеш op2 и HASH("name") op3 параметра op4 режимом чтение op5 в регистр op1
     */
     lbn(targetRegister: string, deviceHash: string, nameHash: string, property: string, batchMode: string) {
         const hash = this.memory.getValue(deviceHash);
@@ -1215,6 +1445,8 @@ export class InterpreterIc10 {
     }
     /*
     * @sbn@
+    * [en] 
+    * [ru] Записывает в устройство хеш op1, хеш имя HASH("name") op2, параметр op3 значение op4 
     */
     sbn(deviceHash: string, nameHash: string, property: string, value: string) {
         const hash = this.memory.getValue(deviceHash)
@@ -1226,6 +1458,8 @@ export class InterpreterIc10 {
     }
     /*
     * @lbs@
+    * [en] 
+    * [ru] Пакетное чтение слотов.
     */
     lbs(register: string, deviceHash: string, slotIndex: string, property: string, batchMode: string) {
         const hash = this.memory.getValue(deviceHash)
@@ -1238,6 +1472,8 @@ export class InterpreterIc10 {
     }
     /*
     * @lbns@
+    * [en] 
+    * [ru] Чтение из устройства хеш op2, имя устройства HASH("name") op3, слота op4, параметра op5, способом op6 в регистр op1
     */
     lbns(register: string, deviceHash: string, nameHash: string, slotIndex: string, property: string, batchMode: string) {
         const hash = this.memory.getValue(deviceHash)
@@ -1251,6 +1487,8 @@ export class InterpreterIc10 {
     }
     /*
     * @ss@
+    * [en] 
+    * [ru] Запись в слот в устройства потр ор1, слот ор2, параметр ор3, значения ор4
     */
     ss(device: string, slotIndex: string, property: string, value: string) {
         const d = this.memory.getDevice(device)
@@ -1273,24 +1511,32 @@ export class InterpreterIc10 {
     }
     /*
     * @and@
+    * [en] Logical AND, one if both op2 and op3 are true, zero otherwise
+    * [ru] Логическое И, единица, если и op2 и op3 истинны, ноль в противном случае
     */
     and(register: string, a: string, b: string) {
         this.__op((a, b) => a && b, register, a, b)
     }
     /*
     * @or@
+    * [en] Logical OR, zero if both op2 and op3 are false, one otherwise
+    * [ru] Логическое ИЛИ, ноль, если и op2 и op3 ложны, единица в противном случае
     */
     or(register: string, a: string, b: string) {
         this.__op((a, b) => a || b, register, a, b)
     }
     /*
     * @xor@
+    * [en] XOR, one if one and only one of op2 and op3 is true, zero otherwise
+    * [ru] Исключающее ИЛИ, единица, если одно и только одно из op2 и op3 истинно, ноль в противном случае
     */
     xor(register: string, a: string, b: string) {
         this.__op((a, b) => a ^ b, register, a, b)
     }
     /*
     * @nor@
+    * [en] Inverse OR, one if both op2 and op3 are false, zero otherwise
+    * [ru] Инверсное ИЛИ, единица, если и op2 и op3 ложны, ноль в противном случае
     */
     nor(register: string, a: string, b: string) {
         this.__op((a, b) => Number(!(a || b)), register, a, b)

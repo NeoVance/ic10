@@ -1,3 +1,5 @@
+import InterpreterIc10 from "./main";
+
 export type TypeSlotParameter = 'ChargeRatio'|'Class'|'Damage'|'Efficiency'|'Growth'|'Health'|'Mature'|'MaxQuantity'|'OccupantHash'|'Occupied'|'PrefabHash'|'Quantity'|'Seeding'|'SortingClass'
 export function isSlotParameter(val: string): val is TypeSlotParameter {return ['ChargeRatio','Class','Damage','Efficiency','Growth','Health','Mature','MaxQuantity','OccupantHash','Occupied','PrefabHash','Quantity','Seeding','SortingClass'].includes(val)}
 export type TypeDeviceParameter = 'Activate'|'Bpm'|'Charge'|'ClearMemory'|'CollectableGoods'|'Color'|'Combustion'|'CombustionInput'|'CombustionLimiter'|'CombustionOutput'|'CombustionOutput2'|'CompletionRatio'|'ElevatorLevel'|'ElevatorSpeed'|'Error'|'ExportCount'|'Filtration'|'ForceWrite'|'Fuel'|'HASH("name")'|'Harvest'|'Horizontal'|'Idle'|'ImportCount'|'InterrogationProgress'|'Lock'|'MineablesInQueue'|'MineablesInVicinity'|'MinimumWattsToContact'|'Mode'|'NextWeatherEventTime'|'On'|'Open'|'Output'|'Plant'|'PositionX'|'PositionY'|'PositionZ'|'Power'|'PowerActual'|'PowerGeneration'|'PowerPotential'|'PowerRequired'|'Pressure'|'PressureAir'|'PressureExternal'|'PressureInput'|'PressureInternal'|'PressureOutput'|'PressureOutput2'|'PressureWaste'|'Ratio'|'RatioCarbonDioxide'|'RatioCarbonDioxideInput'|'RatioCarbonDioxideOutput'|'RatioCarbonDioxideOutput2'|'RatioNitrogen'|'RatioNitrogenInput'|'RatioNitrogenOutput'|'RatioNitrogenOutput2'|'RatioNitrousOxide'|'RatioNitrousOxideInput'|'RatioNitrousOxideOutput'|'RatioNitrousOxideOutput2'|'RatioOxygen'|'RatioOxygenInput'|'RatioOxygenOutput'|'RatioOxygenOutput2'|'RatioPollutant'|'RatioPollutantInput'|'RatioPollutantOutput'|'RatioPollutantOutput2'|'RatioVolatiles'|'RatioVolatilesInput'|'RatioVolatilesOutput'|'RatioVolatilesOutput2'|'RatioWater'|'RatioWaterInput'|'RatioWaterOutput'|'RatioWaterOutput2'|'Reagents'|'RecipeHash'|'RequiredPower'|'ReturnFuelCost'|'Rpm'|'Setting'|'SignalID'|'SignalStrength'|'SizeX'|'SizeZ'|'SolarAngle'|'SolarIrradiance'|'Stress'|'TargetPadIndex'|'TargetX'|'TargetY'|'TargetZ'|'Temperature'|'TemperatureExternal'|'TemperatureInput'|'TemperatureOutput'|'TemperatureOutput2'|'TemperatureSetting'|'Throttle'|'Time'|'TotalMoles'|'TotalMolesInput'|'TotalMolesOutput'|'TotalMolesOutput2'|'VelocityMagnitude'|'VelocityRelativeX'|'VelocityRelativeY'|'VelocityRelativeZ'|'Vertical'|'Volume'|'WattsReachingContact'
@@ -12,3 +14,13 @@ export type TypeBM = 'Average'|'Maximum'|'Minimum'|'Sum'
 export function isBM(val: string): val is TypeBM {return ['Average','Maximum','Minimum','Sum'].includes(val)}
 export type TypeRM = 'Contents'|'Recipe'|'Required'
 export function isRM(val: string): val is TypeRM {return ['Contents','Recipe','Required'].includes(val)}
+
+
+declare global{
+    interface InterpreterIc10{
+        /*
+        * привет мир
+        */
+        alias:()=>void
+    }
+}
