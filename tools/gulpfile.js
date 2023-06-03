@@ -93,7 +93,7 @@ gulp.task("generate-types", async function () {
 
 
 gulp.task("generate-jsDoc", async function () {
-    // process.exit(1);
+    process.exit(1);
     const IC10Data = await getData()
     let mainTs = fs.readFileSync("../src/main.ts").toString()
     const lines = [];
@@ -104,8 +104,8 @@ gulp.task("generate-jsDoc", async function () {
             case 'Function':
                 mainTs = mainTs.replace(`    * @${languageKey}@`,
                     `    * @${languageKey}@\n` +
-                              `    * [en] ${dataEn.description.text.replace('\n', ' ')}\n` +
-                              `    * [ru] ${dataRu.description.text.replace('\n', ' ')}`
+                              `    * [en] ${dataEn.description.text.replace('\n', ' ').trim()}\n` +
+                              `    * [ru] ${dataRu.description.text.replace('\n', ' ').trim()}`
                 )
                 break;
             default :
