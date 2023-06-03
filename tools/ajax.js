@@ -4,7 +4,7 @@ const axios = require("axios")
 async function getData() {
     const Languages = {
         "en": await getLang("en"),
-        "ru": await getLang("eu"),
+        "ru": await getLang("ru"),
     }
     async function getLang(lang = "en") {
         const r = await axios("https://icx.traineratwot.site/GetIc10?lang=" + lang)
