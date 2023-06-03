@@ -88,32 +88,7 @@ gulp.task("generate-types", async function () {
 
 
     fs.writeFileSync("../src/icTypes.ts", lines.join("\n"))
-    // exec("cd .. && tsc")
-})
-
-
-gulp.task("generate-jsDoc", async function () {
-    process.exit(1);
-    const IC10Data = await getData()
-    let mainTs = fs.readFileSync("../src/main.ts").toString()
-    const lines = [];
-    for (const languageKey in IC10Data.Languages["en"]) {
-        const dataRu = IC10Data.Languages["ru"][languageKey]
-        const dataEn = IC10Data.Languages["en"][languageKey]
-        switch (dataEn['type']) {
-            case 'Function':
-                mainTs = mainTs.replace(`    * @${languageKey}@`,
-                    `    * @${languageKey}@\n` +
-                              `    * [en] ${dataEn.description.text.replace('\n', ' ')}\n` +
-                              `    * [ru] ${dataRu.description.text.replace('\n', ' ')}`
-                )
-                break;
-            default :
-                break;
-        }
-    }
-    fs.writeFileSync("../src/main.ts", mainTs)
-
+    exec("cd .. && tsc")
 })
 
 
