@@ -277,14 +277,18 @@ export class InterpreterIc10 {
     __issetLabel(x: string) {
         return x in this.labels
     }
-
+    /*
+    * @define@
+    */
     define(alias: string, value: number | string) {
 		if(isChannel(alias.toLowerCase()) || isSlotParameter(alias.toLowerCase()) || isDeviceParameter(alias.toLowerCase()) || isConst(alias.toLowerCase())){
 			throw Execution.Ic10DiagnosticError(this.position, 'Incorrect constant. Is system keyworld', alias)
 		}
         this.memory.define(alias, value)
     }
-
+    /*
+    * @alias@
+    */
     alias(alias: string , target: string) {
 		if(isChannel(alias.toLowerCase()) || isSlotParameter(alias.toLowerCase()) || isDeviceParameter(alias.toLowerCase()) || isConst(alias.toLowerCase())){
 			throw Execution.Ic10DiagnosticError(this.position, 'Incorrect alias. Is system keyworld', alias)
@@ -299,7 +303,9 @@ export class InterpreterIc10 {
 
         r.value = op(...inputs)
     }
-
+    /*
+    * @move@
+    */
     move(register: string, value: string) {
         this.__op(v => v, register, value)
     }
@@ -307,110 +313,164 @@ export class InterpreterIc10 {
     __move(register: string, value: string) {
         this.move(register, value)
     }
-
+    /*
+    * @add@
+    */
     add(register: string, a: string, b: string) {
         this.__op((a, b) => a + b, register, a, b)
     }
-
+    /*
+    * @sub@
+    */
     sub(register: string, a: string, b: string) {
         this.__op((a, b) => a - b, register, a, b)
     }
-
+    /*
+    * @mul@
+    */
     mul(register: string, a: string, b: string) {
         this.__op((a, b) => a * b, register, a, b)
     }
-
+    /*
+    * @div@
+    */
     div(register: string, a: string, b: string) {
         this.__op((a, b) => Number(a / b) || 0, register, a, b)
     }
-
+    /*
+    * @mod@
+    */
     mod(register: string, a: string, b: string) {
         this.__op((a, b) => a % b, register, a, b)
     }
-
+    /*
+    * @sqrt@
+    */
     sqrt(register: string, v: string) {
         this.__op(Math.sqrt, register, v)
     }
-
+    /*
+    * @round@
+    */
     round(register: string, v: string) {
         this.__op(Math.round, register, v)
     }
-
+    /*
+    * @trunc@
+    */
     trunc(register: string, v: string) {
         this.__op(Math.trunc, register, v)
     }
-
+    /*
+    * @ceil@
+    */
     ceil(register: string, v: string) {
         this.__op(Math.ceil, register, v)
     }
-
+    /*
+    * @floor@
+    */
     floor(register: string, v: string) {
         this.__op(Math.floor, register, v)
     }
-
+    /*
+    * @max@
+    */
     max(register: string, a: string, b: string) {
         this.__op(Math.max, register, a, b)
     }
-
+    /*
+    * @minx@
+    */
     minx(register: string, a: string, b: string) {
         this.__op(Math.min, register, a, b)
     }
-
+    /*
+    * @abs@
+    */
     abs(register: string, v: string) {
         this.__op(Math.abs, register, v)
     }
-
+    /*
+    * @log@
+    */
     log(register: string, v: string) {
         this.__op(Math.log, register, v)
     }
-
+    /*
+    * @exp@
+    */
     exp(register: string, v: string) {
         this.__op(Math.exp, register, v)
     }
-
+    /*
+    * @rand@
+    */
     rand(register: string, v: string) {
         this.__op(_ => Math.random(), register, v)
     }
-
+    /*
+    * @sin@
+    */
     sin(register: string, v: string) {
         this.__op(Math.sin, register, v)
     }
-
+    /*
+    * @cos@
+    */
     cos(register: string, v: string) {
         this.__op(Math.cos, register, v)
     }
-
+    /*
+    * @tan@
+    */
     tan(register: string, v: string) {
         this.__op(Math.tan, register, v)
     }
-
+    /*
+    * @asin@
+    */
     asin(register: string, v: string) {
         this.__op(Math.asin, register, v)
     }
-
+    /*
+    * @acos@
+    */
     acos(register: string, v: string) {
         this.__op(Math.acos, register, v)
     }
-
+    /*
+    * @atan@
+    */
     atan(register: string, v: string) {
         this.__op(Math.atan, register, v)
     }
-
+    /*
+    * @atan2@
+    */
     atan2(register: string, a: string, b: string) {
         this.__op(Math.atan2, register, a, b)
     }
-
+    /*
+    * @yield@
+    */
     yield() {
     }
-
+    /*
+    * @sleep@
+    */
     sleep(s: number) {
         //TODO: yield for s * x ticks
     }
-
+    /*
+    * @select@
+    */
     select(register: string, a: string, b: string, c: string) {
         this.__op((a, b, c) => a ? b : c, register, a, b, c)
     }
-
+    /*
+    * @hcf@
+    */
     hcf() {
         console.log("Die Mother Fucker Die!!!!!")
     }
@@ -435,11 +495,15 @@ export class InterpreterIc10 {
 
         return line
     }
-
+    /*
+    * @j@
+    */
     j(target: string) {
         this.__jump(this.__getJumpTarget(target))
     }
-
+    /*
+    * @jr@
+    */
     jr(offset: string) {
         const d = this.memory.getValue(offset)
 
@@ -448,7 +512,9 @@ export class InterpreterIc10 {
 
         this.__jump(this.position + d - 1)
     }
-
+    /*
+    * @jal@
+    */
     jal(target: string) {
         this.__call(this.__getJumpTarget(target))
     }
@@ -508,83 +574,123 @@ export class InterpreterIc10 {
 
         r.value = op(...inputs) ? 1 : 0
     }
-
+    /*
+    * @seq@
+    */
     seq(register: string, a: string, b: string) {
         this.__sOp(this.__eq.bind(this), register, a, b)
     }
-
+    /*
+    * @seqz@
+    */
     seqz(register: string, a: string) {
         this.__sOp(this.__eq.bind(this), register, a)
     }
-
+    /*
+    * @sge@
+    */
     sge(register: string, a: string, b: string) {
         this.__sOp(this.__ge.bind(this), register, a, b)
     }
-
+    /*
+    * @sgez@
+    */
     sgez(register: string, a: string) {
         this.__sOp(this.__ge.bind(this), register, a)
     }
-
+    /*
+    * @sgt@
+    */
     sgt(register: string, a: string, b: string) {
         this.__sOp(this.__gt.bind(this), register, a, b)
     }
-
+    /*
+    * @sgtz@
+    */
     sgtz(register: string, a: string) {
         this.__sOp(this.__gt.bind(this), register, a)
     }
-
+    /*
+    * @sle@
+    */
     sle(register: string, a: string, b: string) {
         this.__sOp(this.__le.bind(this), register, a, b)
     }
-
+    /*
+    * @slez@
+    */
     slez(register: string, a: string) {
         this.__sOp(this.__le.bind(this), register, a)
     }
-
+    /*
+    * @slt@
+    */
     slt(register: string, a: string, b: string) {
         this.__sOp(this.__lt.bind(this), register, a, b)
     }
-
+    /*
+    * @sltz@
+    */
     sltz(register: string, a: string) {
         this.__sOp(this.__lt.bind(this), register, a)
     }
-
+    /*
+    * @sne@
+    */
     sne(register: string, a: string, b: string) {
         this.__sOp(this.__ne.bind(this), register, a, b)
     }
-
+    /*
+    * @snez@
+    */
     snez(register: string, a: string) {
         this.__sOp(this.__ne.bind(this), register, a)
     }
-
+    /*
+    * @sap@
+    */
     sap(register: string, x: string, y: string, c: string) {
         this.__sOp(this.__ap.bind(this), register, x, y, c)
     }
-
+    /*
+    * @sapz@
+    */
     sapz(register: string, x: string, y: string) {
         this.__sOp(this.__ap.bind(this), register, x, y)
     }
-
+    /*
+    * @sna@
+    */
     sna(register: string, x: string, y: string, c: string) {
         this.__sOp(this.__na.bind(this), register, x, y, c)
     }
-
+    /*
+    * @snaz@
+    */
     snaz(register: string, x: string, y: string) {
         this.__sOp(this.__na.bind(this), register, x, y)
     }
-
+    /*
+    * @sdse@
+    */
     sdse(register: string, d: string) {
         this.memory.getRegister(register).value = Number(this.__dse(d))
     }
-
+    /*
+    * @sdns@
+    */
     sdns(register: string, d: string) {
         this.memory.getRegister(register).value = Number(this.__dns(d))
     }
-
+    /*
+    * @snan@
+    */
     snan(register: string, v: string) {
         this.__sOp(this.__nan.bind(this), register, v)
     }
-
+    /*
+    * @snanz@
+    */
     snanz(register: string, v: string) {
         this.__sOp(this.__nanz.bind(this), register, v)
     }
@@ -615,249 +721,367 @@ export class InterpreterIc10 {
 
         this.jal(line)
     }
-
+    /*
+    * @beq@
+    */
     beq(a: string, b: string, line: string) {
         this.__bOp(this.__eq.bind(this), line, a, b)
     }
-
+    /*
+    * @beqz@
+    */
     beqz(a: string, line: string) {
         this.__bOp(this.__eq.bind(this), line, a)
     }
-
+    /*
+    * @bge@
+    */
     bge(a: string, b: string, line: string) {
         this.__bOp(this.__ge.bind(this), line, a, b)
     }
-
+    /*
+    * @bgez@
+    */
     bgez(a: string, line: string) {
         this.__bOp(this.__ge.bind(this), line, a)
     }
-
+    /*
+    * @bgt@
+    */
     bgt(a: string, b: string, line: string) {
         this.__bOp(this.__gt.bind(this), line, a, b)
     }
-
+    /*
+    * @bgtz@
+    */
     bgtz(a: string, line: string) {
         this.__bOp(this.__gt.bind(this), line, a)
     }
-
+    /*
+    * @ble@
+    */
     ble(a: string, b: string, line: string) {
         this.__bOp(this.__le.bind(this), line, a, b)
     }
-
+    /*
+    * @blez@
+    */
     blez(a: string, line: string) {
         this.__bOp(this.__le.bind(this), line, a)
     }
-
+    /*
+    * @blt@
+    */
     blt(a: string, b: string, line: string) {
         this.__bOp(this.__lt.bind(this), line, a, b)
     }
-
+    /*
+    * @bltz@
+    */
     bltz(a: string, line: string) {
         this.__bOp(this.__lt.bind(this), line, a)
     }
-
+    /*
+    * @bne@
+    */
     bne(a: string, b: string, line: string) {
         this.__bOp(this.__ne.bind(this), line, a, b)
     }
-
+    /*
+    * @bnez@
+    */
     bnez(a: string, line: string) {
         this.__bOp(this.__ne.bind(this), line, a)
     }
-
+    /*
+    * @bap@
+    */
     bap(x: string, y: string, c: string, line: string) {
         this.__bOp(this.__ap.bind(this), line, x, y, c)
     }
-
+    /*
+    * @bapz@
+    */
     bapz(x: string, y: string, line: string) {
         this.__bOp(this.__ap.bind(this), line, x, y)
     }
-
+    /*
+    * @bna@
+    */
     bna(x: string, y: string, c: string, line: string) {
         this.__bOp(this.__na.bind(this), line, x, y, c)
     }
-
+    /*
+    * @bnaz@
+    */
     bnaz(x: string, y: string, line: string) {
         this.__bOp(this.__na.bind(this), line, x, y)
     }
-
+    /*
+    * @bdse@
+    */
     bdse(d: string, line: string) {
         if (this.__dse(d))
             this.j(line)
     }
-
+    /*
+    * @bdns@
+    */
     bdns(d: string, line: string) {
         if (this.__dns(d))
             this.j(line)
     }
-
+    /*
+    * @bnan@
+    */
     bnan(v: string, line: string) {
         this.__bOp(this.__nan.bind(this), line, v)
     }
-
+    /*
+    * @breq@
+    */
     breq(a: string, b: string, offset: string) {
         this.__bROp(this.__eq.bind(this), offset, a, b)
     }
-
+    /*
+    * @breqz@
+    */
     breqz(a: string, offset: string) {
         this.__bROp(this.__eq.bind(this), offset, a)
     }
-
+    /*
+    * @brge@
+    */
     brge(a: string, b: string, offset: string) {
         this.__bROp(this.__ge.bind(this), offset, a)
     }
-
+    /*
+    * @brgez@
+    */
     brgez(a: string, offset: string) {
         this.__bROp(this.__ge.bind(this), offset, a)
     }
-
+    /*
+    * @brgt@
+    */
     brgt(a: string, b: string, offset: string) {
         this.__bROp(this.__gt.bind(this), offset, a, b)
     }
-
+    /*
+    * @brgtz@
+    */
     brgtz(a: string, offset: string) {
         this.__bROp(this.__gt.bind(this), offset, a)
     }
-
+    /*
+    * @brle@
+    */
     brle(a: string, b: string, offset: string) {
         this.__bROp(this.__le.bind(this), offset, a, b)
     }
-
+    /*
+    * @brlez@
+    */
     brlez(a: string, offset: string) {
         this.__bROp(this.__le.bind(this), offset, a)
     }
-
+    /*
+    * @brlt@
+    */
     brlt(a: string, b: string, offset: string) {
         this.__bROp(this.__lt.bind(this), offset, a, b)
     }
-
+    /*
+    * @brltz@
+    */
     brltz(a: string, offset: string) {
         this.__bROp(this.__lt.bind(this), offset, a)
     }
-
+    /*
+    * @brne@
+    */
     brne(a: string, b: string, offset: string) {
         this.__bROp(this.__ne.bind(this), offset, a, b)
     }
-
+    /*
+    * @brnez@
+    */
     brnez(a: string, offset: string) {
         this.__bROp(this.__ne.bind(this), offset, a)
     }
-
+    /*
+    * @brap@
+    */
     brap(x: string, y: string, c: string, offset: string) {
         this.__bROp(this.__ap.bind(this), offset, x, y, c)
     }
-
+    /*
+    * @brapz@
+    */
     brapz(x: string, y: string, offset: string) {
         this.__bROp(this.__ap.bind(this), offset, x, y)
     }
-
+    /*
+    * @brna@
+    */
     brna(x: string, y: string, c: string, offset: string) {
         this.__bROp(this.__na.bind(this), offset, x, y, c)
     }
-
+    /*
+    * @brnaz@
+    */
     brnaz(x: string, y: string, offset: string) {
         this.__bROp(this.__ap.bind(this), offset, x, y)
     }
-
+    /*
+    * @brdse@
+    */
     brdse(d: string, offset: string) {
         if (this.__dse(d)) {
             this.jr(offset)
         }
     }
-
+    /*
+    * @brdns@
+    */
     brdns(d: string, offset: string) {
         if (this.__dns(d)) {
             this.jr(offset)
         }
     }
-
+    /*
+    * @brnan@
+    */
     brnan(v: string, offset: string) {
         this.__bROp(this.__nan.bind(this), offset, v)
     }
-
+    /*
+    * @beqal@
+    */
     beqal(a: string, b: string, line: string) {
         this.__bCOp(this.__eq.bind(this), line, a, b)
     }
-
+    /*
+    * @beqzal@
+    */
     beqzal(a: string, line: string) {
         this.__bCOp(this.__eq.bind(this), line, a)
     }
-
+    /*
+    * @bgeal@
+    */
     bgeal(a: string, b: string, line: string) {
         this.__bCOp(this.__ge.bind(this), line, a, b)
     }
-
+    /*
+    * @bgezal@
+    */
     bgezal(a: string, line: string) {
         this.__bCOp(this.__ge.bind(this), line, a)
     }
-
+    /*
+    * @bgtal@
+    */
     bgtal(a: string, b: string, line: string) {
         this.__bCOp(this.__gt.bind(this), line, a, b)
     }
-
+    /*
+    * @bgtzal@
+    */
     bgtzal(a: string, line: string) {
         this.__bCOp(this.__gt.bind(this), line, a)
     }
-
+    /*
+    * @bleal@
+    */
     bleal(a: string, b: string, line: string) {
         this.__bCOp(this.__le.bind(this), line, a, b)
     }
-
+    /*
+    * @blezal@
+    */
     blezal(a: string, line: string) {
         this.__bCOp(this.__le.bind(this), line, a)
     }
-
+    /*
+    * @bltal@
+    */
     bltal(a: string, b: string, line: string) {
         this.__bCOp(this.__lt.bind(this), line, a, b)
     }
-
+    /*
+    * @bltzal@
+    */
     bltzal(a: string, line: string) {
         this.__bCOp(this.__lt.bind(this), line, a)
     }
-
+    /*
+    * @bneal@
+    */
     bneal(a: string, b: string, line: string) {
         this.__bCOp(this.__ne.bind(this), line, a, b)
     }
-
+    /*
+    * @bnezal@
+    */
     bnezal(a: string, line: string) {
         this.__bCOp(this.__ne.bind(this), line, a)
     }
-
+    /*
+    * @bapal@
+    */
     bapal(x: string, y: string, c: string, line: string) {
         this.__bCOp(this.__ap.bind(this), line, x, y, c)
     }
-
+    /*
+    * @bapzal@
+    */
     bapzal(x: string, y: string, line: string) {
         this.__bCOp(this.__ap.bind(this), line, x, y)
     }
-
+    /*
+    * @bnaal@
+    */
     bnaal(x: string, y: string, c: string, line: string) {
         this.__bCOp(this.__na.bind(this), line, x, y, c)
     }
-
+    /*
+    * @bnazal@
+    */
     bnazal(x: string, y: string, line: string) {
         this.__bCOp(this.__na.bind(this), line, x, y)
     }
-
+    /*
+    * @bdseal@
+    */
     bdseal(d: string, line: string) {
         if (this.__dse(d)) {
             this.jal(line)
         }
     }
-
+    /*
+    * @bdnsal@
+    */
     bdnsal(d: string, line: string) {
         if (this.__dns(d)) {
             this.jal(line)
         }
     }
-
+    /*
+    * @push@
+    */
     push(a: string) {
         this.memory.stack.push(this.memory.getValue(a))
     }
-
+    /*
+    * @pop@
+    */
     pop(register: string) {
         this.memory.getRegister(register).value = this.memory.stack.pop()
     }
-
+    /*
+    * @peek@
+    */
     peek(register: string) {
         this.memory.getRegister(register).value = this.memory.stack.peek()
     }
@@ -895,7 +1119,9 @@ export class InterpreterIc10 {
 
         return devices
     }
-
+    /*
+    * @peek@
+    */
     l(register: string, device: string, property: string) {
         const r = this.memory.getRegister(register)
         const a = this.memory.getDeviceOrDeviceOutput(device)
@@ -914,13 +1140,17 @@ export class InterpreterIc10 {
     __l(register: string, device: string, property: string) {
         this.l(register, device, property)
     }
-
+    /*
+    * @peek@
+    */
     ls(register: string, device: string, slot: string, property: string) {
         const r = this.memory.getRegister(register)
         const d = this.memory.getDevice(device)
         r.value = d.getSlot(this.memory.getValue(slot), property) as number
     }
-
+    /*
+    * @peek@
+    */
     s(device: string, property: string, value: string) {
 		const a = this.memory.getDeviceOrDeviceOutput(device)
 		if (a instanceof Device) {
@@ -934,11 +1164,12 @@ export class InterpreterIc10 {
 		}
 		a.set(property, this.memory.getValue(value))
     }
-
     __s(device: string, property: string, value: string) {
         this.s(device, property, value)
     }
-
+    /*
+    * @lb@
+    */
     lb(register: string, deviceHash: string, property: string, mode: string) {
         const hash = this.memory.getValue(deviceHash)
 
@@ -951,12 +1182,16 @@ export class InterpreterIc10 {
 
         this.memory.getRegister(register).value = this.__transformBatch(values, mode)
     }
-
+    /*
+    * @lr@
+    */
     lr(register: string, device: string, mode: string, property: string) {
         //TODO: well, we don't have reagents so we need to do it later
         throw Execution.Ic10DiagnosticError(this.position, "lr not implemented yet")
     }
-
+    /*
+    * @sb@
+    */
     sb(deviceHash: string, property: string, value: string) {
         const hash = this.memory.getValue(deviceHash)
         const v = this.memory.getValue(value)
@@ -964,7 +1199,9 @@ export class InterpreterIc10 {
 
         devices.forEach(d => d.set(property, v))
     }
-
+    /*
+    * @lbn@
+    */
     lbn(targetRegister: string, deviceHash: string, nameHash: string, property: string, batchMode: string) {
         const hash = this.memory.getValue(deviceHash);
         const name = this.memory.getValue(nameHash)
@@ -976,7 +1213,9 @@ export class InterpreterIc10 {
 
         this.memory.getRegister(targetRegister).value = this.__transformBatch(values, batchMode)
     }
-
+    /*
+    * @sbn@
+    */
     sbn(deviceHash: string, nameHash: string, property: string, value: string) {
         const hash = this.memory.getValue(deviceHash)
         const v = this.memory.getValue(value)
@@ -985,7 +1224,9 @@ export class InterpreterIc10 {
 
         devices.forEach(d => d.set(property, v))
     }
-
+    /*
+    * @lbs@
+    */
     lbs(register: string, deviceHash: string, slotIndex: string, property: string, batchMode: string) {
         const hash = this.memory.getValue(deviceHash)
         const slot = this.memory.getValue(slotIndex)
@@ -995,7 +1236,9 @@ export class InterpreterIc10 {
 
         this.memory.getRegister(register).value = this.__transformBatch(values, batchMode)
     }
-
+    /*
+    * @lbns@
+    */
     lbns(register: string, deviceHash: string, nameHash: string, slotIndex: string, property: string, batchMode: string) {
         const hash = this.memory.getValue(deviceHash)
         const name = this.memory.getValue(nameHash)
@@ -1006,7 +1249,9 @@ export class InterpreterIc10 {
 
         this.memory.getRegister(register).value = this.__transformBatch(values, batchMode)
     }
-
+    /*
+    * @ss@
+    */
     ss(device: string, slotIndex: string, property: string, value: string) {
         const d = this.memory.getDevice(device)
         const v = this.memory.getValue(value)
@@ -1014,7 +1259,9 @@ export class InterpreterIc10 {
 
         (d.getSlot(slot) as Slot).set(property, v)
     }
-
+    /*
+    * @sbs@
+    */
     sbs(deviceHash: string, slotIndex: string, property: string, value: string) {
         const hash = this.memory.getValue(deviceHash)
         const v = this.memory.getValue(value)
@@ -1024,19 +1271,27 @@ export class InterpreterIc10 {
 
         devices.map(d => (d.getSlot(slot) as Slot).set(property, v))
     }
-
+    /*
+    * @and@
+    */
     and(register: string, a: string, b: string) {
         this.__op((a, b) => a && b, register, a, b)
     }
-
+    /*
+    * @or@
+    */
     or(register: string, a: string, b: string) {
         this.__op((a, b) => a || b, register, a, b)
     }
-
+    /*
+    * @xor@
+    */
     xor(register: string, a: string, b: string) {
         this.__op((a, b) => a ^ b, register, a, b)
     }
-
+    /*
+    * @nor@
+    */
     nor(register: string, a: string, b: string) {
         this.__op((a, b) => Number(!(a || b)), register, a, b)
     }
