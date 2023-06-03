@@ -313,7 +313,17 @@ export class InterpreterIc10 {
     * [ru] Присвоение значения
     */
     move(register: string, value: string) {
-        this.__op(v => v, register, value)
+        if(isChannel(register.toLowerCase()) || isSlotParameter(register.toLowerCase()) || isDeviceParameter(register.toLowerCase()) || isConst(register.toLowerCase())){
+            throw Execution.Ic10DiagnosticError(this.position, 'Incorrect register. Is system keyworld', register)
+        }
+        if(isChannel(value.toLowerCase()) || isSlotParameter(value.toLowerCase()) || isDeviceParameter(value.toLowerCase()) || isConst(value.toLowerCase())){
+            throw Execution.Ic10DiagnosticError(this.position, 'Incorrect value. Is system keyworld', value)
+        }
+        try {
+            this.__op(v => v, register, value)
+        }catch (e) {
+            throw Execution.Ic10DiagnosticError(this.position, 'Incorrect register. Not a register', register)
+        }
     }
 
     __move(register: string, value: string) {
@@ -784,7 +794,7 @@ export class InterpreterIc10 {
     }
     /*
     * @snan@
-    * [en] 
+    * [en]
     * [ru] op1 равно 1, если op2 не имеет значения.
     */
     snan(register: string, v: string) {
@@ -792,7 +802,7 @@ export class InterpreterIc10 {
     }
     /*
     * @snanz@
-    * [en] 
+    * [en]
     * [ru] op1 равно 0, если op2 не имеет значения.
     */
     snanz(register: string, v: string) {
@@ -973,7 +983,7 @@ export class InterpreterIc10 {
     }
     /*
     * @bnan@
-    * [en] 
+    * [en]
     * [ru] Переход на op2, если op1 = nan
     */
     bnan(v: string, line: string) {
@@ -1129,7 +1139,7 @@ export class InterpreterIc10 {
     }
     /*
     * @brnan@
-    * [en] 
+    * [en]
     * [ru] Относительный переход на +op2, если op1 = nan
     */
     brnan(v: string, offset: string) {
@@ -1435,7 +1445,7 @@ export class InterpreterIc10 {
     }
     /*
     * @lbn@
-    * [en] 
+    * [en]
     * [ru] Чтение c устройства по хеш op2 и HASH("name") op3 параметра op4 режимом чтение op5 в регистр op1
     */
     lbn(targetRegister: string, deviceHash: string, nameHash: string, property: string, batchMode: string) {
@@ -1451,7 +1461,7 @@ export class InterpreterIc10 {
     }
     /*
     * @sbn@
-    * [en] 
+    * [en]
     * [ru] Записывает в устройство хеш op1, хеш имя HASH("name") op2, параметр op3 значение op4
     */
     sbn(deviceHash: string, nameHash: string, property: string, value: string) {
@@ -1464,7 +1474,7 @@ export class InterpreterIc10 {
     }
     /*
     * @lbs@
-    * [en] 
+    * [en]
     * [ru] Пакетное чтение слотов.
     */
     lbs(register: string, deviceHash: string, slotIndex: string, property: string, batchMode: string) {
@@ -1478,7 +1488,7 @@ export class InterpreterIc10 {
     }
     /*
     * @lbns@
-    * [en] 
+    * [en]
     * [ru] Чтение из устройства хеш op2, имя устройства HASH("name") op3, слота op4, параметра op5, способом op6 в регистр op1
     */
     lbns(register: string, deviceHash: string, nameHash: string, slotIndex: string, property: string, batchMode: string) {
@@ -1493,7 +1503,7 @@ export class InterpreterIc10 {
     }
     /*
     * @ss@
-    * [en] 
+    * [en]
     * [ru] Запись в слот в устройства потр ор1, слот ор2, параметр ор3, значения ор4
     */
     ss(device: string, slotIndex: string, property: string, value: string) {
