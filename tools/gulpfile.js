@@ -21,28 +21,36 @@ gulp.task("generate-types", async function () {
 
     for (const languageKey in IC10Data.Languages["en"]) {
         const data = IC10Data.Languages["en"][languageKey]
-        switch (data['type']) {
-            case 'Slot parameter':
-                types['SlotParameter'].push(languageKey)
-                break;
-            case 'Device parameter':
-                types['DeviceParameter'].push(languageKey)
-                break;
-            case 'Function':
-                types['Function'].push(languageKey)
-                break;
-            case 'Const':
-                types['Const'].push(languageKey)
-                break;
-            case 'Channel':
-                types['Channel'].push(languageKey)
-                break;
-            case 'BM':
-                types['BM'].push(languageKey)
-                break;
-            case 'RM':
-                types['RM'].push(languageKey)
-                break;
+        const p = (data)=>{
+            switch (data['type']) {
+                case 'Slot parameter':
+                    types['SlotParameter'].push(languageKey)
+                    break;
+                case 'Device parameter':
+                    types['DeviceParameter'].push(languageKey)
+                    break;
+                case 'Function':
+                    types['Function'].push(languageKey)
+                    break;
+                case 'Const':
+                    types['Const'].push(languageKey)
+                    break;
+                case 'Channel':
+                    types['Channel'].push(languageKey)
+                    break;
+                case 'BM':
+                    types['BM'].push(languageKey)
+                    break;
+                case 'RM':
+                    types['RM'].push(languageKey)
+                    break;
+            }
+        }
+        if(Array.isArray(data)){
+            p(data[0])
+            p(data[1])
+        }else {
+            p(data)
         }
     }
 
