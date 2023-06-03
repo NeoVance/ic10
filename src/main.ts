@@ -1120,7 +1120,7 @@ export class InterpreterIc10 {
         return devices
     }
     /*
-    * @peek@
+    * @l@
     */
     l(register: string, device: string, property: string) {
         const r = this.memory.getRegister(register)
@@ -1141,7 +1141,7 @@ export class InterpreterIc10 {
         this.l(register, device, property)
     }
     /*
-    * @peek@
+    * @ls@
     */
     ls(register: string, device: string, slot: string, property: string) {
         const r = this.memory.getRegister(register)
@@ -1149,7 +1149,7 @@ export class InterpreterIc10 {
         r.value = d.getSlot(this.memory.getValue(slot), property) as number
     }
     /*
-    * @peek@
+    * @s@
     */
     s(device: string, property: string, value: string) {
 		const a = this.memory.getDeviceOrDeviceOutput(device)
