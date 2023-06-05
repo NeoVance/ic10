@@ -73,10 +73,10 @@ describe('general', () => {
 
     test('hash', () => {
         run({ device: new IcHousing() })`
-            s db Setting HASH("test")
+            s db Setting HASH("sorter 1")
         `
 
-        expect(m.dev("db").get("Setting")).toBe(hashStr("test"))
+        expect(m.dev("db").get("Setting")).toBe(hashStr("sorter 1"))
     })
 
     test('chanel', () => {
