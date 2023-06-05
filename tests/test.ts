@@ -238,7 +238,6 @@ describe('test', () => {
             #log r0
         `
         runWithoutLoop()
-        console.log(interpreterIc10.output.log)
         expect(interpreterIc10.output.log.length > 0).toBe(true)
     })
 })
