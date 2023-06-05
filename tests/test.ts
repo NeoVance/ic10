@@ -201,11 +201,11 @@ describe('test', () => {
 
     test('hash', () => {
         interpret`
-            s db Setting HASH("test")
+            s db Setting HASH("sorter 1")
         `
         runWithoutLoop()
 
-        expect(interpreterIc10.memory.getDevice("db").get("Setting")).toBe(hashStr("test"))
+        expect(interpreterIc10.memory.getDevice("db").get("Setting")).toBe(hashStr("sorter 1"))
     })
 
     test('chanel', () => {

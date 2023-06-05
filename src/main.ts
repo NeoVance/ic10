@@ -55,7 +55,7 @@ export var Execution = {
 export type InterpreterIc10Settings = {
     debug: boolean;
     debugCallback: Function;
-    logCallback: (s:string,out:string[] )=>void;
+    logCallback: (s: string, out: string[]) => void;
     executionCallback: (err: Ic10Error) => void;
     tickTime: number;
 }
@@ -129,7 +129,7 @@ export class InterpreterIc10 {
         this.lines = text.split(/\r?\n/);
         const commands = this.lines
             .map((line: string) => {
-                const args = line.trim().split(/ +/)
+                const args = this.splitString(line.trim())
                 const command = args.shift()
                 return {command, args}
             });
@@ -179,6 +179,28 @@ export class InterpreterIc10 {
         this.position = 0
         this.__updateDevice()
         return this
+    }
+
+    splitString(str: string) {
+        if (!str) return []
+        let result = [];
+        let inQuotes = false;
+        let currentWord = '';
+        for (let i = 0; i < str.length; i++) {
+            if (str[i] === ' ' && !inQuotes) {
+                result.push(currentWord);
+                currentWord = '';
+            } else if (str[i] === '"' || str[i] === "'") {
+                inQuotes = !inQuotes;
+                currentWord += str[i];
+            } else {
+                currentWord += str[i];
+            }
+        }
+
+        result.push(currentWord);
+
+        return result;
     }
 
     __updateDevice() {
