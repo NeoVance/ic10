@@ -1,4 +1,3 @@
-const request = require("sync-request")
 const axios = require("axios")
 
 async function getData() {

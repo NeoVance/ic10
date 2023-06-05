@@ -199,9 +199,6 @@ export class InterpreterIc10 {
         if (this.device === undefined)
             return
 
-        if (this.device.has("LineNumber"))
-            this.device.set("LineNumber", this.position)
-
         this.device.slots.forEach(slot => {
             if (slot.has("LineNumber"))
                 slot.set("LineNumber", this.position)
