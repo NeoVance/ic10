@@ -37,7 +37,7 @@ export declare class InterpreterIc10 {
     constructor(code?: string, settings?: Partial<InterpreterIc10Settings>);
     setSettings(settings?: Partial<InterpreterIc10Settings>): InterpreterIc10;
     init(text: string, device?: Device): InterpreterIc10;
-    splitString(str: string): any[];
+    splitString(str: string): string[];
     __updateDevice(): void;
     stop(): InterpreterIc10;
     run(): Promise<unknown>;
