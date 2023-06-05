@@ -14,13 +14,13 @@ class Environ {
     #scope;
     constructor(scope) {
         this.#scope = scope;
-        this.d0 = new Device_1.Device(scope, 'd0');
-        this.d1 = new Device_1.Device(scope, 'd1');
-        this.d2 = new Device_1.Device(scope, 'd2');
-        this.d3 = new Device_1.Device(scope, 'd3');
-        this.d4 = new Device_1.Device(scope, 'd4');
-        this.d5 = new Device_1.Device(scope, 'd5');
-        this.db = new IcHousing_1.IcHousing(scope, 'db');
+        this.d0 = new Device_1.Device();
+        this.d1 = new Device_1.Device();
+        this.d2 = new Device_1.Device();
+        this.d3 = new Device_1.Device();
+        this.d4 = new Device_1.Device();
+        this.d5 = new Device_1.Device();
+        this.db = new IcHousing_1.IcHousing();
     }
     get(cell) {
         switch (cell) {

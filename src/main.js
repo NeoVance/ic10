@@ -5,7 +5,6 @@ const Ic10Error_1 = require("./Ic10Error");
 const Memory_1 = require("./Memory");
 const Device_1 = require("./Device");
 const icTypes_1 = require("./icTypes");
-const DeviceOutput_1 = require("./DeviceOutput");
 const regexes = {
     strStart: new RegExp("^\".+$"),
     strEnd: new RegExp(".+\"$"),
@@ -17,15 +16,9 @@ const modes = {
     Maximum: 3
 };
 exports.Execution = {
-    error(code, message, obj = null, loc) {
-        return new Ic10Error_1.Ic10Error('--', code, message, obj, 0, loc);
-    },
-    Ic10DiagnosticError(code, message, obj = null, loc) {
-        return new Ic10Error_1.Ic10DiagnosticError('--', code, message, obj, 0, loc);
-    },
     display: function (e) {
         if (e instanceof Ic10Error_1.Ic10Error) {
-            const string = `(${e.code}) - ${e.message}:`;
+            const string = `(${e.line}) - ${e.message}:`;
             switch (e.lvl) {
                 case 0:
                     console.error('ERROR ' + string, e.obj);
@@ -43,10 +36,8 @@ exports.Execution = {
             }
             return string;
         }
-        else {
-            console.log(e);
-            return e;
-        }
+        console.log(e);
+        return e;
     }
 };
 class InterpreterIc10 {
@@ -102,7 +93,6 @@ class InterpreterIc10 {
             if (ics.length === 1) {
                 this.device = device;
                 this.memory.environ.db = device;
-                device.name = "db";
             }
         }
         this.lines = text.split(/\r?\n/);
@@ -211,13 +201,15 @@ class InterpreterIc10 {
                     this.__updateDevice();
                     this.__debug(command, args);
                 }
-                else if (!isComment) {
-                    throw exports.Execution.error(this.position, 'Undefined function', command);
-                }
+                else if (!isComment)
+                    throw new Ic10Error_1.Ic10Error('Unknown function', command);
             }
             catch (e) {
+                if (e instanceof Ic10Error_1.Ic10Error) {
+                    e.line = this.position;
+                }
                 this.memory.environ.db.properties.Error = 1;
-                if (e instanceof Ic10Error_1.Ic10Error)
+                if (e instanceof Ic10Error_1.Ic10DiagnosticError || e instanceof Ic10Error_1.Ic10Error)
                     this.settings.executionCallback.call(this, e);
                 else
                     throw e;
@@ -237,7 +229,7 @@ class InterpreterIc10 {
             return this.position < this.commands.length ? true : 'end';
         }
     }
-    runUntil(cond, maxIterations = 0) {
+    runUntilSync(cond, maxIterations = 0) {
         let status = true;
         let n = 0;
         do {
@@ -251,13 +243,13 @@ class InterpreterIc10 {
     }
     define(alias, value) {
         if ((0, icTypes_1.isChannel)(alias.toLowerCase()) || (0, icTypes_1.isSlotParameter)(alias.toLowerCase()) || (0, icTypes_1.isDeviceParameter)(alias.toLowerCase()) || (0, icTypes_1.isConst)(alias.toLowerCase())) {
-            throw exports.Execution.Ic10DiagnosticError(this.position, 'Incorrect constant. Is system keyworld', alias);
+            throw new Ic10Error_1.Ic10DiagnosticError('Incorrect constant. Is system keyworld', alias);
         }
         this.memory.define(alias, value);
     }
     alias(alias, target) {
         if ((0, icTypes_1.isChannel)(alias.toLowerCase()) || (0, icTypes_1.isSlotParameter)(alias.toLowerCase()) || (0, icTypes_1.isDeviceParameter)(alias.toLowerCase()) || (0, icTypes_1.isConst)(alias.toLowerCase())) {
-            throw exports.Execution.Ic10DiagnosticError(this.position, 'Incorrect alias. Is system keyworld', alias);
+            throw new Ic10Error_1.Ic10DiagnosticError('Incorrect alias. Is system keyworld', alias);
         }
         this.memory.alias(alias, target);
     }
@@ -268,17 +260,12 @@ class InterpreterIc10 {
     }
     move(register, value) {
         if ((0, icTypes_1.isChannel)(register.toLowerCase()) || (0, icTypes_1.isSlotParameter)(register.toLowerCase()) || (0, icTypes_1.isDeviceParameter)(register.toLowerCase()) || (0, icTypes_1.isConst)(register.toLowerCase())) {
-            throw exports.Execution.Ic10DiagnosticError(this.position, 'Incorrect register. Is system keyworld', register);
+            throw new Ic10Error_1.Ic10DiagnosticError('Incorrect register. Is system keyworld', register);
         }
         if ((0, icTypes_1.isChannel)(value.toLowerCase()) || (0, icTypes_1.isSlotParameter)(value.toLowerCase()) || (0, icTypes_1.isDeviceParameter)(value.toLowerCase()) || (0, icTypes_1.isConst)(value.toLowerCase())) {
-            throw exports.Execution.Ic10DiagnosticError(this.position, 'Incorrect value. Is system keyworld', value);
+            throw new Ic10Error_1.Ic10DiagnosticError('Incorrect value. Is system keyworld', value);
         }
-        try {
-            this.__op(v => v, register, value);
-        }
-        catch (e) {
-            throw exports.Execution.Ic10DiagnosticError(this.position, 'Incorrect register. Not a register', register);
-        }
+        this.__op(v => v, register, value);
     }
     __move(register, value) {
         this.move(register, value);
@@ -374,7 +361,7 @@ class InterpreterIc10 {
             return this.labels[target];
         const line = this.memory.getValue(target);
         if (isNaN(line))
-            throw exports.Execution.Ic10DiagnosticError(this.position, 'Incorrect jump target', [target, this.labels]);
+            throw new Ic10Error_1.Ic10DiagnosticError('Incorrect jump target', target);
         return line;
     }
     j(target) {
@@ -383,7 +370,7 @@ class InterpreterIc10 {
     jr(offset) {
         const d = this.memory.getValue(offset);
         if (Math.abs(d) < 0.001)
-            throw exports.Execution.error(this.position, "Infinite loop detected", offset);
+            throw new Ic10Error_1.Ic10Error('Infinite loop detected caused by', offset);
         this.__jump(this.position + d - 1);
     }
     jal(target) {
@@ -708,7 +695,7 @@ class InterpreterIc10 {
             case modes.Maximum:
                 return Math.max(...values);
         }
-        throw exports.Execution.Ic10DiagnosticError(this.position, "Unknown batch mode", mode);
+        throw new Ic10Error_1.Ic10Error("Unknown batch mode", mode);
     }
     __getDevices(hash, name) {
         const devices = [];
@@ -724,14 +711,12 @@ class InterpreterIc10 {
         const r = this.memory.getRegister(register);
         const a = this.memory.getDeviceOrDeviceOutput(device);
         if (a instanceof Device_1.Device) {
-            if (!(0, icTypes_1.isDeviceParameter)(property)) {
-                throw exports.Execution.Ic10DiagnosticError(this.position, `Wrong 3 argument (${property}). Must be "Device parameter"`, property);
-            }
+            if (!(0, icTypes_1.isDeviceParameter)(property))
+                throw new Ic10Error_1.Ic10DiagnosticError(`Wrong third argument, expected device parameter`, property);
         }
-        else if (a instanceof DeviceOutput_1.DeviceOutput) {
-            if (!(0, icTypes_1.isChannel)(property)) {
-                throw exports.Execution.Ic10DiagnosticError(this.position, `Wrong 3 argument (${property}). Must be "Channel"`, property);
-            }
+        else {
+            if (!(0, icTypes_1.isChannel)(property))
+                throw new Ic10Error_1.Ic10DiagnosticError(`Wrong third argument, expected channel`, property);
         }
         r.value = a.get(property);
     }
@@ -747,12 +732,12 @@ class InterpreterIc10 {
         const a = this.memory.getDeviceOrDeviceOutput(device);
         if (a instanceof Device_1.Device) {
             if (!(0, icTypes_1.isDeviceParameter)(property)) {
-                throw exports.Execution.Ic10DiagnosticError(this.position, `Wrong 2 argument (${property}). Must be "Device parameter"`, property);
+                throw new Ic10Error_1.Ic10DiagnosticError(`Wrong second argument (${property}). Must be "Device parameter"`, property);
             }
         }
-        else if (a instanceof DeviceOutput_1.DeviceOutput) {
+        else {
             if (!(0, icTypes_1.isChannel)(property)) {
-                throw exports.Execution.Ic10DiagnosticError(this.position, `Wrong 2 argument (${property}). Must be "Channel"`, property);
+                throw new Ic10Error_1.Ic10DiagnosticError(`Wrong second argument (${property}). Must be "Channel"`, property);
             }
         }
         a.set(property, this.memory.getValue(value));
@@ -765,11 +750,11 @@ class InterpreterIc10 {
         const devices = this.__getDevices(hash);
         const values = devices.map(d => d.get(property));
         if (values.length === 0)
-            throw exports.Execution.Ic10DiagnosticError(this.position, 'Can`t find Device wich hash:', hash);
+            throw new Ic10Error_1.Ic10DiagnosticError('Can`t find device with hash', hash);
         this.memory.getRegister(register).value = this.__transformBatch(values, mode);
     }
     lr(register, device, mode, property) {
-        throw exports.Execution.Ic10DiagnosticError(this.position, "lr not implemented yet");
+        throw new Ic10Error_1.Ic10DiagnosticError("lr not implemented yet");
     }
     sb(deviceHash, property, value) {
         const hash = this.memory.getValue(deviceHash);
@@ -783,7 +768,7 @@ class InterpreterIc10 {
         const devices = this.__getDevices(hash, name);
         const values = devices.map(d => d.get(property));
         if (values.length === 0)
-            throw exports.Execution.error(this.position, 'Can`t find Device wich hash:', hash);
+            throw new Ic10Error_1.Ic10Error("Can't find device with hash", hash);
         this.memory.getRegister(targetRegister).value = this.__transformBatch(values, batchMode);
     }
     sbn(deviceHash, nameHash, property, value) {
@@ -856,18 +841,18 @@ class InterpreterIc10 {
                         let environ = Object.keys(this.memory.environ);
                         if (environ.indexOf(keys[0]) >= 0) {
                             if (keys[0] == key) {
-                                out.push(`${key} = ${JSON.stringify(this.memory.environ.get(key).properties)};`);
+                                out.push(`${key} = ${JSON.stringify(this.memory.environ.get(key)?.properties)};`);
                                 continue;
                             }
                             switch (keys.length) {
                                 case 2:
-                                    out.push(`${key} = ${this.memory.environ.get(keys[0]).get(keys[1])};`);
+                                    out.push(`${key} = ${this.memory.environ.get(keys[0])?.get(keys[1])};`);
                                     break;
                                 case 3:
-                                    out.push(`${key} = ${JSON.stringify(this.memory.environ.get(keys[0]).getSlot(Number(keys[1])))};`);
+                                    out.push(`${key} = ${JSON.stringify(this.memory.environ.get(keys[0])?.getSlot(Number(keys[1])))};`);
                                     break;
                                 case 4:
-                                    out.push(`${key} = ${this.memory.environ.get(keys[0]).getSlot(Number(keys[2]), keys[3])};`);
+                                    out.push(`${key} = ${this.memory.environ.get(keys[0])?.getSlot(Number(keys[2]), keys[3])};`);
                                     break;
                             }
                             continue;
@@ -907,7 +892,7 @@ class InterpreterIc10 {
         const d = this.memory.getDevice(device);
         switch (Object.keys(args).length) {
             case 0:
-                throw exports.Execution.error(this.position, 'missing arguments');
+                throw new Ic10Error_1.Ic10Error("Missing arguments");
             case 1:
                 d.hash = args[0];
                 break;

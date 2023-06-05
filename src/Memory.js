@@ -1,23 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Memory = void 0;
-const main_1 = require("./main");
-const Environ_1 = require("./Environ");
+const Ports_1 = require("./Ports");
 const RegisterCell_1 = require("./RegisterCell");
 const MemoryStack_1 = require("./MemoryStack");
+const Device_1 = require("./Device");
 const ConstantCell_1 = require("./ConstantCell");
 const Utils_1 = require("./Utils");
+const Ic10Error_1 = require("./Ic10Error");
 class Memory {
     cells;
     stack;
     environ;
     aliases = {};
-    aliasesRevert = {};
     #scope;
     constructor(scope) {
         this.#scope = scope;
         this.cells = new Array(18);
-        this.environ = new Environ_1.Environ(scope);
+        this.environ = new Ports_1.Ports();
         this.stack = new MemoryStack_1.MemoryStack(scope, 512, "r16");
         for (let i = 0; i < 18; i++) {
             const n = `r${i}`;
@@ -38,7 +38,7 @@ class Memory {
             r.value = 0;
         this.stack.getStack().fill(0);
         this.aliases = {};
-        this.environ = new Environ_1.Environ(this.#scope);
+        this.environ = new Ports_1.Ports();
     }
     findRegister(name) {
         const mapping = {
@@ -50,7 +50,7 @@ class Memory {
             if ((0, Utils_1.isRegister)(name)) {
                 let m = Utils_1.patterns.reg.exec(name);
                 if (!m)
-                    throw main_1.Execution.error(this.#scope.position, 'Syntax error');
+                    throw new Ic10Error_1.Ic10Error('Internal error');
                 const prefix = m.groups?.prefix ?? "";
                 const indexStr = m.groups?.index ?? "none";
                 const index = parseInt(indexStr);
@@ -65,19 +65,19 @@ class Memory {
             }
             if (name in this.aliases) {
                 const mem = this.aliases[name];
-                if ((0, Utils_1.isRegister)(mem.name))
+                if (mem instanceof RegisterCell_1.RegisterCell)
                     return mem;
             }
             return undefined;
         }
         if (name >= 18)
-            throw main_1.Execution.error(this.#scope.position, 'Unknown register', name);
+            throw new Ic10Error_1.Ic10Error('Unknown register', name);
         return this.cells[name];
     }
     getRegister(name) {
         const reg = this.findRegister(name);
         if (!reg)
-            throw main_1.Execution.error(this.#scope.position, 'Not a register', name);
+            throw new Ic10Error_1.Ic10Error('Not a register', name);
         return reg;
     }
     findDevice(name) {
@@ -88,7 +88,7 @@ class Memory {
         if ((0, Utils_1.isRecPort)(name)) {
             const m = Utils_1.patterns.recDev.exec(name);
             if (!m)
-                throw main_1.Execution.error(this.#scope.position, 'Syntax error');
+                throw new Ic10Error_1.Ic10Error('Internal error');
             const prefix = (m.groups?.prefix ?? "");
             const indexStr = m.groups?.index ?? "none";
             const index = this.getRegister(`${prefix}${indexStr}`).value;
@@ -96,7 +96,7 @@ class Memory {
         }
         if (name in this.aliases) {
             const mem = this.aliases[name];
-            if ((0, Utils_1.isPort)(mem.name))
+            if (mem instanceof Device_1.Device)
                 return mem;
         }
         return undefined;
@@ -104,7 +104,7 @@ class Memory {
     getDevice(name) {
         const device = this.findDevice(name);
         if (!device)
-            throw main_1.Execution.error(this.#scope.position, 'Unknown device', name);
+            throw new Ic10Error_1.Ic10Error('Unknown device', name);
         return device;
     }
     getDeviceOrDeviceOutput(name) {
@@ -119,12 +119,10 @@ class Memory {
     }
     getDeviceOutput(name) {
         const [device, output] = name.split(':');
-        if (!output) {
-            throw main_1.Execution.error(this.#scope.position, 'empty output', name);
-        }
-        if (isNaN(parseInt(output))) {
-            throw main_1.Execution.error(this.#scope.position, 'Invalid output', name);
-        }
+        if (!output)
+            throw new Ic10Error_1.Ic10Error('Empty output', name);
+        if (isNaN(parseInt(output)))
+            throw new Ic10Error_1.Ic10Error('Invalid output', name);
         return this.getDevice(device).getChannel(parseInt(output));
     }
     findValue(value) {
@@ -133,7 +131,7 @@ class Memory {
         if ((0, Utils_1.isHash)(value)) {
             const m = Utils_1.patterns.hash.exec(value);
             if (!m)
-                throw main_1.Execution.error(this.#scope.position, 'Syntax error');
+                throw new Ic10Error_1.Ic10Error('Internal error');
             const hash = m.groups?.hash ?? "";
             return (0, Utils_1.hashStr)(hash);
         }
@@ -154,32 +152,26 @@ class Memory {
     getValue(value) {
         const v = this.findValue(value);
         if (v === undefined)
-            throw main_1.Execution.error(this.#scope.position, 'Unknown value', v);
+            throw new Ic10Error_1.Ic10Error('Unknown value', v);
         return v;
     }
     alias(name, link) {
         const register = this.findRegister(link);
         if (register !== undefined) {
             this.aliases[name] = register;
-            if (typeof name === "string") {
-                this.aliasesRevert[register.name] = name;
-            }
             return this;
         }
         const device = this.findDevice(link);
         if (device !== undefined) {
             this.aliases[name] = device;
-            if (typeof name === "string") {
-                this.aliasesRevert[device.name] = name;
-            }
             return this;
         }
-        throw main_1.Execution.error(this.#scope.position, 'Invalid alias value');
+        throw new Ic10Error_1.Ic10Error('Invalid alias value', link);
     }
     define(name, value) {
         if (typeof value === "string") {
             if (!(0, Utils_1.isNumber)(value))
-                throw main_1.Execution.error(this.#scope.position, "");
+                throw new Ic10Error_1.Ic10Error("Not a number", value);
             value = parseInt(value);
         }
         this.aliases[name] = new ConstantCell_1.ConstantCell(value, name);

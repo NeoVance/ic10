@@ -1,13 +1,10 @@
-import InterpreterIc10, {Execution} from "./main";
+import InterpreterIc10 from "./main";
 import {Device} from "./Device";
 import {isChannel} from "./icTypes";
+import {Ic10Error} from "./Ic10Error";
 
 export class DeviceOutput {
-    #scope: InterpreterIc10
-
-    constructor(public device: Device, scope: InterpreterIc10) {
-        this.#scope = scope
-    }
+    constructor(public device: Device) {}
 
     public Channel0: number = 0;
     public Channel1: number = 0;
@@ -20,16 +17,16 @@ export class DeviceOutput {
     public Channel8: number = 0;
 
     get(property: string): number {
-        if (!isChannel(property)) {
-            throw Execution.error(this.#scope.position, 'Unknown device', name)
-        }
+        if (!isChannel(property))
+            throw new Ic10Error('Invalid channel', property)
+
         return <number>this[property];
     }
 
     set(property: string, value: number): DeviceOutput {
-        if (!isChannel(property)) {
-            throw Execution.error(this.#scope.position, 'Unknown device', name)
-        }
+        if (!isChannel(property))
+            throw new Ic10Error('Invalid channel', property)
+
         this[property] = value;
         return this
     }

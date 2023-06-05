@@ -1,9 +1,7 @@
-import InterpreterIc10 from "./main";
 import { Device } from "./Device";
 export declare class DeviceOutput {
-    #private;
     device: Device;
-    constructor(device: Device, scope: InterpreterIc10);
+    constructor(device: Device);
     Channel0: number;
     Channel1: number;
     Channel2: number;

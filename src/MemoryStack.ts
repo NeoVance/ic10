@@ -1,5 +1,6 @@
-import InterpreterIc10, {Execution} from "./main";
+import InterpreterIc10 from "./main";
 import {RegisterCell} from "./RegisterCell";
+import {Ic10Error} from "./Ic10Error";
 
 export class MemoryStack extends RegisterCell {
     declare public value: number
@@ -15,7 +16,7 @@ export class MemoryStack extends RegisterCell {
 
 	push(value: number): MemoryStack {
 		if (this.value >= 512) {
-			throw Execution.error(this.#scope.position, 'Stack Overflow !!!')
+            throw new Ic10Error('Stack overflow by', value)
 		}
 		this.#stack[this.value] = value
 		this.value++

@@ -2,30 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Ic10DiagnosticError = exports.Ic10Error = void 0;
 class Ic10Error extends Error {
-    loc;
-    message;
-    code;
-    functionName;
+    obj;
     lvl;
     line;
-    className;
-    obj;
-    constructor(caller, code, message, obj, lvl = 0, loc) {
-        super(message);
-        this.loc = loc;
-        this.message = message;
-        this.code = code;
+    constructor(message, obj, lvl = 0, info) {
+        super((!(obj instanceof Object) && obj !== undefined) ? `${message}: ${obj}` : message, info !== undefined ? { cause: info.cause } : undefined);
         this.obj = obj;
         this.lvl = lvl;
-        this.className = caller?.typeName ?? '';
-        this.functionName = caller?.functionName ?? caller?.methodName ?? '';
-        this.line = caller?.lineNumber ?? 0;
-    }
-    getCode() {
-        return this.code;
-    }
-    getMessage() {
-        return this.message;
+        this.line = info?.line ?? 0;
     }
 }
 exports.Ic10Error = Ic10Error;

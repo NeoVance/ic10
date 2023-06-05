@@ -1,27 +1,9 @@
-import { Ic10DiagnosticError, Ic10Error } from "./Ic10Error";
+import { Ic10Error } from "./Ic10Error";
 import { Memory } from "./Memory";
 import { Device } from "./Device";
 export type ReturnCode = "hcf" | "end" | "die";
-export declare var Execution: {
-    error(code: number, message: string, obj?: any, loc?: {
-        start: number;
-        len: number;
-    }): Ic10Error;
-    Ic10DiagnosticError(code: number, message: string, obj?: any, loc?: {
-        start: number;
-        len: number;
-    }): Ic10DiagnosticError;
-    display: (e: {
-        code: any;
-        message: any;
-        lvl: any;
-        obj: any;
-    }) => string | {
-        code: any;
-        message: any;
-        lvl: any;
-        obj: any;
-    };
+export declare const Execution: {
+    display: (e: Ic10Error | any) => any;
 };
 export type InterpreterIc10Settings = {
     debug: boolean;
@@ -59,7 +41,7 @@ export declare class InterpreterIc10 {
     stop(): InterpreterIc10;
     run(): Promise<unknown>;
     prepareLine(line?: number, isDebugger?: boolean): ReturnCode | true;
-    runUntil(cond: (status: true | ReturnCode) => boolean, maxIterations?: number): number;
+    runUntilSync(cond: (status: true | ReturnCode) => boolean, maxIterations?: number): number;
     __issetLabel(x: string): boolean;
     define(alias: string, value: number | string): void;
     alias(alias: string, target: string): void;
@@ -205,7 +187,7 @@ export declare class InterpreterIc10 {
     pop(register: string): void;
     peek(register: string): void;
     __transformBatch(values: number[], mode: string): number;
-    __getDevices(hash: number, name?: number): Device[];
+    __getDevices(hash: number, name?: number): Device<string>[];
     l(register: string, device: string, property: string): void;
     __l(register: string, device: string, property: string): void;
     ls(register: string, device: string, slot: string, property: string): void;

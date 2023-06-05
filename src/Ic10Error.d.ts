@@ -1,21 +1,11 @@
 export declare class Ic10Error extends Error {
-    loc?: {
-        start: number;
-        len: number;
-    };
-    message: string;
-    code: number;
-    functionName: string;
+    obj: any;
     lvl: number;
     line: number;
-    className: string;
-    obj: any;
-    constructor(caller: any, code: number, message: string, obj: any, lvl?: number, loc?: {
-        start: number;
-        len: number;
+    constructor(message: string, obj?: any, lvl?: number, info?: {
+        cause: Error;
+        line: number;
     });
-    getCode(): number;
-    getMessage(): string;
 }
 export declare class Ic10DiagnosticError extends Ic10Error {
 }

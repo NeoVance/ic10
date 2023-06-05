@@ -1,5 +1,5 @@
 import InterpreterIc10 from "./main";
-import { Environ } from "./Environ";
+import { Ports } from "./Ports";
 import { RegisterCell } from "./RegisterCell";
 import { MemoryStack } from "./MemoryStack";
 import { Device } from "./Device";
@@ -9,9 +9,8 @@ export declare class Memory {
     #private;
     cells: Array<RegisterCell>;
     stack: MemoryStack;
-    environ: Environ;
+    environ: Ports;
     aliases: Record<string, ValueCell | Device>;
-    aliasesRevert: Record<string, string>;
     constructor(scope: InterpreterIc10);
     get scope(): InterpreterIc10 | null;
     reset(): void;

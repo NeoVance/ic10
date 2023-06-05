@@ -1,26 +1,25 @@
 import { DeviceFieldsType } from "./DeviceProperties";
-import InterpreterIc10 from "./main";
 import { Slot } from "./Slot";
 import { DeviceOutput } from "./DeviceOutput";
 export declare const IcHash: number;
-export declare class Device {
-    #private;
+export declare class Device<Fields extends keyof DeviceFieldsType = keyof DeviceFieldsType> {
     hash: number;
-    name: string;
     nameHash?: number;
-    properties: Partial<DeviceFieldsType>;
+    properties: Pick<DeviceFieldsType, Fields | "PrefabHash">;
     slots: Slot[];
     outputs: {
         [key: `${number}`]: DeviceOutput;
     };
-    constructor(scope: InterpreterIc10, name: string, slotCount?: number, fields?: Partial<DeviceFieldsType>);
-    get scope(): InterpreterIc10;
-    init(properties: Partial<DeviceFieldsType>): void;
-    has(variable: string): boolean;
-    get(variable: string): number;
-    set(variable: string, value: number): Device;
+    constructor(slotCount: number, fields: Pick<DeviceFieldsType, Fields | "PrefabHash">);
+    has(variable: keyof DeviceFieldsType): boolean;
+    get(variable: (keyof DeviceFieldsType) | 'hash'): number;
+    set(variable: Fields, value: number): Device<Fields>;
     getSlot(slot: number): Slot;
     getSlot(slot: number, property: string): number;
     setSlot(slot: number, property: string, value: number): void;
     getChannel(channel: number): DeviceOutput;
+}
+export declare class DebugDevice extends Device {
+    properties: DeviceFieldsType;
+    constructor(slotCount: number, fields: Partial<DeviceFieldsType>);
 }
