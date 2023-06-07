@@ -321,7 +321,7 @@ export class InterpreterIc10 {
         this.memory.alias(alias, target)
     }
 
-    __op<Args extends number[]>(op: (...args: Args) => number, register: string, ...args: { [K in keyof Args]: string }) {
+    private __op<Args extends number[]>(op: (...args: Args) => number, register: string, ...args: { [K in keyof Args]: string }) {
         const r = this.memory.getRegister(register)
 
         const inputs = args.map(v => this.memory.getValue(v)) as Args
@@ -342,10 +342,6 @@ export class InterpreterIc10 {
             throw new Ic10DiagnosticError('Incorrect value. Is system keyworld', value)
         }
         this.__op(v => v, register, value)
-    }
-
-    __move(register: string, value: string) {
-        this.move(register, value)
     }
 
     /*
@@ -1497,7 +1493,7 @@ export class InterpreterIc10 {
         r.value = a.get(property)
     }
 
-    __l(register: string, device: string, property: string) {
+    private __l(register: string, device: string, property: string) {
         this.l(register, device, property)
     }
 
@@ -1531,7 +1527,7 @@ export class InterpreterIc10 {
         a.set(property, this.memory.getValue(value))
     }
 
-    __s(device: string, property: string, value: string) {
+    private __s(device: string, property: string, value: string) {
         this.s(device, property, value)
     }
 

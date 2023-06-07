@@ -46,11 +46,8 @@ export declare class InterpreterIc10 {
     __issetLabel(x: string): boolean;
     define(alias: string, value: number | string): void;
     alias(alias: string, target: string): void;
-    __op<Args extends number[]>(op: (...args: Args) => number, register: string, ...args: {
-        [K in keyof Args]: string;
-    }): void;
+    private __op;
     move(register: string, value: string): void;
-    __move(register: string, value: string): void;
     add(register: string, a: string, b: string): void;
     sub(register: string, a: string, b: string): void;
     mul(register: string, a: string, b: string): void;
@@ -182,10 +179,10 @@ export declare class InterpreterIc10 {
     private __transformBatch;
     private __getDevices;
     l(register: string, device: string, property: string): void;
-    __l(register: string, device: string, property: string): void;
+    private __l;
     ls(register: string, device: string, slot: string, property: string): void;
     s(device: string, property: string, value: string): void;
-    __s(device: string, property: string, value: string): void;
+    private __s;
     lb(register: string, deviceHash: string, property: string, mode: string): void;
     lr(register: string, device: string, mode: string, property: string): void;
     sb(deviceHash: string, property: string, value: string): void;

@@ -287,9 +287,6 @@ class InterpreterIc10 {
         }
         this.__op(v => v, register, value);
     }
-    __move(register, value) {
-        this.move(register, value);
-    }
     add(register, a, b) {
         this.__op((a, b) => a + b, register, a, b);
     }
