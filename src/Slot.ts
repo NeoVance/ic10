@@ -1,4 +1,4 @@
-import InterpreterIc10, {Execution} from "./main";
+import {Ic10Error} from "./Ic10Error";
 
 export interface ItemProperties {
     Charge: number
@@ -24,10 +24,8 @@ export interface ItemProperties {
 export class Slot {
 	number: number;
 	public properties: Partial<ItemProperties>
-	readonly #scope: InterpreterIc10;
 
-	constructor(scope: InterpreterIc10, number: number, properties?: Partial<ItemProperties>) {
-		this.#scope = scope;
+	constructor(number: number, properties?: Partial<ItemProperties>) {
 		this.number = number;
         this.properties = properties ?? {}
 	}
@@ -36,27 +34,21 @@ export class Slot {
         this.properties = properties
     }
 
-	get scope(): InterpreterIc10 {
-		return this.#scope;
-	}
-
     has(property: string) {
         return property in this.properties
     }
 
 	get(property: string) {
-		if (this.has(property)) {
-			return (this.properties as Record<string, number>)[property]
-		} else {
-			throw Execution.error(this.#scope.position, 'Unknown parameter', property)
-		}
+		if (!this.has(property))
+            throw new Ic10Error('Unknown parameter', property)
+
+        return (this.properties as Record<string, number>)[property]
 	}
 
 	set(property: string, value: number) {
-		if (this.has(property)) {
-            (this.properties as Record<string, number>)[property] = value
-		} else {
-			throw Execution.error(this.#scope.position, 'Unknown parameter', property)
-		}
+		if (!this.has(property))
+            throw new Ic10Error('Unknown parameter', property);
+
+        (this.properties as Record<string, number>)[property] = value
 	}
 }

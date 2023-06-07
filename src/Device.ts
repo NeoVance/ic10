@@ -1,64 +1,52 @@
-import {DeviceFields, DeviceFieldsType} from "./DeviceProperties";
-import InterpreterIc10, {Execution} from "./main";
+import {DeviceFieldsType} from "./DeviceProperties";
 import {Slot} from "./Slot";
 import {hashStr} from "./Utils";
 import {DeviceOutput} from "./DeviceOutput";
 import {isDeviceParameter} from "./icTypes";
+import {Ic10Error} from "./Ic10Error";
 
 export const IcHash = hashStr("ItemIntegratedCircuit10")
 
-export class Device {
+export class Device<Fields extends keyof DeviceFieldsType = keyof DeviceFieldsType> {
     public hash: number;
-    public name: string;
     public nameHash?: number;
-    public properties: Partial<DeviceFieldsType>
+    public properties: Pick<DeviceFieldsType, Fields | "PrefabHash">
     public slots: Slot[]
-    readonly #scope: InterpreterIc10
     public outputs: { [key: `${number}`]: DeviceOutput } = {}
 
-    constructor(scope: InterpreterIc10, name: string, slotCount?: number, fields?: Partial<DeviceFieldsType>) {
-        this.name = name
-        this.#scope = scope;
+    constructor(slotCount: number, fields: Pick<DeviceFieldsType, Fields | "PrefabHash">) {
         this.hash = 0
-        this.#scope = scope
-        this.properties = fields ?? new DeviceFields
-        this.slots = Array(slotCount ?? 0).fill(0).map((_, i) => new Slot(scope, i))
+        this.properties = fields
+        this.slots = Array(slotCount ?? 0).fill(0).map((_, i) => new Slot(i))
 
         if (this.properties.PrefabHash !== undefined)
             this.hash = this.properties.PrefabHash
     }
 
-    get scope(): InterpreterIc10 {
-        return this.#scope;
-    }
-
-    init(properties: Partial<DeviceFieldsType>) {
-        this.properties = properties
-    }
-
-    has(variable: string) {
+    has(variable: keyof DeviceFieldsType) {
         return (variable in this.properties)
     }
 
-    get(variable: string): number {
-        if (variable == 'hash') {
+    get(variable: (keyof DeviceFieldsType) | 'hash'): number {
+        if (variable == 'hash')
             return this.hash
-        }
 
         if (!this.has(variable))
-            throw Execution.error(this.#scope.position, 'Unknown variable', variable)
+            throw new Ic10Error('Unknown variable', variable)
 
         return (this.properties as Record<string, number>)[variable]
     }
 
-    set(variable: string, value: number): Device {
+    set(variable: Fields, value: number): Device<Fields> {
         if (!isDeviceParameter(variable))
-            throw Execution.error(this.#scope.position, 'Unknown variable', variable);
+            throw new Ic10Error('Unknown variable', variable);
 
-        (this.properties as Record<string, number>)[variable] = value
+        const r: Record<keyof DeviceFieldsType, number> = this.properties
 
-        if (this.properties.PrefabHash !== undefined)
-            this.hash = this.properties.PrefabHash
+        r[variable] = value
+
+        if (r.PrefabHash !== undefined)
+            this.hash = r.PrefabHash
 
         return this
     }
@@ -69,7 +57,7 @@ export class Device {
         const s = this.slots[slot]
 
         if (s === undefined)
-            throw Execution.error(this.#scope.position, 'Unknown Slot', slot)
+            throw new Ic10Error('Unknown slot', slot)
 
         if (property === undefined)
             return s
@@ -82,7 +70,7 @@ export class Device {
         const s = this.slots[slot]
 
         if (s === undefined)
-            throw Execution.error(this.#scope.position, 'Unknown Slot', slot)
+            throw new Ic10Error('Unknown slot', slot)
 
         s.set(property, value)
     }
@@ -91,7 +79,15 @@ export class Device {
         const ch = String(channel) as `${number}`;
         const o: DeviceOutput = this.outputs[ch]
         if (o === undefined)
-            this.outputs[ch] = new DeviceOutput(this, this.#scope)
+            this.outputs[ch] = new DeviceOutput(this)
         return this.outputs[ch]
+    }
+}
+
+export class DebugDevice extends Device {
+    declare public properties: DeviceFieldsType
+
+    constructor(slotCount: number, fields: Partial<DeviceFieldsType>) {
+        super(slotCount, fields as DeviceFieldsType);
     }
 }

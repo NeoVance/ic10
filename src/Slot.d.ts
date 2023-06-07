@@ -1,4 +1,3 @@
-import InterpreterIc10 from "./main";
 export interface ItemProperties {
     Charge: number;
     ChargeRatio: number;
@@ -20,12 +19,10 @@ export interface ItemProperties {
     LineNumber: number;
 }
 export declare class Slot {
-    #private;
     number: number;
     properties: Partial<ItemProperties>;
-    constructor(scope: InterpreterIc10, number: number, properties?: Partial<ItemProperties>);
+    constructor(number: number, properties?: Partial<ItemProperties>);
     init(properties: Partial<ItemProperties>): void;
-    get scope(): InterpreterIc10;
     has(property: string): boolean;
     get(property: string): number;
     set(property: string, value: number): void;

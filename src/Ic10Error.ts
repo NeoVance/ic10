@@ -1,34 +1,15 @@
 export class Ic10Error extends Error {
-	public message: string;
-	public code: number;
-	public functionName: string;
-	public lvl: number;
-	public line: number;
-	public className: string;
-	public obj: any;
+    public obj: any
+    public lvl: number
+    public line: number
 
-	constructor(caller: any, code: number, message: string, obj: any, lvl: number = 0,public loc?:{start:number,len:number}) {
-        super(message);
-        this.message      = message;
-		this.code         = code;
-		this.obj          = obj;
-		this.lvl          = lvl;
-		this.className    = caller?.typeName ?? ''
-		this.functionName = caller?.functionName ?? caller?.methodName ?? '';
-		this.line         = caller?.lineNumber ?? 0;
-	}
-
-	getCode(): number {
-		return this.code
-	}
-
-	getMessage(): string {
-		return this.message
-	}
+    constructor(message: string, obj?: any, lvl: number = 0, info?: {cause: Error, line: number}) {
+        super((!(obj instanceof Object) && obj !== undefined) ? `${message}: ${obj}` : message, info !== undefined ? { cause: info.cause } : undefined);
+        this.obj = obj
+        this.lvl = lvl
+        this.line = info?.line ?? 0
+    }
 }
-
 
 // Class for vsCode code analyser
-export class Ic10DiagnosticError extends Ic10Error {
-
-}
+export class Ic10DiagnosticError extends Ic10Error {}

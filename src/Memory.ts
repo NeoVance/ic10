@@ -1,26 +1,23 @@
-import InterpreterIc10, {Execution} from "./main";
-import {Environ} from "./Environ";
+import {Ports} from "./Ports";
 import {RegisterCell} from "./RegisterCell";
 import {MemoryStack} from "./MemoryStack";
 import {Device} from "./Device";
 import {ConstantCell} from "./ConstantCell";
-import {hashStr, isHash, isNumber, isPort, isRecPort, isRegister, isSimplePort, patterns} from "./Utils";
+import {hashStr, isHash, isNumber, isRecPort, isRegister, isSimplePort, patterns} from "./Utils";
 import {ValueCell} from "./ValueCell";
 import {DeviceOutput} from "./DeviceOutput";
+import {Ic10Error} from "./Ic10Error";
 
 export class Memory {
     public cells: Array<RegisterCell>
     public stack: MemoryStack
-    public environ: Environ
+    public environ: Ports
     public aliases: Record<string, ValueCell | Device> = {}
-    public aliasesRevert: Record<string, string> = {}
-    readonly #scope: InterpreterIc10;
 
-    constructor(scope: InterpreterIc10) {
-        this.#scope = scope;
+    constructor() {
         this.cells = new Array<RegisterCell>(18)
-        this.environ = new Environ(scope)
-        this.stack = new MemoryStack(scope, 512, "r16")
+        this.environ = new Ports()
+        this.stack = new MemoryStack(512, "r16")
 
         for (let i = 0; i < 18; i++) {
             const n = `r${i}`
@@ -33,20 +30,16 @@ export class Memory {
         }
     }
 
-    get scope(): InterpreterIc10 | null {
-        return this.#scope;
-    }
-
     reset() {
         for (let r of this.cells)
             r.value = 0
 
         this.stack.getStack().fill(0)
         this.aliases = {}
-        this.environ = new Environ(this.#scope)
+        this.environ = new Ports()
     }
 
-    findRegister(name: string | number): RegisterCell | ConstantCell | undefined {
+    findRegister(name: string | number): RegisterCell | undefined {
         const mapping: Record<string, string | undefined> = {
             sp: "r16",
             ra: "r17"
@@ -59,7 +52,7 @@ export class Memory {
                 let m = patterns.reg.exec(name)
 
                 if (!m)
-                    throw Execution.error(this.#scope.position, 'Syntax error')
+                    throw new Ic10Error('Internal error')
 
                 const prefix = m.groups?.prefix ?? ""
                 const indexStr = m.groups?.index ?? "none"
@@ -81,16 +74,15 @@ export class Memory {
             if (name in this.aliases) {
                 const mem = this.aliases[name]
 
-                if (isRegister(mem.name))
-                    return mem as RegisterCell
-                return mem as ConstantCell
+                if (mem instanceof RegisterCell)
+                    return mem
             }
 
             return undefined
         }
 
         if (name >= 18)
-            throw Execution.error(this.#scope.position, 'Unknown register', name)
+            throw new Ic10Error('Unknown register', name)
 
         return this.cells[name]
     }
@@ -99,7 +91,7 @@ export class Memory {
         const reg = this.findRegister(name)
 
         if (!reg)
-            throw Execution.error(this.#scope.position, 'Not a register', name)
+            throw new Ic10Error('Not a register', name)
 
         return reg
     }
@@ -115,7 +107,7 @@ export class Memory {
             const m = patterns.recDev.exec(name)
 
             if (!m)
-                throw Execution.error(this.#scope.position, 'Syntax error')
+                throw new Ic10Error('Internal error')
 
             const prefix = (m.groups?.prefix ?? "")
             const indexStr = m.groups?.index ?? "none"
@@ -128,8 +120,8 @@ export class Memory {
         if (name in this.aliases) {
             const mem = this.aliases[name]
 
-            if (isPort(mem.name))
-                return mem as Device
+            if (mem instanceof Device)
+                return mem
         }
 
         return undefined
@@ -139,7 +131,7 @@ export class Memory {
         const device = this.findDevice(name)
 
         if (!device)
-            throw Execution.error(this.#scope.position, 'Unknown device', name)
+            throw new Ic10Error('Unknown device', name)
 
         return device
     }
@@ -156,12 +148,12 @@ export class Memory {
 
     getDeviceOutput(name: string): DeviceOutput {
         const [device, output] = name.split(':')
-        if (!output) {
-            throw Execution.error(this.#scope.position, 'empty output', name)
-        }
-        if (isNaN(parseInt(output))) {
-            throw Execution.error(this.#scope.position, 'Invalid output', name)
-        }
+        if (!output)
+            throw new Ic10Error('Empty output', name)
+
+        if (isNaN(parseInt(output)))
+            throw new Ic10Error('Invalid output', name)
+
         return this.getDevice(device).getChannel(parseInt(output))
     }
 
@@ -173,7 +165,7 @@ export class Memory {
             const m = patterns.hash.exec(value)
 
             if (!m)
-                throw Execution.error(this.#scope.position, 'Syntax error')
+                throw new Ic10Error('Internal error')
 
             const hash = m.groups?.hash ?? ""
 
@@ -207,7 +199,7 @@ export class Memory {
         const v = this.findValue(value)
 
         if (v === undefined)
-            throw Execution.error(this.#scope.position, 'Unknown value', v)
+            throw new Ic10Error('Unknown value', v)
 
         return v
     }
@@ -217,9 +209,6 @@ export class Memory {
 
         if (register !== undefined) {
             this.aliases[name] = register
-            if (typeof name === "string") {
-                this.aliasesRevert[register.name] = name
-            }
             return this
         }
 
@@ -227,19 +216,16 @@ export class Memory {
 
         if (device !== undefined) {
             this.aliases[name] = device
-            if (typeof name === "string") {
-                this.aliasesRevert[device.name] = name
-            }
             return this
         }
 
-        throw Execution.error(this.#scope.position, 'Invalid alias value')
+        throw new Ic10Error('Invalid alias value', link)
     }
 
     define(name: string, value: string | number) {
         if (typeof value === "string") {
             if (!isNumber(value))
-                throw Execution.error(this.#scope.position, "")
+                throw new Ic10Error("Not a number", value)
 
             value = parseInt(value)
         }

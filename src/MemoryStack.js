@@ -1,20 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MemoryStack = void 0;
-const main_1 = require("./main");
 const RegisterCell_1 = require("./RegisterCell");
+const Ic10Error_1 = require("./Ic10Error");
 class MemoryStack extends RegisterCell_1.RegisterCell {
-    #scope;
     #stack;
-    constructor(scope, size, name) {
+    constructor(size, name) {
         super(name);
-        this.#scope = scope;
         this.#stack = Array(size).fill(0);
         this.value = 0;
     }
     push(value) {
         if (this.value >= 512) {
-            throw main_1.Execution.error(this.#scope.position, 'Stack Overflow !!!');
+            throw new Ic10Error_1.Ic10Error('Stack overflow by', value);
         }
         this.#stack[this.value] = value;
         this.value++;
