@@ -67,6 +67,7 @@ class Memory {
                 const mem = this.aliases[name];
                 if (mem instanceof RegisterCell_1.RegisterCell)
                     return mem;
+                return mem;
             }
             return undefined;
         }
@@ -145,9 +146,11 @@ class Memory {
                 return r.value;
             return undefined;
         }
-        if (!(v instanceof RegisterCell_1.RegisterCell))
-            return undefined;
-        return v.value;
+        if (v instanceof RegisterCell_1.RegisterCell)
+            return v.value;
+        if (v instanceof ConstantCell_1.ConstantCell)
+            return v.value;
+        return undefined;
     }
     getValue(value) {
         const v = this.findValue(value);

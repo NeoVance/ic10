@@ -36,6 +36,16 @@ describe('general', () => {
         expect(m.reg("r3").value).toBe(1)
     })
 
+    test('alias and const', () => {
+        run`
+            define TEST 100
+            alias reg r0
+            move reg TEST
+        `
+        expect(interpreterIc10.memory.getRegister('r0').value).toBe(100)
+
+    })
+
     test('example2', () => {
         run({
             connectedDevices: { d0: new DebugDevice(0, { Setting: 0, Vertical: 0 }) },

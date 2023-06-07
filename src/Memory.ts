@@ -194,10 +194,12 @@ export class Memory {
             return undefined
         }
 
-        if (!(v instanceof RegisterCell))
-            return undefined
+        if (v instanceof RegisterCell)
+            return v.value
+        if (v instanceof ConstantCell)
+            return v.value
 
-        return (v as RegisterCell).value
+        return undefined
     }
 
     getValue(value: string | number): number {
