@@ -38,12 +38,12 @@ export declare class InterpreterIc10 {
     setSettings(settings?: Partial<InterpreterIc10Settings>): InterpreterIc10;
     init(text: string, device?: Device): InterpreterIc10;
     splitString(str: string): string[];
-    __updateDevice(): void;
+    private __updateDevice;
     stop(): InterpreterIc10;
     run(): Promise<unknown>;
     prepareLine(line?: number, isDebugger?: boolean): ReturnCode | true;
     runUntilSync(cond: (status: true | ReturnCode) => boolean, maxIterations?: number): number;
-    __issetLabel(x: string): boolean;
+    private __issetLabel;
     define(alias: string, value: number | string): void;
     alias(alias: string, target: string): void;
     private __op;

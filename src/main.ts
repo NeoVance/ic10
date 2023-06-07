@@ -195,7 +195,7 @@ export class InterpreterIc10 {
         return result;
     }
 
-    __updateDevice() {
+    private __updateDevice() {
         if (this.device === undefined)
             return
 
@@ -293,7 +293,7 @@ export class InterpreterIc10 {
         return n
     }
 
-    __issetLabel(x: string) {
+    private __issetLabel(x: string) {
         return x in this.labels
     }
 
