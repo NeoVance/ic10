@@ -88,6 +88,6 @@ export class DebugDevice extends Device {
     declare public properties: DeviceFieldsType
 
     constructor(slotCount: number, fields: Partial<DeviceFieldsType>) {
-        super(slotCount, fields as DeviceFieldsType);
+        super(slotCount, { PrefabHash: fields.PrefabHash ?? 0, ...fields } as DeviceFieldsType);
     }
 }

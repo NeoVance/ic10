@@ -64,7 +64,7 @@ class Device {
 exports.Device = Device;
 class DebugDevice extends Device {
     constructor(slotCount, fields) {
-        super(slotCount, fields);
+        super(slotCount, { PrefabHash: fields.PrefabHash ?? 0, ...fields });
     }
 }
 exports.DebugDevice = DebugDevice;

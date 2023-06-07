@@ -53,6 +53,7 @@ class InterpreterIc10 {
     settings;
     ignoreLine;
     device;
+    sleeping;
     constructor(code = '', settings = {}) {
         this.code = code;
         this.memory = new Memory_1.Memory();
@@ -80,10 +81,14 @@ class InterpreterIc10 {
             log: '',
             error: '',
         };
+        this.sleeping = 0;
     }
     setSettings(settings = {}) {
-        this.settings = Object.assign(this.settings, settings);
+        this.settings = Object.assign({}, this.settings, settings);
         return this;
+    }
+    getSettings() {
+        return Object.assign({}, this.settings);
     }
     init(text, device) {
         this.memory.reset();
@@ -133,7 +138,7 @@ class InterpreterIc10 {
         this.commands = commands;
         this.position = 0;
         while (this.position < this.commands.length) {
-            let { command, args } = this.commands[this.position];
+            let { command } = this.commands[this.position];
             this.position++;
             if (command?.match(/^\w+:$/)) {
                 let label = command.replace(":", "");
@@ -142,6 +147,7 @@ class InterpreterIc10 {
             }
         }
         this.position = 0;
+        this.sleeping = 0;
         this.__updateDevice();
         return this;
     }
@@ -192,6 +198,12 @@ class InterpreterIc10 {
         });
     }
     prepareLine(line = -1, isDebugger = false) {
+        if (this.sleeping > 0) {
+            this.sleeping--;
+            return true;
+        }
+        else
+            this.sleeping = 0;
         if (line === 0) {
             this.memory.environ.db.properties.Error = 0;
         }
@@ -287,9 +299,6 @@ class InterpreterIc10 {
         }
         this.__op(v => v, register, value);
     }
-    __move(register, value) {
-        this.move(register, value);
-    }
     add(register, a, b) {
         this.__op((a, b) => a + b, register, a, b);
     }
@@ -323,7 +332,7 @@ class InterpreterIc10 {
     max(register, a, b) {
         this.__op(Math.max, register, a, b);
     }
-    minx(register, a, b) {
+    min(register, a, b) {
         this.__op(Math.min, register, a, b);
     }
     abs(register, v) {
@@ -362,6 +371,7 @@ class InterpreterIc10 {
     yield() {
     }
     sleep(s) {
+        this.sleeping = Math.ceil(s / this.settings.tickTime);
     }
     select(register, a, b, c) {
         this.__op((a, b, c) => a ? b : c, register, a, b, c);
@@ -740,9 +750,6 @@ class InterpreterIc10 {
         }
         r.value = a.get(property);
     }
-    __l(register, device, property) {
-        this.l(register, device, property);
-    }
     ls(register, device, slot, property) {
         const r = this.memory.getRegister(register);
         const d = this.memory.getDevice(device);
@@ -844,44 +851,48 @@ class InterpreterIc10 {
     _log(...args) {
         const out = [];
         try {
-            for (const argumentsKey in args) {
-                if (args.hasOwnProperty(argumentsKey)) {
-                    let key = args[argumentsKey];
-                    try {
-                        const value = this.memory.findValue(key);
-                        if (value !== undefined) {
-                            out.push(`${key} = ${value};`);
-                            break;
-                        }
+            for (const key of args) {
+                try {
+                    const value = this.memory.findValue(key);
+                    if (value !== undefined) {
+                        out.push(`${key} = ${value};`);
+                        continue;
                     }
-                    catch {
-                    }
-                    let keys = key.split('.');
-                    try {
-                        let environ = Object.keys(this.memory.environ);
-                        if (environ.indexOf(keys[0]) >= 0) {
-                            if (keys[0] == key) {
-                                out.push(`${key} = ${JSON.stringify(this.memory.environ.get(key)?.properties)};`);
-                                continue;
+                }
+                catch { }
+                let keys = key.split('.');
+                try {
+                    const device = this.memory.findDevice(keys[0]);
+                    if (device !== undefined) {
+                        switch (keys.length) {
+                            case 1: {
+                                out.push(`${key} = ${JSON.stringify(device.properties)};`);
+                                break;
                             }
-                            switch (keys.length) {
-                                case 2:
-                                    out.push(`${key} = ${this.memory.environ.get(keys[0])?.get(keys[1])};`);
-                                    break;
-                                case 3:
-                                    out.push(`${key} = ${JSON.stringify(this.memory.environ.get(keys[0])?.getSlot(Number(keys[1])))};`);
-                                    break;
-                                case 4:
-                                    out.push(`${key} = ${this.memory.environ.get(keys[0])?.getSlot(Number(keys[2]), keys[3])};`);
-                                    break;
+                            case 2: {
+                                const property = keys[1];
+                                out.push(`${key} = ${device.get(property)};`);
+                                break;
                             }
-                            continue;
+                            case 3: {
+                                const slot = this.memory.getValue(keys[2]);
+                                out.push(`${key} = ${JSON.stringify(device.getSlot(slot))};`);
+                                break;
+                            }
+                            case 4: {
+                                const slot = this.memory.getValue(keys[2]);
+                                const property = keys[3];
+                                out.push(`${key} = ${device.getSlot(slot, property)};`);
+                                break;
+                            }
                         }
-                        out.push(`${key};`);
+                        continue;
                     }
-                    catch (e) {
+                    out.push(`${key};`);
+                }
+                catch (e) {
+                    if (e instanceof Error)
                         out.push(key + ' ' + e.message + '; ');
-                    }
                 }
             }
             this.settings.logCallback.call(this, `Log[${this.position}]: `, out);
@@ -890,42 +901,42 @@ class InterpreterIc10 {
             console.debug(e);
         }
     }
-    _d0(op1) {
+    _d0() {
         this.__d('d0', arguments);
     }
-    _d1(op1) {
+    _d1() {
         this.__d('d1', arguments);
     }
-    _d2(op1) {
+    _d2() {
         this.__d('d2', arguments);
     }
-    _d3(op1) {
+    _d3() {
         this.__d('d3', arguments);
     }
-    _d4(op1) {
+    _d4() {
         this.__d('d4', arguments);
     }
-    _d5(op1) {
+    _d5() {
         this.__d('d5', arguments);
     }
     __d(device, args) {
         const d = this.memory.getDevice(device);
-        switch (Object.keys(args).length) {
+        switch (args.length) {
             case 0:
                 throw new Ic10Error_1.Ic10Error("Missing arguments");
             case 1:
-                d.hash = args[0];
+                d.set("PrefabHash", this.memory.getValue(args[0]));
                 break;
             case 2:
-                d.set(args[0], args[1]);
+                d.set(args[0], this.memory.getValue(args[1]));
                 break;
             case 3:
-                d.setSlot(args[0], args[1], args[2]);
+                d.setSlot(this.memory.getValue(args[0]), args[1], this.memory.getValue(args[2]));
         }
     }
-    __debug(p, iArguments) {
+    __debug(command, args) {
         if (this.settings.debug) {
-            this.settings.debugCallback.call(this, ...arguments);
+            this.settings.debugCallback.call(this, command, args);
         }
     }
 }

@@ -7,7 +7,7 @@ export declare const Execution: {
 };
 export type InterpreterIc10Settings = {
     debug: boolean;
-    debugCallback: Function;
+    debugCallback: (command: string, args: string[]) => void;
     logCallback: (s: string, out: string[]) => void;
     executionCallback: (err: Ic10Error) => void;
     tickTime: number;
@@ -34,8 +34,10 @@ export declare class InterpreterIc10 {
     settings: InterpreterIc10Settings;
     ignoreLine: Array<number>;
     device?: Device;
+    private sleeping;
     constructor(code?: string, settings?: Partial<InterpreterIc10Settings>);
     setSettings(settings?: Partial<InterpreterIc10Settings>): InterpreterIc10;
+    getSettings(): InterpreterIc10Settings;
     init(text: string, device?: Device): InterpreterIc10;
     splitString(str: string): string[];
     __updateDevice(): void;
@@ -50,7 +52,6 @@ export declare class InterpreterIc10 {
         [K in keyof Args]: string;
     }): void;
     move(register: string, value: string): void;
-    __move(register: string, value: string): void;
     add(register: string, a: string, b: string): void;
     sub(register: string, a: string, b: string): void;
     mul(register: string, a: string, b: string): void;
@@ -62,7 +63,7 @@ export declare class InterpreterIc10 {
     ceil(register: string, v: string): void;
     floor(register: string, v: string): void;
     max(register: string, a: string, b: string): void;
-    minx(register: string, a: string, b: string): void;
+    min(register: string, a: string, b: string): void;
     abs(register: string, v: string): void;
     log(register: string, v: string): void;
     exp(register: string, v: string): void;
@@ -190,7 +191,6 @@ export declare class InterpreterIc10 {
     __transformBatch(values: number[], mode: string): number;
     __getDevices(hash: number, name?: number): Device<string>[];
     l(register: string, device: string, property: string): void;
-    __l(register: string, device: string, property: string): void;
     ls(register: string, device: string, slot: string, property: string): void;
     s(device: string, property: string, value: string): void;
     __s(device: string, property: string, value: string): void;
@@ -209,13 +209,13 @@ export declare class InterpreterIc10 {
     nor(register: string, a: string, b: string): void;
     _debug(...args: string[]): void;
     _log(...args: string[]): void;
-    _d0(op1: any): void;
-    _d1(op1: any): void;
-    _d2(op1: any): void;
-    _d3(op1: any): void;
-    _d4(op1: any): void;
-    _d5(op1: any): void;
-    __d(device: string, args: any): void;
-    __debug(p: string, iArguments: string[]): void;
+    _d0(): void;
+    _d1(): void;
+    _d2(): void;
+    _d3(): void;
+    _d4(): void;
+    _d5(): void;
+    __d(device: string, args: IArguments): void;
+    __debug(command: string, args: string[]): void;
 }
 export default InterpreterIc10;
