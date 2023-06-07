@@ -717,9 +717,13 @@ class InterpreterIc10 {
     __getDevices(hash, name) {
         const devices = [];
         for (let i = 0; i <= 5; i++) {
-            const d = this.memory.getDevice('d' + i);
-            if (d.hash == hash && (name === undefined || d.nameHash === name)) {
-                devices.push(d);
+            try {
+                const d = this.memory.getDevice('d' + i);
+                if (d.hash == hash && (name === undefined || d.nameHash === name)) {
+                    devices.push(d);
+                }
+            }
+            catch (e) {
             }
         }
         return devices;

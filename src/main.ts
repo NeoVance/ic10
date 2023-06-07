@@ -1462,16 +1462,16 @@ export class InterpreterIc10 {
 
     private __getDevices(hash: number, name?: number) {
         const devices: Device[] = []
-
         //TODO: check all devices in the network
         for (let i = 0; i <= 5; i++) {
-            const d = this.memory.getDevice('d' + i);
-
-            if (d.hash == hash && (name === undefined || d.nameHash === name)) {
-                devices.push(d)
+            try {
+                const d = this.memory.getDevice('d' + i);
+                if (d.hash == hash && (name === undefined || d.nameHash === name)) {
+                    devices.push(d)
+                }
+            }catch (e) {
             }
         }
-
         return devices
     }
 
