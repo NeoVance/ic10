@@ -55,7 +55,7 @@ class InterpreterIc10 {
     device;
     constructor(code = '', settings = {}) {
         this.code = code;
-        this.memory = new Memory_1.Memory(this);
+        this.memory = new Memory_1.Memory();
         this.constants = {};
         this.labels = {};
         this.ignoreLine = [];

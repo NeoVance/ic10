@@ -4,11 +4,9 @@ exports.MemoryStack = void 0;
 const RegisterCell_1 = require("./RegisterCell");
 const Ic10Error_1 = require("./Ic10Error");
 class MemoryStack extends RegisterCell_1.RegisterCell {
-    #scope;
     #stack;
-    constructor(scope, size, name) {
+    constructor(size, name) {
         super(name);
-        this.#scope = scope;
         this.#stack = Array(size).fill(0);
         this.value = 0;
     }

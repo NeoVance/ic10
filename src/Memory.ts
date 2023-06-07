@@ -1,10 +1,9 @@
-import InterpreterIc10 from "./main";
 import {Ports} from "./Ports";
 import {RegisterCell} from "./RegisterCell";
 import {MemoryStack} from "./MemoryStack";
 import {Device} from "./Device";
 import {ConstantCell} from "./ConstantCell";
-import {hashStr, isHash, isNumber, isPort, isRecPort, isRegister, isSimplePort, patterns} from "./Utils";
+import {hashStr, isHash, isNumber, isRecPort, isRegister, isSimplePort, patterns} from "./Utils";
 import {ValueCell} from "./ValueCell";
 import {DeviceOutput} from "./DeviceOutput";
 import {Ic10Error} from "./Ic10Error";
@@ -14,13 +13,11 @@ export class Memory {
     public stack: MemoryStack
     public environ: Ports
     public aliases: Record<string, ValueCell | Device> = {}
-    readonly #scope: InterpreterIc10;
 
-    constructor(scope: InterpreterIc10) {
-        this.#scope = scope;
+    constructor() {
         this.cells = new Array<RegisterCell>(18)
         this.environ = new Ports()
-        this.stack = new MemoryStack(scope, 512, "r16")
+        this.stack = new MemoryStack(512, "r16")
 
         for (let i = 0; i < 18; i++) {
             const n = `r${i}`
@@ -31,10 +28,6 @@ export class Memory {
             }
             this.cells[i].value = 0
         }
-    }
-
-    get scope(): InterpreterIc10 | null {
-        return this.#scope;
     }
 
     reset() {

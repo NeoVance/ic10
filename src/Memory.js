@@ -13,12 +13,10 @@ class Memory {
     stack;
     environ;
     aliases = {};
-    #scope;
-    constructor(scope) {
-        this.#scope = scope;
+    constructor() {
         this.cells = new Array(18);
         this.environ = new Ports_1.Ports();
-        this.stack = new MemoryStack_1.MemoryStack(scope, 512, "r16");
+        this.stack = new MemoryStack_1.MemoryStack(512, "r16");
         for (let i = 0; i < 18; i++) {
             const n = `r${i}`;
             if (i === 16) {
@@ -29,9 +27,6 @@ class Memory {
             }
             this.cells[i].value = 0;
         }
-    }
-    get scope() {
-        return this.#scope;
     }
     reset() {
         for (let r of this.cells)
@@ -67,7 +62,6 @@ class Memory {
                 const mem = this.aliases[name];
                 if (mem instanceof RegisterCell_1.RegisterCell)
                     return mem;
-                return mem;
             }
             return undefined;
         }

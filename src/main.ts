@@ -74,7 +74,7 @@ export class InterpreterIc10 {
 
     constructor(code: string = '', settings: Partial<InterpreterIc10Settings> = {}) {
         this.code = code
-        this.memory = new Memory(this)
+        this.memory = new Memory()
         this.constants = {}
         this.labels = {}
         this.ignoreLine = []
