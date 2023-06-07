@@ -3,6 +3,7 @@ import { Environ } from "./Environ";
 import { RegisterCell } from "./RegisterCell";
 import { MemoryStack } from "./MemoryStack";
 import { Device } from "./Device";
+import { ConstantCell } from "./ConstantCell";
 import { ValueCell } from "./ValueCell";
 import { DeviceOutput } from "./DeviceOutput";
 export declare class Memory {
@@ -15,7 +16,7 @@ export declare class Memory {
     constructor(scope: InterpreterIc10);
     get scope(): InterpreterIc10 | null;
     reset(): void;
-    findRegister(name: string | number): RegisterCell | undefined;
+    findRegister(name: string | number): RegisterCell | ConstantCell | undefined;
     getRegister(name: string | number): RegisterCell;
     findDevice(name: string | number): Device | undefined;
     getDevice(name: string | number): Device;

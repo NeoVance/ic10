@@ -46,7 +46,7 @@ export class Memory {
         this.environ = new Environ(this.#scope)
     }
 
-    findRegister(name: string | number): RegisterCell | undefined {
+    findRegister(name: string | number): RegisterCell | ConstantCell | undefined {
         const mapping: Record<string, string | undefined> = {
             sp: "r16",
             ra: "r17"
@@ -83,6 +83,7 @@ export class Memory {
 
                 if (isRegister(mem.name))
                     return mem as RegisterCell
+                return mem as ConstantCell
             }
 
             return undefined
@@ -194,10 +195,12 @@ export class Memory {
             return undefined
         }
 
-        if (!(v instanceof RegisterCell))
-            return undefined
+        if (v instanceof RegisterCell)
+            return v.value
+        if (v instanceof ConstantCell)
+            return v.value
 
-        return (v as RegisterCell).value
+        return undefined
     }
 
     getValue(value: string | number): number {

@@ -63,6 +63,17 @@ describe('test', () => {
         runWithoutLoop()
     })
 
+    test('alias and const', () => {
+        interpret`
+            define TEST 100
+            alias reg r0
+            move reg TEST
+        `
+        runWithoutLoop()
+        expect(interpreterIc10.memory.getRegister('r0').value).toBe(100)
+
+    })
+
     test('stack', () => {
         const code = ic10`
             move r0 1
