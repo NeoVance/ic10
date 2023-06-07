@@ -78,27 +78,25 @@ export declare class InterpreterIc10 {
     sleep(s: number): void;
     select(register: string, a: string, b: string, c: string): void;
     hcf(): void;
-    __jump(line: number): void;
-    __call(line: number): void;
-    __getJumpTarget(target: string): number;
+    private __jump;
+    private __call;
+    private __getJumpTarget;
     j(target: string): void;
     jr(offset: string): void;
     jal(target: string): void;
-    __eq(a: number, b?: number): boolean;
-    __ge(a: number, b?: number): boolean;
-    __gt(a: number, b?: number): boolean;
-    __le(a: number, b?: number): boolean;
-    __lt(a: number, b?: number): boolean;
-    __ne(a: number, b?: number): boolean;
-    __ap(x: number, y: number, c?: number): boolean;
-    __na(x: number, y: number, c?: number): boolean;
-    __dse(d: string): boolean;
-    __dns(d: string): boolean;
-    __nan(v: number): boolean;
-    __nanz(v: number): boolean;
-    __sOp<Args extends number[]>(op: (...args: Args) => boolean, register: string, ...args: {
-        [K in keyof Args]: string;
-    }): void;
+    private __eq;
+    private __ge;
+    private __gt;
+    private __le;
+    private __lt;
+    private __ne;
+    private __ap;
+    private __na;
+    private __dse;
+    private __dns;
+    private __nan;
+    private __nanz;
+    private __sOp;
     seq(register: string, a: string, b: string): void;
     seqz(register: string, a: string): void;
     sge(register: string, a: string, b: string): void;
@@ -119,15 +117,9 @@ export declare class InterpreterIc10 {
     sdns(register: string, d: string): void;
     snan(register: string, v: string): void;
     snanz(register: string, v: string): void;
-    __bOp<Args extends number[]>(op: (...args: Args) => boolean | undefined, line: string, ...args: {
-        [K in keyof Args]: string;
-    }): void;
-    __bROp<Args extends number[]>(op: (...args: Args) => boolean | undefined, offset: string, ...args: {
-        [K in keyof Args]: string;
-    }): void;
-    __bCOp<Args extends number[]>(op: (...args: Args) => boolean | undefined, line: string, ...args: {
-        [K in keyof Args]: string;
-    }): void;
+    private __bOp;
+    private __bROp;
+    private __bCOp;
     beq(a: string, b: string, line: string): void;
     beqz(a: string, line: string): void;
     bge(a: string, b: string, line: string): void;
@@ -187,8 +179,8 @@ export declare class InterpreterIc10 {
     push(a: string): void;
     pop(register: string): void;
     peek(register: string): void;
-    __transformBatch(values: number[], mode: string): number;
-    __getDevices(hash: number, name?: number): Device<string>[];
+    private __transformBatch;
+    private __getDevices;
     l(register: string, device: string, property: string): void;
     __l(register: string, device: string, property: string): void;
     ls(register: string, device: string, slot: string, property: string): void;
@@ -215,7 +207,7 @@ export declare class InterpreterIc10 {
     _d3(op1: any): void;
     _d4(op1: any): void;
     _d5(op1: any): void;
-    __d(device: string, args: any): void;
-    __debug(p: string, iArguments: string[]): void;
+    private __d;
+    private __debug;
 }
 export default InterpreterIc10;

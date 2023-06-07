@@ -588,16 +588,16 @@ export class InterpreterIc10 {
         console.log("Die Mother Fucker Die!!!!!")
     }
 
-    __jump(line: number) {
+    private __jump(line: number) {
         this.position = line
     }
 
-    __call(line: number) {
+    private __call(line: number) {
         this.memory.getRegister("ra").value = this.position
         this.__jump(line)
     }
 
-    __getJumpTarget(target: string) {
+    private __getJumpTarget(target: string) {
         if (this.__issetLabel(target))
             return this.labels[target]
 
@@ -641,55 +641,55 @@ export class InterpreterIc10 {
         this.__call(this.__getJumpTarget(target))
     }
 
-    __eq(a: number, b: number = 0) {
+   private __eq(a: number, b: number = 0) {
         return a == b
     }
 
-    __ge(a: number, b: number = 0) {
+   private __ge(a: number, b: number = 0) {
         return a >= b
     }
 
-    __gt(a: number, b: number = 0) {
+   private __gt(a: number, b: number = 0) {
         return a > b
     }
 
-    __le(a: number, b: number = 0) {
+   private __le(a: number, b: number = 0) {
         return a <= b
     }
 
-    __lt(a: number, b: number = 0) {
+   private __lt(a: number, b: number = 0) {
         return a < b
     }
 
-    __ne(a: number, b: number = 0) {
+   private __ne(a: number, b: number = 0) {
         return a != b
     }
 
-    __ap(x: number, y: number, c: number = 0) {
+   private __ap(x: number, y: number, c: number = 0) {
         return !this.__na(x, y, c)
     }
 
-    __na(x: number, y: number, c: number = 0) {
+   private __na(x: number, y: number, c: number = 0) {
         return Math.abs(x - y) > c * Math.max(Math.abs(x), Math.abs(y))
     }
 
-    __dse(d: string) {
+    private __dse(d: string) {
         return this.memory.findDevice(d) !== undefined
     }
 
-    __dns(d: string) {
+    private __dns(d: string) {
         return !this.__dse(d)
     }
 
-    __nan(v: number) {
+    private __nan(v: number) {
         return isNaN(this.memory.getValue(v))
     }
 
-    __nanz(v: number) {
+    private __nanz(v: number) {
         return !this.__nan(v)
     }
 
-    __sOp<Args extends number[]>(op: (...args: Args) => boolean, register: string, ...args: { [K in keyof Args]: string }) {
+    private __sOp<Args extends number[]>(op: (...args: Args) => boolean, register: string, ...args: { [K in keyof Args]: string }) {
         const r = this.memory.getRegister(register)
 
         const inputs = args.map(v => this.memory.getValue(v)) as Args
@@ -877,7 +877,7 @@ export class InterpreterIc10 {
         this.__sOp(this.__nanz.bind(this), register, v)
     }
 
-    __bOp<Args extends number[]>(op: (...args: Args) => boolean | undefined, line: string, ...args: { [K in keyof Args]: string }) {
+    private __bOp<Args extends number[]>(op: (...args: Args) => boolean | undefined, line: string, ...args: { [K in keyof Args]: string }) {
         const inputs = args.map(v => this.memory.getValue(v)) as Args
 
         if (!op(...inputs))
@@ -886,7 +886,7 @@ export class InterpreterIc10 {
         this.j(line)
     }
 
-    __bROp<Args extends number[]>(op: (...args: Args) => boolean | undefined, offset: string, ...args: { [K in keyof Args]: string }) {
+    private __bROp<Args extends number[]>(op: (...args: Args) => boolean | undefined, offset: string, ...args: { [K in keyof Args]: string }) {
         const inputs = args.map(v => this.memory.getValue(v)) as Args
 
         if (!op(...inputs))
@@ -895,7 +895,7 @@ export class InterpreterIc10 {
         this.jr(offset)
     }
 
-    __bCOp<Args extends number[]>(op: (...args: Args) => boolean | undefined, line: string, ...args: { [K in keyof Args]: string }) {
+    private __bCOp<Args extends number[]>(op: (...args: Args) => boolean | undefined, line: string, ...args: { [K in keyof Args]: string }) {
         const inputs = args.map(v => this.memory.getValue(v)) as Args
 
         if (!op(...inputs))
@@ -1445,7 +1445,7 @@ export class InterpreterIc10 {
         this.memory.getRegister(register).value = this.memory.stack.peek()
     }
 
-    __transformBatch(values: number[], mode: string) {
+    private __transformBatch(values: number[], mode: string) {
         const modeMapping: Record<string, number | undefined> = modes
 
         const m = modeMapping[mode] ?? this.memory.getValue(mode)
@@ -1464,7 +1464,7 @@ export class InterpreterIc10 {
         throw new Ic10Error("Unknown batch mode", mode)
     }
 
-    __getDevices(hash: number, name?: number) {
+    private __getDevices(hash: number, name?: number) {
         const devices: Device[] = []
 
         //TODO: check all devices in the network
@@ -1780,7 +1780,7 @@ export class InterpreterIc10 {
         this.__d('d5', arguments)
     }
 
-    __d(device: string, args: any) {
+    private __d(device: string, args: any) {
         const d = this.memory.getDevice(device);
         switch (Object.keys(args).length) {
             case 0:
@@ -1797,7 +1797,7 @@ export class InterpreterIc10 {
 
     }
 
-    __debug(p: string, iArguments: string[]) {
+    private __debug(p: string, iArguments: string[]) {
         if (this.settings.debug) {
             this.settings.debugCallback.call(this, ...arguments)
         }
