@@ -1,11 +1,10 @@
-import {interpreterIc10, m, makeDebugger, run} from "./utils";
+import {makeDebugger, run} from "./utils";
 import {DebugDevice, IcHash} from "../src/Device";
-import {hashStr} from "../src/Utils";
 
 describe("debugging", () => {
     const { debugCallback, debugInfo } = makeDebugger()
 
-    test('debug callback', () => {
+    test('debug callback and dn', () => {
         const d0 = new DebugDevice(0, {
             Setting: 0,
             PrefabHash: 1
@@ -28,7 +27,7 @@ describe("debugging", () => {
         ])
     })
 
-    test('_dn', () => {
+    test('log', () => {
         const { debugCallback, debugInfo } = makeDebugger()
 
         const d0 = new DebugDevice(1, {

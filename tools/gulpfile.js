@@ -81,7 +81,8 @@ gulp.task("generate-types", async function () {
         ...makeDef("Const", Const),
         ...makeDef("Channel", Channel),
         ...makeDef("BM", BM),
-        ...makeDef("RM", RM)
+        ...makeDef("RM", RM),
+        'export const isKeyword = (s: string) => isChannel(s) || isSlotParameter(s) || isDeviceParameter(s) || isConst(s)'
     ];
 
 

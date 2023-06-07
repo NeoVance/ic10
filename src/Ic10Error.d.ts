@@ -9,3 +9,4 @@ export declare class Ic10Error extends Error {
 }
 export declare class Ic10DiagnosticError extends Ic10Error {
 }
+export declare const keywordErrorMsg: (target: string) => string;

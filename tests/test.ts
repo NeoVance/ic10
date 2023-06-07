@@ -3,6 +3,7 @@ import {hashStr} from "../src/Utils";
 import {interpreterIc10, m, run} from "./utils";
 import {DebugDevice} from "../src/Device";
 import {IcHousing} from "../src/devices/IcHousing";
+import {keywordErrorMsg} from "../src/Ic10Error";
 
 describe('general', () => {
     test('example code', () => {
@@ -101,10 +102,10 @@ describe('general', () => {
     test('define error', () => {
         expect(() => {
             run`
-                define PI 4
+                define pi 4
             `
 
-        }).toThrow('Incorrect constant. Is system keyworld')
+        }).toThrow(keywordErrorMsg('constant'))
     })
 
     test('log system', () => {

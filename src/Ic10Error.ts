@@ -13,3 +13,5 @@ export class Ic10Error extends Error {
 
 // Class for vsCode code analyser
 export class Ic10DiagnosticError extends Ic10Error {}
+
+export const keywordErrorMsg = (target: string) => `Expected ${target}, got keyword`

@@ -1,5 +1,6 @@
-import InterpreterIc10, {InterpreterIc10Settings, ReturnCode} from "../src/main";
+import InterpreterIc10, {ReturnCode} from "../src/main";
 import {Device} from "../src/Device";
+import {ScopeSettings} from "../src/commands/core";
 
 export const interpreterIc10 = new InterpreterIc10();
 
@@ -32,7 +33,7 @@ type ExecutionConfig = {
         d5?: Device
     }
     breakWhen?: (status: true | ReturnCode) => boolean
-    ic10Conf?: Partial<InterpreterIc10Settings>
+    ic10Conf?: Partial<ScopeSettings>
 }
 
 const isTemplateStringsArray = (arg: ExecutionConfig | TemplateStringsArray): arg is TemplateStringsArray => Array.isArray(arg)

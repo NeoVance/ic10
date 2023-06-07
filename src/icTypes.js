@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isRM = exports.isBM = exports.isChannel = exports.isConst = exports.isFunction = exports.isDeviceParameter = exports.isSlotParameter = void 0;
+exports.isKeyword = exports.isRM = exports.isBM = exports.isChannel = exports.isConst = exports.isFunction = exports.isDeviceParameter = exports.isSlotParameter = void 0;
 const valuesSlotParameter = ['ChargeRatio', 'Class', 'Damage', 'Efficiency', 'Growth', 'Health', 'Mature', 'MaxQuantity', 'OccupantHash', 'Occupied', 'Seeding', 'SortingClass'];
 const isSlotParameter = (val) => valuesSlotParameter.includes(val);
 exports.isSlotParameter = isSlotParameter;
@@ -22,4 +22,6 @@ exports.isBM = isBM;
 const valuesRM = ['Contents', 'Recipe', 'Required'];
 const isRM = (val) => valuesRM.includes(val);
 exports.isRM = isRM;
+const isKeyword = (s) => (0, exports.isChannel)(s) || (0, exports.isSlotParameter)(s) || (0, exports.isDeviceParameter)(s) || (0, exports.isConst)(s);
+exports.isKeyword = isKeyword;
 //# sourceMappingURL=icTypes.js.map

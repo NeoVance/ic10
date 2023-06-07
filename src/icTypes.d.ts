@@ -19,4 +19,5 @@ export declare const isBM: (val: string) => val is "Maximum" | "Minimum" | "Aver
 declare const valuesRM: readonly ["Contents", "Recipe", "Required"];
 export type TypeRM = (typeof valuesRM)[number];
 export declare const isRM: (val: string) => val is "Contents" | "Recipe" | "Required";
+export declare const isKeyword: (s: string) => boolean;
 export {};
