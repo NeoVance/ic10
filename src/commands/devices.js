@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.makeDeviceCommands = exports.BatchModes = void 0;
 const Ic10Error_1 = require("../Ic10Error");
-const Device_1 = require("../Device");
+const Device_1 = require("../devices/Device");
 const icTypes_1 = require("../icTypes");
 exports.BatchModes = {
     Average: 0,
@@ -30,7 +30,7 @@ const makeDeviceCommands = (scope) => {
         const devices = [];
         for (let i = 0; i <= 5; i++) {
             const d = scope.memory.getDevice('d' + i);
-            if (d.hash == hash && (name === undefined || d.nameHash === name))
+            if (d.get("PrefabHash") == hash && (name === undefined || d.nameHash === name))
                 devices.push(d);
         }
         return devices;

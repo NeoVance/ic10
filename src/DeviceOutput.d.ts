@@ -1,4 +1,4 @@
-import { Device } from "./Device";
+import { Device } from "./devices/Device";
 export declare class DeviceOutput {
     device: Device;
     constructor(device: Device);

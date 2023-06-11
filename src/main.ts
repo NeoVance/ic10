@@ -1,6 +1,6 @@
 import {Ic10DiagnosticError, Ic10Error} from "./Ic10Error";
 import {Memory} from "./Memory";
-import {Device, IcHash} from "./Device";
+import {Device, IcHash} from "./devices/Device";
 import {Scope, ScopeSettings} from "./commands/core";
 import {makeDebugCommands} from "./commands/debug";
 import {makeArithmeticCommands} from "./commands/arithmetic";
@@ -217,16 +217,6 @@ export class InterpreterIc10 implements Scope {
         return result;
     }
 
-    private updateDevice() {
-        if (this.device === undefined)
-            return
-
-        this.device.slots.forEach(slot => {
-            if (slot.has("LineNumber"))
-                slot.set("LineNumber", this.position)
-        })
-    }
-
     /*
     * Stops currently running async execution
     */
@@ -350,6 +340,16 @@ export class InterpreterIc10 implements Scope {
             return
 
         this.settings.debugCallback.call(this, command, args)
+    }
+
+    private updateDevice() {
+        if (this.device === undefined)
+            return
+
+        this.device.slots.forEach(slot => {
+            if (slot.has("LineNumber"))
+                slot.set("LineNumber", this.position)
+        })
     }
 }
 

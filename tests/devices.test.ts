@@ -1,5 +1,5 @@
 import {m, run} from "./utils";
-import {DebugDevice} from "../src/Device";
+import {DebugDevice} from "../src/devices/Device";
 
 describe('devices', () => {
     test('write into device', () => {

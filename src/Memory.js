@@ -4,7 +4,7 @@ exports.Memory = void 0;
 const Ports_1 = require("./Ports");
 const RegisterCell_1 = require("./RegisterCell");
 const MemoryStack_1 = require("./MemoryStack");
-const Device_1 = require("./Device");
+const Device_1 = require("./devices/Device");
 const ConstantCell_1 = require("./ConstantCell");
 const Utils_1 = require("./Utils");
 const Ic10Error_1 = require("./Ic10Error");
@@ -103,14 +103,10 @@ class Memory {
         return device;
     }
     getDeviceOrDeviceOutput(name) {
-        try {
-            return this.getDevice(name);
-        }
-        catch (e) {
-            if (typeof name === "number")
-                throw e;
-            return this.getDeviceOutput(name);
-        }
+        const device = this.findDevice(name);
+        if (device !== undefined)
+            return device;
+        return this.getDeviceOutput(name);
     }
     getDeviceOutput(name) {
         const [device, output] = name.split(':');

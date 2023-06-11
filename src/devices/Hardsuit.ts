@@ -1,4 +1,4 @@
-import {Device} from "../Device";
+import {Device} from "./Device";
 import {hashStr} from "../Utils";
 import {DeviceFieldsType} from "../DeviceProperties";
 

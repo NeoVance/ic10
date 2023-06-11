@@ -1,6 +1,6 @@
 import {Scope} from "./core";
 import {Ic10DiagnosticError, Ic10Error} from "../Ic10Error";
-import {Device} from "../Device";
+import {Device} from "../devices/Device";
 import {isChannel, isDeviceParameter} from "../icTypes";
 
 export const BatchModes = {
@@ -38,7 +38,7 @@ export const makeDeviceCommands = (scope: Scope) => {
         for (let i = 0; i <= 5; i++) {
             const d = scope.memory.getDevice('d' + i);
 
-            if (d.hash == hash && (name === undefined || d.nameHash === name))
+            if (d.get("PrefabHash") == hash && (name === undefined || d.nameHash === name))
                 devices.push(d)
         }
 

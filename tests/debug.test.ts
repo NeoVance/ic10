@@ -1,5 +1,5 @@
 import {makeDebugger, run} from "./utils";
-import {DebugDevice, IcHash} from "../src/Device";
+import {DebugDevice, IcHash} from "../src/devices/Device";
 
 describe("debugging", () => {
     const { debugCallback, debugInfo } = makeDebugger()

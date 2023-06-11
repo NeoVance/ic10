@@ -1,6 +1,6 @@
 import { Ic10Error } from "./Ic10Error";
 import { Memory } from "./Memory";
-import { Device } from "./Device";
+import { Device } from "./devices/Device";
 import { Scope, ScopeSettings } from "./commands/core";
 export type ReturnCode = "hcf" | "end" | "die";
 export declare const Execution: {
@@ -34,11 +34,11 @@ export declare class InterpreterIc10 implements Scope {
     getSettings(): ScopeSettings;
     init(text: string, device?: Device): InterpreterIc10;
     splitString(str: string): string[];
-    private updateDevice;
     stop(): InterpreterIc10;
     run(): Promise<unknown>;
     prepareLine(line?: number, isDebugger?: boolean): ReturnCode | true;
     runUntilSync(cond: (status: true | ReturnCode) => boolean, maxIterations?: number): number;
     private debug;
+    private updateDevice;
 }
 export default InterpreterIc10;

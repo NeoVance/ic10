@@ -1,7 +1,7 @@
 import {Hardsuit} from "../src/devices/Hardsuit";
 import {hashStr} from "../src/Utils";
 import {interpreterIc10, m, run} from "./utils";
-import {DebugDevice} from "../src/Device";
+import {DebugDevice} from "../src/devices/Device";
 import {IcHousing} from "../src/devices/IcHousing";
 import {keywordErrorMsg} from "../src/Ic10Error";
 

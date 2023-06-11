@@ -1,9 +1,8 @@
-import { DeviceFieldsType } from "./DeviceProperties";
-import { Slot } from "./Slot";
-import { DeviceOutput } from "./DeviceOutput";
+import { DeviceFieldsType } from "../DeviceProperties";
+import { Slot } from "../Slot";
+import { DeviceOutput } from "../DeviceOutput";
 export declare const IcHash: number;
 export declare class Device<Fields extends keyof DeviceFieldsType = keyof DeviceFieldsType> {
-    hash: number;
     nameHash?: number;
     properties: Pick<DeviceFieldsType, Fields | "PrefabHash">;
     slots: Slot[];
@@ -12,7 +11,7 @@ export declare class Device<Fields extends keyof DeviceFieldsType = keyof Device
     };
     constructor(slotCount: number, fields: Pick<DeviceFieldsType, Fields | "PrefabHash">);
     has(variable: keyof DeviceFieldsType): boolean;
-    get(variable: (keyof DeviceFieldsType) | 'hash'): number;
+    get(variable: keyof DeviceFieldsType): number;
     set(variable: Fields, value: number): Device<Fields>;
     getSlot(slot: number): Slot;
     getSlot(slot: number, property: string): number;

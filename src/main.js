@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.InterpreterIc10 = exports.Execution = void 0;
 const Ic10Error_1 = require("./Ic10Error");
 const Memory_1 = require("./Memory");
-const Device_1 = require("./Device");
+const Device_1 = require("./devices/Device");
 const debug_1 = require("./commands/debug");
 const arithmetic_1 = require("./commands/arithmetic");
 const stack_1 = require("./commands/stack");
@@ -192,14 +192,6 @@ class InterpreterIc10 {
         result.push(currentWord);
         return result;
     }
-    updateDevice() {
-        if (this.device === undefined)
-            return;
-        this.device.slots.forEach(slot => {
-            if (slot.has("LineNumber"))
-                slot.set("LineNumber", this.position);
-        });
-    }
     stop() {
         clearInterval(this.interval);
         return this;
@@ -307,6 +299,14 @@ class InterpreterIc10 {
         if (!this.settings.debug)
             return;
         this.settings.debugCallback.call(this, command, args);
+    }
+    updateDevice() {
+        if (this.device === undefined)
+            return;
+        this.device.slots.forEach(slot => {
+            if (slot.has("LineNumber"))
+                slot.set("LineNumber", this.position);
+        });
     }
 }
 exports.InterpreterIc10 = InterpreterIc10;

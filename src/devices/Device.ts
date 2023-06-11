@@ -1,36 +1,28 @@
-import {DeviceFieldsType} from "./DeviceProperties";
-import {Slot} from "./Slot";
-import {hashStr} from "./Utils";
-import {DeviceOutput} from "./DeviceOutput";
-import {isDeviceParameter} from "./icTypes";
-import {Ic10Error} from "./Ic10Error";
+import {DeviceFieldsType} from "../DeviceProperties";
+import {Slot} from "../Slot";
+import {hashStr} from "../Utils";
+import {DeviceOutput} from "../DeviceOutput";
+import {isDeviceParameter} from "../icTypes";
+import {Ic10Error} from "../Ic10Error";
 
 export const IcHash = hashStr("ItemIntegratedCircuit10")
 
 export class Device<Fields extends keyof DeviceFieldsType = keyof DeviceFieldsType> {
-    public hash: number;
     public nameHash?: number;
     public properties: Pick<DeviceFieldsType, Fields | "PrefabHash">
     public slots: Slot[]
     public outputs: { [key: `${number}`]: DeviceOutput } = {}
 
     constructor(slotCount: number, fields: Pick<DeviceFieldsType, Fields | "PrefabHash">) {
-        this.hash = 0
         this.properties = fields
         this.slots = Array(slotCount ?? 0).fill(0).map((_, i) => new Slot(i))
-
-        if (this.properties.PrefabHash !== undefined)
-            this.hash = this.properties.PrefabHash
     }
 
     has(variable: keyof DeviceFieldsType) {
         return (variable in this.properties)
     }
 
-    get(variable: (keyof DeviceFieldsType) | 'hash'): number {
-        if (variable == 'hash')
-            return this.hash
-
+    get(variable: keyof DeviceFieldsType): number {
         if (!this.has(variable))
             throw new Ic10Error('Unknown variable', variable)
 
@@ -44,9 +36,6 @@ export class Device<Fields extends keyof DeviceFieldsType = keyof DeviceFieldsTy
         const r: Record<keyof DeviceFieldsType, number> = this.properties
 
         r[variable] = value
-
-        if (r.PrefabHash !== undefined)
-            this.hash = r.PrefabHash
 
         return this
     }

@@ -1,5 +1,5 @@
 import InterpreterIc10, {ReturnCode} from "../src/main";
-import {Device} from "../src/Device";
+import {Device} from "../src/devices/Device";
 import {ScopeSettings} from "../src/commands/core";
 
 export const interpreterIc10 = new InterpreterIc10();

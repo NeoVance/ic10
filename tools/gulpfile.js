@@ -91,6 +91,7 @@ gulp.task("generate-types", async function () {
 
 
 gulp.task("generate-jsDoc", async function () {
+    //TODO: refactor
     process.exit(1);
     const IC10Data = await getData()
     let mainTs = fs.readFileSync("../src/main.ts").toString()
@@ -110,7 +111,6 @@ gulp.task("generate-jsDoc", async function () {
         }
     }
     fs.writeFileSync("../src/main.ts", mainTs)
-
 })
 
 

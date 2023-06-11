@@ -46,6 +46,10 @@ const makeArithmeticCommands = scope => {
     const log = (register, v) => op(Math.log, register, v);
     const exp = (register, v) => op(Math.exp, register, v);
     const rand = (register, v) => op(_ => Math.random(), register, v);
+    const sll = (register, a, b) => op((a, b) => (a << b), register, a, b);
+    const srl = (register, a, b) => op((a, b) => (a >>> b), register, a, b);
+    const sla = (register, a, b) => op((a, b) => (a << b) + Number(a < 0) * ((2 << b) - 1), register, a, b);
+    const sra = (register, a, b) => op((a, b) => (a >> b), register, a, b);
     const sin = (register, v) => op(Math.sin, register, v);
     const cos = (register, v) => op(Math.cos, register, v);
     const tan = (register, v) => op(Math.tan, register, v);
@@ -62,6 +66,7 @@ const makeArithmeticCommands = scope => {
         add, sub, mul, div, mod, sqrt,
         round, trunc, ceil, floor, max, min, abs, log, exp,
         rand,
+        sll, srl, sla, sra,
         sin, cos, tan, asin, acos, atan, atan2,
         and, or, xor, nor
     };
