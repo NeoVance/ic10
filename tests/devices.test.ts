@@ -33,4 +33,16 @@ describe('devices', () => {
 
         expect(m.dev("d1").get("Setting")).toBe(5)
     })
+
+    test('issues 61', () => {
+        run({ connectedDevices: {
+                d0: new DebugDevice(0, { PrefabHash:5465465,  On: 100 }),
+            } })`
+            move r1 15
+            move r15 5465465
+            lb r0 rr1 On Minimum
+        `
+
+        expect(m.reg('r0').value).toBe(100)
+    })
 })
