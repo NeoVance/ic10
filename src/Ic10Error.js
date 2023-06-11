@@ -5,11 +5,11 @@ class Ic10Error extends Error {
     obj;
     lvl;
     line;
-    constructor(message, obj, lvl = 0, info) {
-        super((!(obj instanceof Object) && obj !== undefined) ? `${message}: ${obj}` : message, info !== undefined ? { cause: info.cause } : undefined);
+    constructor(message, obj, lvl = 0) {
+        super((!(obj instanceof Object) && obj !== undefined) ? `${message}: ${obj}` : message);
         this.obj = obj;
         this.lvl = lvl;
-        this.line = info?.line ?? 0;
+        this.line = 0;
     }
 }
 exports.Ic10Error = Ic10Error;

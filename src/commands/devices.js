@@ -29,7 +29,9 @@ const makeDeviceCommands = (scope) => {
     function __getDevices(hash, name) {
         const devices = [];
         for (let i = 0; i <= 5; i++) {
-            const d = scope.memory.getDevice('d' + i);
+            const d = scope.memory.findDevice('d' + i);
+            if (d === undefined)
+                continue;
             if (d.get("PrefabHash") == hash && (name === undefined || d.nameHash === name))
                 devices.push(d);
         }

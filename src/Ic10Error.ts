@@ -3,11 +3,11 @@ export class Ic10Error extends Error {
     public lvl: number
     public line: number
 
-    constructor(message: string, obj?: any, lvl: number = 0, info?: {cause: Error, line: number}) {
-        super((!(obj instanceof Object) && obj !== undefined) ? `${message}: ${obj}` : message, info !== undefined ? { cause: info.cause } : undefined);
+    constructor(message: string, obj?: any, lvl: number = 0) {
+        super((!(obj instanceof Object) && obj !== undefined) ? `${message}: ${obj}` : message);
         this.obj = obj
         this.lvl = lvl
-        this.line = info?.line ?? 0
+        this.line = 0
     }
 }
 
