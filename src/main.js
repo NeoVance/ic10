@@ -16,12 +16,6 @@ const regexes = {
     strStart: new RegExp("^\".+$"),
     strEnd: new RegExp(".+\"$"),
 };
-const modes = {
-    Average: 0,
-    Sum: 1,
-    Minimum: 2,
-    Maximum: 3
-};
 exports.Execution = {
     display: function (e) {
         if (e instanceof Ic10Error_1.Ic10Error) {

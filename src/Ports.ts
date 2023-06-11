@@ -1,7 +1,5 @@
-import InterpreterIc10 from "./main";
 import {Device} from "./devices/Device";
 import {IcHousing} from "./devices/IcHousing";
-import {DeviceFieldsType} from "./DeviceProperties";
 import {Ic10Error} from "./Ic10Error";
 
 export class Ports {

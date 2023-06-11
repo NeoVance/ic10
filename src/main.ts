@@ -16,13 +16,6 @@ const regexes = {
     strEnd: new RegExp(".+\"$"),
 }
 
-const modes = {
-    Average: 0,
-    Sum: 1,
-    Minimum: 2,
-    Maximum: 3
-} as const
-
 export type ReturnCode = "hcf" | "end" | "die"
 
 export const Execution = {
