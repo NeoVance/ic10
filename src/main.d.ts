@@ -2,6 +2,7 @@ import { Ic10Error } from "./Ic10Error";
 import { Memory } from "./Memory";
 import { Device } from "./devices/Device";
 import { Scope, ScopeSettings } from "./commands/core";
+import { DeviceFieldsType } from "./DeviceProperties";
 export type ReturnCode = "hcf" | "end" | "die";
 export declare const Execution: {
     display: (e: Ic10Error | any) => any;
@@ -40,5 +41,6 @@ export declare class InterpreterIc10 implements Scope {
     runUntilSync(cond: (status: true | ReturnCode) => boolean, maxIterations?: number): number;
     private debug;
     private updateDevice;
+    connectDevice(name: string, hash: string | number, slotCount: number, fields: Partial<DeviceFieldsType>): void;
 }
 export default InterpreterIc10;

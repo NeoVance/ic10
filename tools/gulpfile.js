@@ -2,6 +2,7 @@
 const gulp = require("gulp")
 const getData = require(__dirname + "/ajax.js")
 const fs = require("fs");
+const axios = require("axios");
 gulp.task("generate-types", async function () {
     const IC10Data = await getData()
     const types = {
@@ -16,7 +17,7 @@ gulp.task("generate-types", async function () {
 
     for (const languageKey in IC10Data.Languages["en"]) {
         const data = IC10Data.Languages["en"][languageKey]
-        const p = (data)=>{
+        const p = (data) => {
             switch (data['type']) {
                 case 'Slot parameter':
                     types['SlotParameter'].push(languageKey)
@@ -41,10 +42,10 @@ gulp.task("generate-types", async function () {
                     break;
             }
         }
-        if(Array.isArray(data)){
+        if (Array.isArray(data)) {
             p(data[0])
             p(data[1])
-        }else {
+        } else {
             p(data)
         }
     }
@@ -89,6 +90,16 @@ gulp.task("generate-types", async function () {
     fs.writeFileSync("../src/icTypes.ts", lines.join("\n"))
 })
 
+gulp.task("generate-devices", async function () {
+    const devices = await axios("https://icx.traineratwot.site/GetDevice")
+    const b = JSON.stringify(devices.data.object, null, 2)
+    const text = "import {DeviceDataType} from \"../types\";\n" +
+        "\n" +
+        `export const devices:DeviceDataType = \n ${b} as const;\n\nexport default devices;`
+
+    fs.writeFileSync("../src/data/devices.ts", text)
+})
+
 
 gulp.task("generate-jsDoc", async function () {
     //TODO: refactor
@@ -102,8 +113,8 @@ gulp.task("generate-jsDoc", async function () {
             case 'Function':
                 mainTs = mainTs.replace(`    * @${languageKey}@`,
                     `    * @${languageKey}@\n` +
-                              `    * [en] ${dataEn.description.text.replace('\n', ' ').trim()}\n` +
-                              `    * [ru] ${dataRu.description.text.replace('\n', ' ').trim()}`
+                    `    * [en] ${dataEn.description.text.replace('\n', ' ').trim()}\n` +
+                    `    * [ru] ${dataRu.description.text.replace('\n', ' ').trim()}`
                 )
                 break;
             default :

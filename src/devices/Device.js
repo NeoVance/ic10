@@ -10,6 +10,7 @@ exports.IcHash = (0, Utils_1.hashStr)("ItemIntegratedCircuit10");
 class Device {
     nameHash;
     properties;
+    propertiesAccess = {};
     slots;
     outputs = {};
     constructor(slotCount, fields) {

@@ -2,14 +2,16 @@ import {DeviceFieldsType} from "../DeviceProperties";
 import {Slot} from "../Slot";
 import {hashStr} from "../Utils";
 import {DeviceOutput} from "../DeviceOutput";
-import {isDeviceParameter} from "../icTypes";
+import {isDeviceParameter, TypeDeviceParameter} from "../icTypes";
 import {Ic10Error} from "../Ic10Error";
+import {accessType} from "../types";
 
 export const IcHash = hashStr("ItemIntegratedCircuit10")
 
 export class Device<Fields extends keyof DeviceFieldsType = keyof DeviceFieldsType> {
     public nameHash?: number;
     public properties: Pick<DeviceFieldsType, Fields | "PrefabHash">
+    public propertiesAccess: { [key in TypeDeviceParameter|string]: accessType} ={}
     public slots: Slot[]
     public outputs: { [key: `${number}`]: DeviceOutput } = {}
 

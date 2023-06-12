@@ -13,3 +13,12 @@ export declare const isPort: (value: string) => boolean;
 export declare const isRecPort: (value: string) => boolean;
 export declare const isSimplePort: (value: string) => boolean;
 export declare const isRegister: (value: string) => boolean;
+export declare const findDevice: (HashOrName: string | number) => {
+    PrefabHash: number;
+    params: {
+        [x: string]: import("./types").accessType;
+    };
+    name: string;
+    description: string;
+    slot_count: number;
+};

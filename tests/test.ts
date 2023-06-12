@@ -1,5 +1,5 @@
 import {Hardsuit} from "../src/devices/Hardsuit";
-import {hashStr} from "../src/Utils";
+import {findDevice, hashStr} from "../src/Utils";
 import {interpreterIc10, m, run} from "./utils";
 import {DebugDevice} from "../src/devices/Device";
 import {IcHousing} from "../src/devices/IcHousing";
@@ -115,5 +115,11 @@ describe('general', () => {
         `
 
         expect(interpreterIc10.output.log.length > 0).toBe(true)
+    })
+
+    test('findDevice', () => {
+        const a = findDevice('StructureSmallSatelliteDish')
+        const b = findDevice(-2138748650)
+        expect(a.PrefabHash).toBe(b.PrefabHash)
     })
 })

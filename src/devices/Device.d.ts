@@ -1,10 +1,15 @@
 import { DeviceFieldsType } from "../DeviceProperties";
 import { Slot } from "../Slot";
 import { DeviceOutput } from "../DeviceOutput";
+import { TypeDeviceParameter } from "../icTypes";
+import { accessType } from "../types";
 export declare const IcHash: number;
 export declare class Device<Fields extends keyof DeviceFieldsType = keyof DeviceFieldsType> {
     nameHash?: number;
     properties: Pick<DeviceFieldsType, Fields | "PrefabHash">;
+    propertiesAccess: {
+        [key in TypeDeviceParameter | string]: accessType;
+    };
     slots: Slot[];
     outputs: {
         [key: `${number}`]: DeviceOutput;

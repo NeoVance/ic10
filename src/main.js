@@ -12,6 +12,7 @@ const conditions_1 = require("./commands/conditions");
 const jumps_1 = require("./commands/jumps");
 const selects_1 = require("./commands/selects");
 const devices_1 = require("./commands/devices");
+const Utils_1 = require("./Utils");
 const regexes = {
     strStart: new RegExp("^\".+$"),
     strEnd: new RegExp(".+\"$"),
@@ -301,6 +302,26 @@ class InterpreterIc10 {
             if (slot.has("LineNumber"))
                 slot.set("LineNumber", this.position);
         });
+    }
+    connectDevice(name, hash, slotCount, fields) {
+        const d = new Device_1.DebugDevice(slotCount, fields);
+        try {
+            const deviceData = (0, Utils_1.findDevice)(hash);
+            d.properties.PrefabHash = deviceData.PrefabHash;
+            d.propertiesAccess = deviceData.params;
+            for (const paramsKey in deviceData.params) {
+                d.properties[paramsKey] = 0;
+            }
+        }
+        catch (e) {
+            if (typeof hash === 'number') {
+                d.properties.PrefabHash = hash;
+            }
+            else {
+                d.properties.PrefabHash = (0, Utils_1.hashStr)(hash);
+            }
+        }
+        this.memory.environ.set(name, d);
     }
 }
 exports.InterpreterIc10 = InterpreterIc10;
