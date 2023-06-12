@@ -1,4 +1,4 @@
-import {Device} from "./Device";
+import {Device} from "./devices/Device";
 import {IcHousing} from "./devices/IcHousing";
 import {Slot} from "./Slot";
 import {DeviceOutput} from "./DeviceOutput";

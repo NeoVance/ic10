@@ -1,4 +1,4 @@
-import { Device } from "./Device";
+import { Device } from "./devices/Device";
 export declare class Ports {
     d0?: Device;
     d1?: Device;

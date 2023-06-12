@@ -1,5 +1,6 @@
 import InterpreterIc10, {ReturnCode} from "../src/main";
-import {Device} from "../src/Device";
+import {Device} from "../src/devices/Device";
+import {ScopeSettings} from "../src/commands/core";
 
 export const interpreterIc10 = new InterpreterIc10();
 
@@ -32,6 +33,7 @@ type ExecutionConfig = {
         d5?: Device
     }
     breakWhen?: (status: true | ReturnCode) => boolean
+    ic10Conf?: Partial<ScopeSettings>
 }
 
 const isTemplateStringsArray = (arg: ExecutionConfig | TemplateStringsArray): arg is TemplateStringsArray => Array.isArray(arg)
@@ -43,6 +45,9 @@ export function run(arg1: ExecutionConfig | TemplateStringsArray, ...values: any
     let config: ExecutionConfig = {}
 
     const execute = (code: string, config: ExecutionConfig) => {
+        const settings = interpreterIc10.getSettings()
+
+        interpreterIc10.setSettings(config.ic10Conf ?? settings)
         interpreterIc10.init(code, config.device)
 
         const connectedDevices = config.connectedDevices ?? {}
@@ -58,6 +63,8 @@ export function run(arg1: ExecutionConfig | TemplateStringsArray, ...values: any
         interpreterIc10.memory.environ.d0 = connectedDevices.d0
 
         interpreterIc10.runUntilSync(config.breakWhen ?? (() => false), config.maxLines ?? 10000)
+
+        interpreterIc10.setSettings(settings)
     }
 
     if (isTemplateStringsArray(arg1)) {
@@ -80,4 +87,19 @@ export const m = {
     val: (v: string) => interpreterIc10.memory.getValue(v),
     chan: (c: string) => interpreterIc10.memory.getDeviceOutput(c),
     stack: () => interpreterIc10.memory.stack.getStack()
+}
+
+export const makeDebugger = () => {
+    type DebugInfo = {cmd: string, args: string[]}[]
+
+    const debugInfo: DebugInfo = []
+
+    const debugCallback = (cmd: string, args: string[]) => {
+        debugInfo.push({cmd, args})
+    }
+
+    return {
+        debugCallback,
+        debugInfo
+    }
 }

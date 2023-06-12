@@ -1,5 +1,5 @@
 import {m, run} from "./utils";
-import {DebugDevice} from "../src/Device";
+import {DebugDevice} from "../src/devices/Device";
 
 describe('devices', () => {
     test('write into device', () => {
@@ -36,7 +36,7 @@ describe('devices', () => {
 
     test('issues 61', () => {
         run({ connectedDevices: {
-                d0: new DebugDevice(0, { PrefabHash:5465465,  On: 100 }),
+                d0: new DebugDevice(0, { PrefabHash: 5465465,  On: 100 }),
             } })`
             move r1 15
             move r15 5465465

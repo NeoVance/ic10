@@ -1,5 +1,4 @@
-import InterpreterIc10 from "./main";
-import {Device} from "./Device";
+import {Device} from "./devices/Device";
 import {isChannel} from "./icTypes";
 import {Ic10Error} from "./Ic10Error";
 

@@ -1,4 +1,4 @@
-import { Device } from "../Device";
+import { Device } from "./Device";
 declare const defaultProperties: {
     Power: number;
     Error: number;

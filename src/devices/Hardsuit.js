@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Hardsuit = void 0;
-const Device_1 = require("../Device");
+const Device_1 = require("./Device");
 const Utils_1 = require("../Utils");
 const defaultProperties = {
     Power: 1,

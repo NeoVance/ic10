@@ -1,31 +1,25 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DebugDevice = exports.Device = exports.IcHash = void 0;
-const Slot_1 = require("./Slot");
-const Utils_1 = require("./Utils");
-const DeviceOutput_1 = require("./DeviceOutput");
-const icTypes_1 = require("./icTypes");
-const Ic10Error_1 = require("./Ic10Error");
+const Slot_1 = require("../Slot");
+const Utils_1 = require("../Utils");
+const DeviceOutput_1 = require("../DeviceOutput");
+const icTypes_1 = require("../icTypes");
+const Ic10Error_1 = require("../Ic10Error");
 exports.IcHash = (0, Utils_1.hashStr)("ItemIntegratedCircuit10");
 class Device {
-    hash;
     nameHash;
     properties;
     slots;
     outputs = {};
     constructor(slotCount, fields) {
-        this.hash = 0;
         this.properties = fields;
         this.slots = Array(slotCount ?? 0).fill(0).map((_, i) => new Slot_1.Slot(i));
-        if (this.properties.PrefabHash !== undefined)
-            this.hash = this.properties.PrefabHash;
     }
     has(variable) {
         return (variable in this.properties);
     }
     get(variable) {
-        if (variable == 'hash')
-            return this.hash;
         if (!this.has(variable))
             throw new Ic10Error_1.Ic10Error('Unknown variable', variable);
         return this.properties[variable];
@@ -35,8 +29,6 @@ class Device {
             throw new Ic10Error_1.Ic10Error('Unknown variable', variable);
         const r = this.properties;
         r[variable] = value;
-        if (r.PrefabHash !== undefined)
-            this.hash = r.PrefabHash;
         return this;
     }
     getSlot(slot, property) {
@@ -64,7 +56,7 @@ class Device {
 exports.Device = Device;
 class DebugDevice extends Device {
     constructor(slotCount, fields) {
-        super(slotCount, fields);
+        super(slotCount, { PrefabHash: fields.PrefabHash ?? 0, ...fields });
     }
 }
 exports.DebugDevice = DebugDevice;

@@ -1,7 +1,7 @@
 import {Ports} from "./Ports";
 import {RegisterCell} from "./RegisterCell";
 import {MemoryStack} from "./MemoryStack";
-import {Device} from "./Device";
+import {Device} from "./devices/Device";
 import {ConstantCell} from "./ConstantCell";
 import {hashStr, isHash, isNumber, isRecPort, isRegister, isSimplePort, patterns} from "./Utils";
 import {ValueCell} from "./ValueCell";
@@ -136,14 +136,13 @@ export class Memory {
         return device
     }
 
-    getDeviceOrDeviceOutput(name: string | number): Device | DeviceOutput {
-        try {
-            return this.getDevice(name)
-        } catch (e) {
-            if (typeof name === "number")
-                throw e;
-            return this.getDeviceOutput(name)
-        }
+    getDeviceOrDeviceOutput(name: string): Device | DeviceOutput {
+        const device = this.findDevice(name)
+
+        if (device !== undefined)
+            return device
+
+        return this.getDeviceOutput(name)
     }
 
     getDeviceOutput(name: string): DeviceOutput {
