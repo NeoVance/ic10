@@ -4,15 +4,16 @@ exports.Memory = void 0;
 const Ports_1 = require("./Ports");
 const RegisterCell_1 = require("./RegisterCell");
 const MemoryStack_1 = require("./MemoryStack");
-const Device_1 = require("./devices/Device");
 const ConstantCell_1 = require("./ConstantCell");
 const Utils_1 = require("./Utils");
 const Ic10Error_1 = require("./Ic10Error");
+const types_1 = require("./types");
 class Memory {
     cells;
     stack;
     environ;
     aliases = {};
+    aliasesRevert = {};
     constructor() {
         this.cells = new Array(18);
         this.environ = new Ports_1.Ports();
@@ -91,7 +92,7 @@ class Memory {
         }
         if (name in this.aliases) {
             const mem = this.aliases[name];
-            if (mem instanceof Device_1.Device)
+            if ((0, types_1.isDevice)(mem))
                 return mem;
         }
         return undefined;
@@ -152,11 +153,17 @@ class Memory {
         const register = this.findRegister(link);
         if (register !== undefined) {
             this.aliases[name] = register;
+            if (typeof name === "string") {
+                this.aliasesRevert[register.name] = name;
+            }
             return this;
         }
         const device = this.findDevice(link);
         if (device !== undefined) {
             this.aliases[name] = device;
+            if (typeof name === "string") {
+                this.aliasesRevert[link] = name;
+            }
             return this;
         }
         throw new Ic10Error_1.Ic10Error('Invalid alias value', link);

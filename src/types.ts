@@ -14,7 +14,7 @@ export type _TupleOf<T, N extends number, R extends unknown[]> = R['length'] ext
 
 export function isDevice(val: any): val is Device {
     if (typeof val === 'object') {
-        if (val.constructor.name === 'Device') {
+        if (val instanceof Device || val.constructor.name === 'Device' || val.constructor.name === 'DebugDevice') {
             return true
         }
     }

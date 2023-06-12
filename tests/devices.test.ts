@@ -45,4 +45,17 @@ describe('devices', () => {
 
         expect(m.reg('r0').value).toBe(100)
     })
+
+    test('write to device with alias', () => {
+        run({ connectedDevices: {
+                d0: new DebugDevice(0, { PrefabHash: 5465465,  On: 100 }),
+            } })`
+            alias device d0
+            alias val r1
+            move val 100
+            s device Setting val
+        `
+
+        expect(m.dev("device").get('Setting')).toBe(100)
+    })
 })

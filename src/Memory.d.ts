@@ -9,6 +9,9 @@ export declare class Memory {
     stack: MemoryStack;
     environ: Ports;
     aliases: Record<string, ValueCell | Device>;
+    aliasesRevert: {
+        [key: string]: string;
+    };
     constructor();
     reset(): void;
     findRegister(name: string | number): RegisterCell | undefined;

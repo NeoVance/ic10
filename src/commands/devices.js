@@ -2,8 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.makeDeviceCommands = exports.BatchModes = void 0;
 const Ic10Error_1 = require("../Ic10Error");
-const Device_1 = require("../devices/Device");
 const icTypes_1 = require("../icTypes");
+const types_1 = require("../types");
 exports.BatchModes = {
     Average: 0,
     Sum: 1,
@@ -40,7 +40,7 @@ const makeDeviceCommands = (scope) => {
     const l = (register, device, property) => {
         const r = scope.memory.getRegister(register);
         const a = scope.memory.getDeviceOrDeviceOutput(device);
-        if (a instanceof Device_1.Device) {
+        if ((0, types_1.isDevice)(a)) {
             if (!(0, icTypes_1.isDeviceParameter)(property))
                 throw new Ic10Error_1.Ic10DiagnosticError(`Wrong third argument, expected device parameter`, property);
         }
@@ -57,7 +57,7 @@ const makeDeviceCommands = (scope) => {
     };
     const s = (device, property, value) => {
         const a = scope.memory.getDeviceOrDeviceOutput(device);
-        if (a instanceof Device_1.Device) {
+        if ((0, types_1.isDevice)(a)) {
             if (!(0, icTypes_1.isDeviceParameter)(property)) {
                 throw new Ic10Error_1.Ic10DiagnosticError(`Wrong second argument (${property}). Must be "Device parameter"`, property);
             }
