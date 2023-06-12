@@ -2,6 +2,7 @@ import {Scope} from "./core";
 import {Ic10DiagnosticError, Ic10Error} from "../Ic10Error";
 import {Device} from "../devices/Device";
 import {isChannel, isDeviceParameter} from "../icTypes";
+import {isDevice} from "../types";
 
 export const BatchModes = {
     Average: 0,
@@ -56,7 +57,7 @@ export const makeDeviceCommands = (scope: Scope) => {
     const l = (register: string, device: string, property: string) => {
         const r = scope.memory.getRegister(register)
         const a = scope.memory.getDeviceOrDeviceOutput(device)
-        if (a instanceof Device) {
+        if (isDevice(a)) {
             if (!isDeviceParameter(property))
                 throw new Ic10DiagnosticError(`Wrong third argument, expected device parameter`, property)
         } else {
@@ -84,7 +85,7 @@ export const makeDeviceCommands = (scope: Scope) => {
     */
     const s = (device: string, property: string, value: string) => {
         const a = scope.memory.getDeviceOrDeviceOutput(device)
-        if (a instanceof Device) {
+        if (isDevice(a)) {
             if (!isDeviceParameter(property)) {
                 throw new Ic10DiagnosticError(`Wrong second argument (${property}). Must be "Device parameter"`, property)
             }

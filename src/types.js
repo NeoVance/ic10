@@ -1,9 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isDeviceOutput = exports.isSlot = exports.isIcHousing = exports.isDevice = void 0;
+const Device_1 = require("./devices/Device");
 function isDevice(val) {
     if (typeof val === 'object') {
-        if (val.constructor.name === 'Device') {
+        if (val instanceof Device_1.Device || val.constructor.name === 'Device' || val.constructor.name === 'DebugDevice') {
             return true;
         }
     }

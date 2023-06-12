@@ -7,12 +7,14 @@ import {hashStr, isHash, isNumber, isRecPort, isRegister, isSimplePort, patterns
 import {ValueCell} from "./ValueCell";
 import {DeviceOutput} from "./DeviceOutput";
 import {Ic10Error} from "./Ic10Error";
+import {isDevice} from "./types";
 
 export class Memory {
     public cells: Array<RegisterCell>
     public stack: MemoryStack
     public environ: Ports
     public aliases: Record<string, ValueCell | Device> = {}
+    public aliasesRevert:{[key:string]:string} ={}
 
     constructor() {
         this.cells = new Array<RegisterCell>(18)
@@ -119,8 +121,7 @@ export class Memory {
 
         if (name in this.aliases) {
             const mem = this.aliases[name]
-
-            if (mem instanceof Device)
+            if (isDevice(mem))
                 return mem
         }
 
@@ -208,6 +209,9 @@ export class Memory {
 
         if (register !== undefined) {
             this.aliases[name] = register
+            if (typeof name === "string") {
+                this.aliasesRevert[register.name] = name
+            }
             return this
         }
 
@@ -215,6 +219,9 @@ export class Memory {
 
         if (device !== undefined) {
             this.aliases[name] = device
+            if (typeof name === "string") {
+                this.aliasesRevert[link] = name
+            }
             return this
         }
 
