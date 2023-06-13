@@ -46,6 +46,16 @@ describe('devices', () => {
         expect(m.reg('r0').value).toBe(100)
     })
 
+    test('Lb', () => {
+        run({ connectedDevices: {
+                d0: new DebugDevice(0, { PrefabHash: -2138748650,  Horizontal: 100 }),
+            } })`
+            define dhDish -2138748650
+            lb r2 dhDish Horizontal Sum
+        `
+        expect(m.reg('r2').value).toBe(100)
+    })
+
     test('write to device with alias', () => {
         run({ connectedDevices: {
                 d0: new DebugDevice(0, { PrefabHash: 5465465,  On: 100 }),
