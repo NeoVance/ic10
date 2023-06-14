@@ -314,11 +314,11 @@ class InterpreterIc10 {
         const d = new Device_1.DebugDevice(slotCount, fields);
         try {
             const deviceData = (0, Utils_1.findDevice)(hash);
-            d.properties.PrefabHash = deviceData.PrefabHash;
             d.propertiesAccess = deviceData.params;
             for (const paramsKey in deviceData.params) {
                 d.properties[paramsKey] = 0;
             }
+            d.properties.PrefabHash = deviceData.PrefabHash;
         }
         catch (e) {
             if (typeof hash === 'number') {

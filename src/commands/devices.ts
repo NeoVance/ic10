@@ -107,10 +107,10 @@ export const makeDeviceCommands = (scope: Scope) => {
 
         const devices = __getDevices(hash)
 
-        const values = devices.map(d => d.get(property) as number)
-
-        if (values.length === 0)
+        if (devices.length === 0)
             throw new Ic10DiagnosticError('Can`t find device with hash', hash)
+
+        const values = devices.map(d => d.get(property) as number)
 
         scope.memory.getRegister(register).value = __transformBatch(values, mode)
     }

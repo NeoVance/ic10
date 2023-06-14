@@ -355,11 +355,11 @@ export class InterpreterIc10 implements Scope {
         const d = new DebugDevice(slotCount, fields)
         try {
             const deviceData = findDevice(hash)
-            d.properties.PrefabHash = deviceData.PrefabHash
             d.propertiesAccess = deviceData.params
             for (const paramsKey in deviceData.params) {
                 d.properties[paramsKey] = 0
             }
+            d.properties.PrefabHash = deviceData.PrefabHash
         } catch (e) {
             if (typeof hash === 'number') {
                 d.properties.PrefabHash = hash
