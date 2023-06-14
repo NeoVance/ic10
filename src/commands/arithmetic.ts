@@ -1,6 +1,6 @@
 import {CommandBuilder} from "./core";
 import {Ic10DiagnosticError, keywordErrorMsg} from "../Ic10Error";
-import {isKeyword} from "../icTypes";
+import {isKeyword, isKeywordNoConst} from "../icTypes";
 
 export const makeArithmeticCommands: CommandBuilder = scope => {
     function op<Args extends number[]>(op: (...args: Args) => number, register: string, ...args: { [K in keyof Args]: string }) {
@@ -32,7 +32,7 @@ export const makeArithmeticCommands: CommandBuilder = scope => {
         if (isKeyword(register))
             throw new Ic10DiagnosticError(keywordErrorMsg('register'), register)
 
-        if (isKeyword(value)) {
+        if (isKeywordNoConst(value)) {
             throw new Ic10DiagnosticError(keywordErrorMsg('value'), value)
         }
         op(v => v, register, value)

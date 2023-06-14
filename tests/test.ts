@@ -122,4 +122,11 @@ describe('general', () => {
         const b = findDevice(-2138748650)
         expect(a.PrefabHash).toBe(b.PrefabHash)
     })
+
+    test('const', () => {
+        run`
+            move r0 pi
+        `
+        expect(m.reg("r0").value).toBe(3.14159265358979)
+    })
 })

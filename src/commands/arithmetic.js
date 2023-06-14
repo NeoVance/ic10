@@ -18,7 +18,7 @@ const makeArithmeticCommands = scope => {
     const move = (register, value) => {
         if ((0, icTypes_1.isKeyword)(register))
             throw new Ic10Error_1.Ic10DiagnosticError((0, Ic10Error_1.keywordErrorMsg)('register'), register);
-        if ((0, icTypes_1.isKeyword)(value)) {
+        if ((0, icTypes_1.isKeywordNoConst)(value)) {
             throw new Ic10Error_1.Ic10DiagnosticError((0, Ic10Error_1.keywordErrorMsg)('value'), value);
         }
         op(v => v, register, value);

@@ -125,9 +125,9 @@ export class InterpreterIc10 implements Scope {
 
     init(text: string, device?: Device): InterpreterIc10 {
         this.memory.reset()
-        for (const cKey in DataConstants) {
-            this.memory.define(cKey, DataConstants[cKey])
-        }
+        Object.entries(DataConstants).map(([key,value])=>{
+            this.memory.define(key, parseFloat(value))
+        })
         if (device !== undefined) {
             const ics = device.slots
                 .filter(s => s.has("OccupantHash") && s.get("OccupantHash") === IcHash)

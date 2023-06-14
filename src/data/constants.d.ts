@@ -1,9 +1,9 @@
 declare const _default: {
-    deg2rad: string;
-    nan: string;
-    ninf: string;
-    pi: string;
-    pinf: string;
-    rad2deg: string;
+    readonly deg2rad: "0.017453292519943295769236907684";
+    readonly nan: "NaN";
+    readonly ninf: "-Infinity";
+    readonly pi: "3.14159265358979";
+    readonly pinf: "Infinity";
+    readonly rad2deg: "57.2957795130823208767981";
 };
 export default _default;
