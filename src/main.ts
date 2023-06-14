@@ -12,6 +12,7 @@ import {makeSelectCommands} from "./commands/selects";
 import {makeDeviceCommands} from "./commands/devices";
 import {findDevice, hashStr} from "./Utils";
 import {DeviceFieldsType} from "./DeviceProperties";
+import DataConstants from "./data/constants"
 
 const regexes = {
     strStart: new RegExp("^\".+$"),
@@ -124,6 +125,9 @@ export class InterpreterIc10 implements Scope {
 
     init(text: string, device?: Device): InterpreterIc10 {
         this.memory.reset()
+        for (const cKey in DataConstants) {
+            this.memory.define(cKey, constants[cKey])
+        }
         if (device !== undefined) {
             const ics = device.slots
                 .filter(s => s.has("OccupantHash") && s.get("OccupantHash") === IcHash)

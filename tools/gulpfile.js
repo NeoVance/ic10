@@ -5,6 +5,7 @@ const fs = require("fs");
 const axios = require("axios");
 gulp.task("generate-types", async function () {
     const IC10Data = await getData()
+    const constants = {};
     const types = {
         'SlotParameter': [],
         'DeviceParameter': [],
@@ -29,6 +30,7 @@ gulp.task("generate-types", async function () {
                     types['Function'].push(languageKey)
                     break;
                 case 'Const':
+                    constants[languageKey] = data['description']['preview']
                     types['Const'].push(languageKey)
                     break;
                 case 'Channel':
@@ -86,6 +88,9 @@ gulp.task("generate-types", async function () {
         'export const isKeyword = (s: string) => isChannel(s) || isSlotParameter(s) || isDeviceParameter(s) || isConst(s)'
     ];
 
+    fs.writeFileSync("../src/data/constants.ts", `
+export default ${JSON.stringify(constants,null,2)} as const;
+    `)
 
     fs.writeFileSync("../src/icTypes.ts", lines.join("\n"))
 })
