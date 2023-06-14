@@ -126,7 +126,7 @@ export class InterpreterIc10 implements Scope {
     init(text: string, device?: Device): InterpreterIc10 {
         this.memory.reset()
         for (const cKey in DataConstants) {
-            this.memory.define(cKey, constants[cKey])
+            this.memory.define(cKey, DataConstants[cKey])
         }
         if (device !== undefined) {
             const ics = device.slots
