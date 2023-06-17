@@ -2,15 +2,13 @@ import {DeviceFieldsType} from "../DeviceProperties";
 import {Slot} from "../Slot";
 import {hashStr} from "../Utils";
 import {DeviceOutput} from "../DeviceOutput";
-import {isDeviceParameter, isRM, TypeDeviceParameter, TypeRM} from "../icTypes";
+import {isDeviceParameter, TypeDeviceParameter, TypeRM} from "../icTypes";
 import {Ic10Error} from "../Ic10Error";
 import {accessType} from "../types";
 import {
     getReagent,
     getReagentMode,
-    isReagent,
-    Reagent,
-    reverseReagentMapping
+    Reagent
 } from "../data/reagents";
 import _ from "lodash";
 
