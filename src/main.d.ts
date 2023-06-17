@@ -34,7 +34,7 @@ export declare class InterpreterIc10 implements Scope {
     setSettings(settings?: Partial<ScopeSettings>): InterpreterIc10;
     getSettings(): ScopeSettings;
     init(text: string, device?: Device): InterpreterIc10;
-    splitString(str: string): string[];
+    splitString(str: string): any[];
     stop(): InterpreterIc10;
     run(): Promise<unknown>;
     prepareLine(line?: number, isDebugger?: boolean): ReturnCode | true;
