@@ -4,5 +4,8 @@ export default {
     "ninf": "-Infinity",
     "pi": "3.14159265358979",
     "pinf": "Infinity",
-    "rad2deg": "57.2957795130823208767981"
+    "rad2deg": "57.2957795130823208767981",
+    "Contents": "0",
+    "Required": "1",
+    "Recipe": "2"
 } as const

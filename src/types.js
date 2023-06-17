@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isDeviceOutput = exports.isSlot = exports.isIcHousing = exports.isDevice = void 0;
+exports.arrToObj = exports.reverseMapping = exports.isDeviceOutput = exports.isSlot = exports.isIcHousing = exports.isDevice = void 0;
 const Device_1 = require("./devices/Device");
 function isDevice(val) {
     if (typeof val === 'object') {
@@ -38,4 +38,20 @@ function isDeviceOutput(val) {
     return false;
 }
 exports.isDeviceOutput = isDeviceOutput;
+const reverseMapping = (mapping) => {
+    const keys = Object.keys(mapping);
+    return keys.reduce((acc, k) => {
+        acc[mapping[k]] = k;
+        return acc;
+    }, {});
+};
+exports.reverseMapping = reverseMapping;
+const arrToObj = (arr, transformer) => {
+    return arr.reduce((acc, v) => {
+        const [k, nv] = transformer(v);
+        acc[k] = nv;
+        return acc;
+    }, {});
+};
+exports.arrToObj = arrToObj;
 //# sourceMappingURL=types.js.map

@@ -1,5 +1,6 @@
 import {m, run} from "./utils";
 import {DebugDevice} from "../src/devices/Device";
+import {hashStr} from "../src/Utils";
 
 describe('devices', () => {
     test('write into device', () => {
@@ -67,5 +68,23 @@ describe('devices', () => {
         `
 
         expect(m.dev("device").get('Setting')).toBe(100)
+    })
+
+    test('read reagents', () => {
+        run({ connectedDevices: {
+                d0: new DebugDevice(0, { PrefabHash: 0 }, { reagents: {
+                    Contents: { Copper: 1 },
+                    Required: { Iron: 2 },
+                    Recipe: { Electrum: 3 }
+                } })
+            } })`
+            lr r0 d0 0 ${hashStr("Copper")}
+            lr r1 d0 1 ${hashStr("Iron")}
+            lr r2 d0 2 ${hashStr("Electrum")}
+        `
+
+        expect(m.reg("r0").value).toBe(1)
+        expect(m.reg("r1").value).toBe(2)
+        expect(m.reg("r2").value).toBe(3)
     })
 })

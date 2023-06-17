@@ -28,3 +28,5 @@ export declare function isDevice(val: any): val is Device;
 export declare function isIcHousing(val: any): val is IcHousing;
 export declare function isSlot(val: any): val is Slot;
 export declare function isDeviceOutput(val: any): val is DeviceOutput;
+export declare const reverseMapping: <Key extends string | number, Value extends string | number>(mapping: Record<Key, Value>) => Record<Value, Key>;
+export declare const arrToObj: <Value, Key extends string, NewValue>(arr: readonly Value[], transformer: (v: Value) => [Key, NewValue]) => Record<Key, NewValue>;
