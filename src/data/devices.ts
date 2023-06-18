@@ -1,6 +1,6 @@
 import {DeviceDataType} from "../types";
 
-export const devices:DeviceDataType = 
+export const devices =
  {
   "assoc": {
     "111280987": "ItemTerrainManipulator",
@@ -971,6 +971,6 @@ export const devices:DeviceDataType =
       "slot_count": 0
     }
   }
-} as const;
+} as const satisfies DeviceDataType;
 
 export default devices;

@@ -72,7 +72,7 @@ gulp.task("generate-types", async function () {
     const RM = types['RM'].map(escape)
 
     const makeDef = (name, values) => ([
-        `const values${name} = [ ${values.join(", ")} ] as const`,
+        `export const values${name} = [ ${values.join(", ")} ] as const`,
         `export type Type${name} = (typeof values${name})[number]`,
         `export const is${name} = (val: string): val is Type${name} => values${name}.includes(val as Type${name})`
     ])
@@ -100,7 +100,7 @@ gulp.task("generate-devices", async function () {
     const b = JSON.stringify(devices.data.object, null, 2)
     const text = "import {DeviceDataType} from \"../types\";\n" +
         "\n" +
-        `export const devices:DeviceDataType = \n ${b} as const;\n\nexport default devices;`
+        `export const devices = \n ${b} as const satisfies DeviceDataType;\n\nexport default devices;`
 
     fs.writeFileSync("../src/data/devices.ts", text)
 })

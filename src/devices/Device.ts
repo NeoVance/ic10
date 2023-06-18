@@ -2,7 +2,7 @@ import {DeviceFieldsType} from "../DeviceProperties";
 import {Slot} from "../Slot";
 import {hashStr} from "../Utils";
 import {DeviceOutput} from "../DeviceOutput";
-import {isDeviceParameter, TypeDeviceParameter, TypeRM} from "../icTypes";
+import {isDeviceParameter, TypeDeviceParameter, TypeRM, valuesDeviceParameter} from "../icTypes";
 import {Ic10Error} from "../Ic10Error";
 import {accessType} from "../types";
 import {
@@ -11,6 +11,7 @@ import {
     Reagent
 } from "../data/reagents";
 import _ from "lodash";
+import devices from "../data/devices";
 
 export const IcHash = hashStr("ItemIntegratedCircuit10")
 
@@ -114,4 +115,28 @@ export class DebugDevice extends Device {
 
         this.reagents = _.merge(this.reagents, reagents)
     }
+}
+
+type Devices = typeof devices
+type DeviceName = keyof Devices["devices"] & string
+type DeviceConf<Type extends DeviceName> = Devices["devices"][Type]
+
+//TODO: create base class to store prefab name
+export const deviceFromConfig = <Type extends DeviceName>(type: Type) => {
+    const d = devices.devices[type]
+
+    type Fields = Record<keyof DeviceConf<Type>["params"] & TypeDeviceParameter & string, number>
+
+    //get all properties with initial value
+    const fields: Fields = _.pick(d, valuesDeviceParameter) as Fields
+
+    //fill rest with 0
+    for (const prop in d.params) {
+        if (fields[prop as keyof Fields] !== undefined)
+            continue
+
+        fields[prop as keyof Fields] = 0
+    }
+
+    return new Device<keyof DeviceConf<Type>["params"] & TypeDeviceParameter & string>(d.slot_count, fields)
 }

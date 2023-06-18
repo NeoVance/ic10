@@ -28,5 +28,8 @@ export const findDevice = (HashOrName: string | number) => {
     if (typeof HashOrName === "number") hash = HashOrName;
     if (typeof HashOrName === "string") hash = hashStr(HashOrName)
     const _hash = String(hash);
-    return devices['devices'][devices['assoc'][_hash]];
+
+    const deviceName = devices['assoc'][_hash as keyof typeof devices['assoc']]
+
+    return devices['devices'][deviceName as keyof typeof devices['devices']]
 }

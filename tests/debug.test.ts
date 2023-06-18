@@ -1,5 +1,7 @@
 import {interpreterIc10, makeDebugger, run} from "./utils";
-import {DebugDevice, IcHash} from "../src/devices/Device";
+import {DebugDevice, deviceFromConfig, IcHash} from "../src/devices/Device";
+import {hashStr} from "../src/Utils";
+import devices from "../src/data/devices";
 
 describe("debugging", () => {
     const { debugCallback, debugInfo } = makeDebugger()
@@ -71,5 +73,12 @@ describe("debugging", () => {
         const t = interpreterIc10.memory.aliasesRevert["r0"]
 
         expect(t).toBe("test")
+    })
+
+    test("device from config", () => {
+        const computer = deviceFromConfig("StructureComputer")
+
+        expect(computer.properties.PrefabHash).toBe(hashStr("StructureComputer"))
+        expect(computer.slots.length).toBe(devices.devices.StructureComputer.slot_count)
     })
 })
