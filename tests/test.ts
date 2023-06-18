@@ -142,6 +142,7 @@ describe('general', () => {
             }
             }})
         // console.log(ic10.memory.environ['d0'])
-        expect(ic10.memory.environ['d0']?.properties.PrefabHash).toBe(hashStr("StructureAdvancedPackagingMachine"))
+        expect(ic10.memory.getDevice("d0").properties.PrefabHash).toBe(hashStr("StructureAdvancedPackagingMachine"))
+        expect(ic10.memory.getDevice("d0").name).toBe("StructureAdvancedPackagingMachine")
     })
 })

@@ -17,6 +17,7 @@ export declare class Device<Fields extends keyof DeviceFieldsType = keyof Device
     };
     reagents: Record<TypeRM, Partial<Record<Reagent, number>>>;
     constructor(slotCount: number, fields: Pick<DeviceFieldsType, Fields | "PrefabHash">);
+    get name(): string | number;
     has(variable: keyof DeviceFieldsType): boolean;
     get(variable: keyof DeviceFieldsType): number;
     set(variable: Fields, value: number): Device<Fields>;

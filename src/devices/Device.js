@@ -11,6 +11,7 @@ const icTypes_1 = require("../icTypes");
 const Ic10Error_1 = require("../Ic10Error");
 const reagents_1 = require("../data/reagents");
 const lodash_1 = __importDefault(require("lodash"));
+const devices_1 = __importDefault(require("../data/devices"));
 exports.IcHash = (0, Utils_1.hashStr)("ItemIntegratedCircuit10");
 class Device {
     nameHash;
@@ -26,6 +27,15 @@ class Device {
     constructor(slotCount, fields) {
         this.properties = fields;
         this.slots = Array(slotCount ?? 0).fill(0).map((_, i) => new Slot_1.Slot(i));
+    }
+    get name() {
+        if (!this.properties.PrefabHash) {
+            return 'Unknown';
+        }
+        if (devices_1.default.assoc[this.properties.PrefabHash]) {
+            return devices_1.default.assoc[this.properties.PrefabHash];
+        }
+        return this.properties.PrefabHash;
     }
     has(variable) {
         return (variable in this.properties);
