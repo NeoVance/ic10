@@ -26,11 +26,10 @@ export declare class Device<Fields extends keyof DeviceFieldsType = keyof Device
     getChannel(channel: number): DeviceOutput;
     getReagent(reagentMode: TypeRM | number, reagent: Reagent | number): number;
 }
-type AdditionalOptions = {
+export type AdditionalOptions = {
     reagents: Partial<Record<TypeRM, Partial<Record<Reagent, number>>>>;
 };
 export declare class DebugDevice extends Device {
     properties: DeviceFieldsType;
     constructor(slotCount: number, fields: Partial<DeviceFieldsType>, additionalOptions?: Partial<AdditionalOptions>);
 }
-export {};
