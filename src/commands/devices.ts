@@ -120,9 +120,13 @@ export const makeDeviceCommands = (scope: Scope) => {
     * [en] Read reagent value op4 in op3 mode from port op2
     * [ru] Чтение значения реагента op4 в режиме op3 из порта op2
     */
-    const lr = (register: string, device: string, mode: string, property: string) => {
-        //TODO: well, we don't have reagents so we need to do it later
-        throw new Ic10DiagnosticError("lr not implemented yet")
+    const lr = (register: string, device: string, mode: string, reagent: string) => {
+        const d = scope.memory.getDevice(device)
+
+        const r = scope.memory.getValue(reagent)
+        const m = scope.memory.getValue(mode)
+
+        scope.memory.getRegister(register).value = d.getReagent(m, r)
     }
 
     /*

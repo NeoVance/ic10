@@ -60,4 +60,18 @@ export function isDeviceOutput(val: any): val is DeviceOutput {
 	return false
 }
 
+export const reverseMapping = <Key extends string | number, Value extends string | number>(mapping: Record<Key, Value>): Record<Value, Key> => {
+    const keys: Key[] = Object.keys(mapping) as Key[]
+    return keys.reduce((acc, k) => {
+        acc[mapping[k]] = k
+        return acc
+    }, {} as Record<Value, Key>)
+}
 
+export const arrToObj = <Value, Key extends string, NewValue>(arr: readonly Value[], transformer: (v: Value) => [Key, NewValue]): Record<Key, NewValue> => {
+    return arr.reduce((acc, v) => {
+        const [ k, nv ] = transformer(v)
+        acc[k] = nv
+        return acc
+    }, {} as Record<Key, NewValue>)
+}
