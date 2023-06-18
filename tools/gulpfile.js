@@ -72,7 +72,7 @@ gulp.task("generate-types", async function () {
     const RM = types['RM'].map(escape)
 
     const makeDef = (name, values) => ([
-        `const values${name} = [ ${values.join(", ")} ] as const`,
+        `export const values${name} = [ ${values.join(", ")} ] as const`,
         `export type Type${name} = (typeof values${name})[number]`,
         `export const is${name} = (val: string): val is Type${name} => values${name}.includes(val as Type${name})`
     ])
