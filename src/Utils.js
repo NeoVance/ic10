@@ -38,7 +38,8 @@ const findDevice = (HashOrName) => {
     if (typeof HashOrName === "string")
         hash = (0, exports.hashStr)(HashOrName);
     const _hash = String(hash);
-    return devices_1.default['devices'][devices_1.default['assoc'][_hash]];
+    const deviceName = devices_1.default['assoc'][_hash];
+    return devices_1.default['devices'][deviceName];
 };
 exports.findDevice = findDevice;
 //# sourceMappingURL=Utils.js.map

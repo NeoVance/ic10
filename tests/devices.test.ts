@@ -1,6 +1,5 @@
 import {m, run} from "./utils";
 import {DebugDevice} from "../src/devices/Device";
-import {hashStr} from "../src/Utils";
 
 describe('devices', () => {
     test('write into device', () => {
@@ -78,9 +77,9 @@ describe('devices', () => {
                     Recipe: { Electrum: 3 }
                 } })
             } })`
-            lr r0 d0 0 ${hashStr("Copper")}
+            lr r0 d0 0 HASH("Copper")
             lr r1 d0 1 HASH("Iron")
-            lr r2 d0 2 ${hashStr("Electrum")}
+            lr r2 d0 2 HASH("Electrum")
         `
 
         expect(m.reg("r0").value).toBe(1)

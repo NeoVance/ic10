@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DebugDevice = exports.Device = exports.IcHash = void 0;
+exports.deviceFromConfig = exports.DebugDevice = exports.Device = exports.IcHash = void 0;
 const Slot_1 = require("../Slot");
 const Utils_1 = require("../Utils");
 const DeviceOutput_1 = require("../DeviceOutput");
@@ -32,9 +32,9 @@ class Device {
         if (!this.properties.PrefabHash) {
             return 'Unknown';
         }
-        if (devices_1.default.assoc[this.properties.PrefabHash]) {
-            return devices_1.default.assoc[this.properties.PrefabHash];
-        }
+        const assoc = devices_1.default.assoc;
+        if (assoc[this.properties.PrefabHash])
+            return assoc[this.properties.PrefabHash];
         return this.properties.PrefabHash;
     }
     has(variable) {
@@ -92,4 +92,15 @@ class DebugDevice extends Device {
     }
 }
 exports.DebugDevice = DebugDevice;
+const deviceFromConfig = (type) => {
+    const d = devices_1.default.devices[type];
+    const fields = lodash_1.default.pick(d, icTypes_1.valuesDeviceParameter);
+    for (const prop in d.params) {
+        if (fields[prop] !== undefined)
+            continue;
+        fields[prop] = 0;
+    }
+    return new Device(d.slot_count, fields);
+};
+exports.deviceFromConfig = deviceFromConfig;
 //# sourceMappingURL=Device.js.map
