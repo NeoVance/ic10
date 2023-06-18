@@ -127,10 +127,11 @@ describe('general', () => {
     test('const', () => {
         run`
             move r0 pi
+            define pia 3.14
         `
         expect(m.reg("r0").value).toBe(3.14159265358979)
+        expect(m.val("pia")).toBe(3.14)
     })
-
 
     test('connectDevice', () => {
         const ic10 = new InterpreterIc10()
@@ -139,6 +140,7 @@ describe('general', () => {
                 Copper:5
             }
             }})
-        expect(ic10.memory.environ['d0']?.properties.PrefabHash).toBe(hashStr("StructureAdvancedPackagingMachine"))
+        expect(ic10.memory.getDevice("d0").properties.PrefabHash).toBe(hashStr("StructureAdvancedPackagingMachine"))
+        expect(ic10.memory.getDevice("d0").name).toBe("StructureAdvancedPackagingMachine")
     })
 })

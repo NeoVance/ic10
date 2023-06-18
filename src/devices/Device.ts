@@ -5,11 +5,7 @@ import {DeviceOutput} from "../DeviceOutput";
 import {isDeviceParameter, TypeDeviceParameter, TypeRM, valuesDeviceParameter} from "../icTypes";
 import {Ic10Error} from "../Ic10Error";
 import {accessType} from "../types";
-import {
-    getReagent,
-    getReagentMode,
-    Reagent
-} from "../data/reagents";
+import {getReagent, getReagentMode, Reagent} from "../data/reagents";
 import _ from "lodash";
 import devices from "../data/devices";
 
@@ -18,7 +14,7 @@ export const IcHash = hashStr("ItemIntegratedCircuit10")
 export class Device<Fields extends keyof DeviceFieldsType = keyof DeviceFieldsType> {
     public nameHash?: number;
     public properties: Pick<DeviceFieldsType, Fields | "PrefabHash">
-    public propertiesAccess: { [key in TypeDeviceParameter|string]: accessType} = {}
+    public propertiesAccess: { [key in TypeDeviceParameter | string]: accessType } = {}
     public slots: Slot[]
     public outputs: { [key: `${number}`]: DeviceOutput } = {}
     public reagents: Record<TypeRM, Partial<Record<Reagent, number>>> = {
@@ -30,6 +26,17 @@ export class Device<Fields extends keyof DeviceFieldsType = keyof DeviceFieldsTy
     constructor(slotCount: number, fields: Pick<DeviceFieldsType, Fields | "PrefabHash">) {
         this.properties = fields
         this.slots = Array(slotCount ?? 0).fill(0).map((_, i) => new Slot(i))
+    }
+
+    get name() {
+        if (!this.properties.PrefabHash) {
+            return 'Unknown'
+        }
+        if (devices.assoc[this.properties.PrefabHash]) {
+            return devices.assoc[this.properties.PrefabHash]
+        }
+        return this.properties.PrefabHash
+
     }
 
     has(variable: keyof DeviceFieldsType) {
@@ -109,7 +116,7 @@ export class DebugDevice extends Device {
     declare public properties: DeviceFieldsType
 
     constructor(slotCount: number, fields: Partial<DeviceFieldsType>, additionalOptions?: Partial<AdditionalOptions>) {
-        super(slotCount, { PrefabHash: fields.PrefabHash ?? 0, ...fields } as DeviceFieldsType);
+        super(slotCount, {PrefabHash: fields.PrefabHash ?? 0, ...fields} as DeviceFieldsType);
 
         const reagents = additionalOptions?.reagents ?? {}
 
