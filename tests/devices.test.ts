@@ -79,7 +79,7 @@ describe('devices', () => {
                 } })
             } })`
             lr r0 d0 0 ${hashStr("Copper")}
-            lr r1 d0 1 ${hashStr("Iron")}
+            lr r1 d0 1 HASH("Iron")
             lr r2 d0 2 ${hashStr("Electrum")}
         `
 
