@@ -172,7 +172,7 @@ class Memory {
         if (typeof value === "string") {
             if (!(0, Utils_1.isNumber)(value))
                 throw new Ic10Error_1.Ic10Error("Not a number", value);
-            value = parseInt(value);
+            value = parseFloat(value);
         }
         this.aliases[name] = new ConstantCell_1.ConstantCell(value, name);
     }

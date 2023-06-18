@@ -233,7 +233,7 @@ export class Memory {
             if (!isNumber(value))
                 throw new Ic10Error("Not a number", value)
 
-            value = parseInt(value)
+            value = parseFloat(value)
         }
 
         this.aliases[name] = new ConstantCell(value, name)
