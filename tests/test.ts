@@ -4,6 +4,7 @@ import {interpreterIc10, m, run} from "./utils";
 import {DebugDevice} from "../src/devices/Device";
 import {IcHousing} from "../src/devices/IcHousing";
 import {keywordErrorMsg} from "../src/Ic10Error";
+import InterpreterIc10 from "../src/main";
 
 describe('general', () => {
     test('example code', () => {
@@ -128,5 +129,17 @@ describe('general', () => {
             move r0 pi
         `
         expect(m.reg("r0").value).toBe(3.14159265358979)
+    })
+
+
+    test('connectDevice', () => {
+        const ic10 = new InterpreterIc10()
+        ic10.connectDevice('d0',hashStr("StructureAdvancedPackagingMachine"),2,{},{reagents:{
+            Contents:{
+                Copper:5
+            }
+            }})
+        console.log(ic10.memory.environ['d0'])
+        expect(ic10.memory.environ['d0']?.properties.PrefabHash).toBe(hashStr("StructureAdvancedPackagingMachine"))
     })
 })

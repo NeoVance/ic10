@@ -310,8 +310,8 @@ class InterpreterIc10 {
                 slot.set("LineNumber", this.position);
         });
     }
-    connectDevice(name, hash, slotCount, fields) {
-        const d = new Device_1.DebugDevice(slotCount, fields);
+    connectDevice(name, hash, slotCount, fields, additionalOptions) {
+        const d = new Device_1.DebugDevice(slotCount, fields, additionalOptions);
         try {
             const deviceData = (0, Utils_1.findDevice)(hash);
             d.propertiesAccess = deviceData.params;
