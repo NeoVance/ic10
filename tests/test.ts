@@ -139,7 +139,6 @@ describe('general', () => {
                 Copper:5
             }
             }})
-        console.log(ic10.memory.environ['d0'])
         expect(ic10.memory.environ['d0']?.properties.PrefabHash).toBe(hashStr("StructureAdvancedPackagingMachine"))
     })
 })
