@@ -100,7 +100,7 @@ export class Device<Fields extends keyof DeviceFieldsType = keyof DeviceFieldsTy
     }
 }
 
-type AdditionalOptions = {
+export type AdditionalOptions = {
     reagents: Partial<Record<TypeRM, Partial<Record<Reagent, number>>>>
 }
 

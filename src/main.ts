@@ -1,6 +1,6 @@
 import {Ic10DiagnosticError, Ic10Error} from "./Ic10Error";
 import {Memory} from "./Memory";
-import {DebugDevice, Device, IcHash} from "./devices/Device";
+import {AdditionalOptions, DebugDevice, Device, IcHash} from "./devices/Device";
 import {Scope, ScopeSettings} from "./commands/core";
 import {makeDebugCommands} from "./commands/debug";
 import {makeArithmeticCommands} from "./commands/arithmetic";
@@ -125,7 +125,7 @@ export class InterpreterIc10 implements Scope {
 
     init(text: string, device?: Device): InterpreterIc10 {
         this.memory.reset()
-        Object.entries(DataConstants).map(([key,value])=>{
+        Object.entries(DataConstants).map(([key, value]) => {
             this.memory.define(key, parseFloat(value))
         })
         if (device !== undefined) {
@@ -351,8 +351,8 @@ export class InterpreterIc10 implements Scope {
         })
     }
 
-    public connectDevice(name: string, hash: string | number, slotCount: number, fields: Partial<DeviceFieldsType>) {
-        const d = new DebugDevice(slotCount, fields)
+    public connectDevice(name: string, hash: string | number, slotCount: number, fields: Partial<DeviceFieldsType>, additionalOptions?: Partial<AdditionalOptions>) {
+        const d = new DebugDevice(slotCount, fields, additionalOptions)
         try {
             const deviceData = findDevice(hash)
             d.propertiesAccess = deviceData.params
