@@ -32,9 +32,12 @@ export class Device<Fields extends keyof DeviceFieldsType = keyof DeviceFieldsTy
         if (!this.properties.PrefabHash) {
             return 'Unknown'
         }
-        if (devices.assoc[this.properties.PrefabHash]) {
-            return devices.assoc[this.properties.PrefabHash]
-        }
+
+        const assoc = devices.assoc as Record<number, string>
+
+        if (assoc[this.properties.PrefabHash])
+            return assoc[this.properties.PrefabHash]
+
         return this.properties.PrefabHash
 
     }

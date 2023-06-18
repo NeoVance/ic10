@@ -32,9 +32,9 @@ class Device {
         if (!this.properties.PrefabHash) {
             return 'Unknown';
         }
-        if (devices_1.default.assoc[this.properties.PrefabHash]) {
-            return devices_1.default.assoc[this.properties.PrefabHash];
-        }
+        const assoc = devices_1.default.assoc;
+        if (assoc[this.properties.PrefabHash])
+            return assoc[this.properties.PrefabHash];
         return this.properties.PrefabHash;
     }
     has(variable) {
