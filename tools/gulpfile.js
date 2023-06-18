@@ -2,8 +2,10 @@
 const gulp = require("gulp")
 const getData = require(__dirname + "/ajax.js")
 const fs = require("fs");
+const axios = require("axios");
 gulp.task("generate-types", async function () {
     const IC10Data = await getData()
+    const constants = {};
     const types = {
         'SlotParameter': [],
         'DeviceParameter': [],
@@ -16,7 +18,7 @@ gulp.task("generate-types", async function () {
 
     for (const languageKey in IC10Data.Languages["en"]) {
         const data = IC10Data.Languages["en"][languageKey]
-        const p = (data)=>{
+        const p = (data) => {
             switch (data['type']) {
                 case 'Slot parameter':
                     types['SlotParameter'].push(languageKey)
@@ -28,6 +30,7 @@ gulp.task("generate-types", async function () {
                     types['Function'].push(languageKey)
                     break;
                 case 'Const':
+                    constants[languageKey] = data['description']['preview']
                     types['Const'].push(languageKey)
                     break;
                 case 'Channel':
@@ -41,10 +44,10 @@ gulp.task("generate-types", async function () {
                     break;
             }
         }
-        if(Array.isArray(data)){
+        if (Array.isArray(data)) {
             p(data[0])
             p(data[1])
-        }else {
+        } else {
             p(data)
         }
     }
@@ -69,7 +72,7 @@ gulp.task("generate-types", async function () {
     const RM = types['RM'].map(escape)
 
     const makeDef = (name, values) => ([
-        `const values${name} = [ ${values.join(", ")} ] as const`,
+        `export const values${name} = [ ${values.join(", ")} ] as const`,
         `export type Type${name} = (typeof values${name})[number]`,
         `export const is${name} = (val: string): val is Type${name} => values${name}.includes(val as Type${name})`
     ])
@@ -85,8 +88,21 @@ gulp.task("generate-types", async function () {
         'export const isKeyword = (s: string) => isChannel(s) || isSlotParameter(s) || isDeviceParameter(s) || isConst(s)'
     ];
 
+    fs.writeFileSync("../src/data/constants.ts", `
+export default ${JSON.stringify(constants,null,2)} as const;
+    `)
 
     fs.writeFileSync("../src/icTypes.ts", lines.join("\n"))
+})
+
+gulp.task("generate-devices", async function () {
+    const devices = await axios("https://icx.traineratwot.site/GetDevice")
+    const b = JSON.stringify(devices.data.object, null, 2)
+    const text = "import {DeviceDataType} from \"../types\";\n" +
+        "\n" +
+        `export const devices:DeviceDataType = \n ${b} as const;\n\nexport default devices;`
+
+    fs.writeFileSync("../src/data/devices.ts", text)
 })
 
 
@@ -102,8 +118,8 @@ gulp.task("generate-jsDoc", async function () {
             case 'Function':
                 mainTs = mainTs.replace(`    * @${languageKey}@`,
                     `    * @${languageKey}@\n` +
-                              `    * [en] ${dataEn.description.text.replace('\n', ' ').trim()}\n` +
-                              `    * [ru] ${dataRu.description.text.replace('\n', ' ').trim()}`
+                    `    * [en] ${dataEn.description.text.replace('\n', ' ').trim()}\n` +
+                    `    * [ru] ${dataRu.description.text.replace('\n', ' ').trim()}`
                 )
                 break;
             default :

@@ -72,13 +72,16 @@ const makeDeviceCommands = (scope) => {
     const lb = (register, deviceHash, property, mode) => {
         const hash = scope.memory.getValue(deviceHash);
         const devices = __getDevices(hash);
-        const values = devices.map(d => d.get(property));
-        if (values.length === 0)
+        if (devices.length === 0)
             throw new Ic10Error_1.Ic10DiagnosticError('Can`t find device with hash', hash);
+        const values = devices.map(d => d.get(property));
         scope.memory.getRegister(register).value = __transformBatch(values, mode);
     };
-    const lr = (register, device, mode, property) => {
-        throw new Ic10Error_1.Ic10DiagnosticError("lr not implemented yet");
+    const lr = (register, device, mode, reagent) => {
+        const d = scope.memory.getDevice(device);
+        const r = scope.memory.getValue(reagent);
+        const m = scope.memory.getValue(mode);
+        scope.memory.getRegister(register).value = d.getReagent(m, r);
     };
     const sb = (deviceHash, property, value) => {
         const hash = scope.memory.getValue(deviceHash);

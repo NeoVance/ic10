@@ -1,7 +1,7 @@
 {
   "name": "ic10",
   "type": "commonjs",
-  "version": "3.2.1",
+  "version": "3.3.1",
   "description": "ic10 interpreter",
   "main": "src/main.js",
   "scripts": {
@@ -35,6 +35,8 @@
   },
   "dependencies": {
     "@types/crc": "^3.8.0",
-    "crc": "^4.3.2"
+    "@types/lodash": "^4.14.195",
+    "crc": "^4.3.2",
+    "lodash": "^4.17.21"
   }
 }

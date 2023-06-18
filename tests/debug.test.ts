@@ -1,4 +1,4 @@
-import {makeDebugger, run} from "./utils";
+import {interpreterIc10, makeDebugger, run} from "./utils";
 import {DebugDevice, IcHash} from "../src/devices/Device";
 
 describe("debugging", () => {
@@ -61,5 +61,15 @@ describe("debugging", () => {
             { cmd: 'Log[6]: ', args: [`d0.slot.0.OccupantHash = ${IcHash};`] },
             { cmd: 'Log[7]: ', args: ['d0.Setting = 0;', `2 = 2;`, `r0 = 0;`] }
         ])
+    })
+
+    test("reverse alias", () => {
+        run`
+            alias test r0
+        `
+
+        const t = interpreterIc10.memory.aliasesRevert["r0"]
+
+        expect(t).toBe("test")
     })
 })

@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InterpreterIc10 = exports.Execution = void 0;
 const Ic10Error_1 = require("./Ic10Error");
@@ -12,6 +15,8 @@ const conditions_1 = require("./commands/conditions");
 const jumps_1 = require("./commands/jumps");
 const selects_1 = require("./commands/selects");
 const devices_1 = require("./commands/devices");
+const Utils_1 = require("./Utils");
+const constants_1 = __importDefault(require("./data/constants"));
 const regexes = {
     strStart: new RegExp("^\".+$"),
     strEnd: new RegExp(".+\"$"),
@@ -105,6 +110,9 @@ class InterpreterIc10 {
     }
     init(text, device) {
         this.memory.reset();
+        Object.entries(constants_1.default).map(([key, value]) => {
+            this.memory.define(key, parseFloat(value));
+        });
         if (device !== undefined) {
             const ics = device.slots
                 .filter(s => s.has("OccupantHash") && s.get("OccupantHash") === Device_1.IcHash);
@@ -301,6 +309,26 @@ class InterpreterIc10 {
             if (slot.has("LineNumber"))
                 slot.set("LineNumber", this.position);
         });
+    }
+    connectDevice(name, hash, slotCount, fields) {
+        const d = new Device_1.DebugDevice(slotCount, fields);
+        try {
+            const deviceData = (0, Utils_1.findDevice)(hash);
+            d.propertiesAccess = deviceData.params;
+            for (const paramsKey in deviceData.params) {
+                d.properties[paramsKey] = 0;
+            }
+            d.properties.PrefabHash = deviceData.PrefabHash;
+        }
+        catch (e) {
+            if (typeof hash === 'number') {
+                d.properties.PrefabHash = hash;
+            }
+            else {
+                d.properties.PrefabHash = (0, Utils_1.hashStr)(hash);
+            }
+        }
+        this.memory.environ.set(name, d);
     }
 }
 exports.InterpreterIc10 = InterpreterIc10;

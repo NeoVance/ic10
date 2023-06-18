@@ -2,16 +2,29 @@ import {DeviceFieldsType} from "../DeviceProperties";
 import {Slot} from "../Slot";
 import {hashStr} from "../Utils";
 import {DeviceOutput} from "../DeviceOutput";
-import {isDeviceParameter} from "../icTypes";
+import {isDeviceParameter, TypeDeviceParameter, TypeRM} from "../icTypes";
 import {Ic10Error} from "../Ic10Error";
+import {accessType} from "../types";
+import {
+    getReagent,
+    getReagentMode,
+    Reagent
+} from "../data/reagents";
+import _ from "lodash";
 
 export const IcHash = hashStr("ItemIntegratedCircuit10")
 
 export class Device<Fields extends keyof DeviceFieldsType = keyof DeviceFieldsType> {
     public nameHash?: number;
     public properties: Pick<DeviceFieldsType, Fields | "PrefabHash">
+    public propertiesAccess: { [key in TypeDeviceParameter|string]: accessType} = {}
     public slots: Slot[]
     public outputs: { [key: `${number}`]: DeviceOutput } = {}
+    public reagents: Record<TypeRM, Partial<Record<Reagent, number>>> = {
+        Contents: {},
+        Recipe: {},
+        Required: {}
+    }
 
     constructor(slotCount: number, fields: Pick<DeviceFieldsType, Fields | "PrefabHash">) {
         this.properties = fields
@@ -71,12 +84,34 @@ export class Device<Fields extends keyof DeviceFieldsType = keyof DeviceFieldsTy
             this.outputs[ch] = new DeviceOutput(this)
         return this.outputs[ch]
     }
+
+    getReagent(reagentMode: TypeRM | number, reagent: Reagent | number): number {
+        const rm = getReagentMode(reagentMode)
+
+        if (rm === undefined)
+            throw new Ic10Error("Unknown reagent mode", reagentMode)
+
+        const r = getReagent(reagent)
+
+        if (r === undefined)
+            throw new Ic10Error("Unknown reagent", reagent)
+
+        return this.reagents[rm][r] ?? 0
+    }
+}
+
+type AdditionalOptions = {
+    reagents: Partial<Record<TypeRM, Partial<Record<Reagent, number>>>>
 }
 
 export class DebugDevice extends Device {
     declare public properties: DeviceFieldsType
 
-    constructor(slotCount: number, fields: Partial<DeviceFieldsType>) {
+    constructor(slotCount: number, fields: Partial<DeviceFieldsType>, additionalOptions?: Partial<AdditionalOptions>) {
         super(slotCount, { PrefabHash: fields.PrefabHash ?? 0, ...fields } as DeviceFieldsType);
+
+        const reagents = additionalOptions?.reagents ?? {}
+
+        this.reagents = _.merge(this.reagents, reagents)
     }
 }

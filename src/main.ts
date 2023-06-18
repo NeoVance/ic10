@@ -1,6 +1,6 @@
 import {Ic10DiagnosticError, Ic10Error} from "./Ic10Error";
 import {Memory} from "./Memory";
-import {Device, IcHash} from "./devices/Device";
+import {DebugDevice, Device, IcHash} from "./devices/Device";
 import {Scope, ScopeSettings} from "./commands/core";
 import {makeDebugCommands} from "./commands/debug";
 import {makeArithmeticCommands} from "./commands/arithmetic";
@@ -10,6 +10,9 @@ import {makeConditions} from "./commands/conditions";
 import {makeJumpCommands} from "./commands/jumps";
 import {makeSelectCommands} from "./commands/selects";
 import {makeDeviceCommands} from "./commands/devices";
+import {findDevice, hashStr} from "./Utils";
+import {DeviceFieldsType} from "./DeviceProperties";
+import DataConstants from "./data/constants"
 
 const regexes = {
     strStart: new RegExp("^\".+$"),
@@ -65,7 +68,7 @@ export class InterpreterIc10 implements Scope {
     public device?: Device
 
     public sleeping: number
-    private readonly debugCommands: Record<string,(...args: string[]) => void>
+    private readonly debugCommands: Record<string, (...args: string[]) => void>
     private readonly inGameCommands: Record<string, (...args: string[]) => void>
 
     constructor(code: string = '', settings: Partial<ScopeSettings> = {}) {
@@ -122,6 +125,9 @@ export class InterpreterIc10 implements Scope {
 
     init(text: string, device?: Device): InterpreterIc10 {
         this.memory.reset()
+        Object.entries(DataConstants).map(([key,value])=>{
+            this.memory.define(key, parseFloat(value))
+        })
         if (device !== undefined) {
             const ics = device.slots
                 .filter(s => s.has("OccupantHash") && s.get("OccupantHash") === IcHash)
@@ -173,7 +179,7 @@ export class InterpreterIc10 implements Scope {
         this.commands = commands
         this.position = 0
         while (this.position < this.commands.length) {
-            let { command} = this.commands[this.position]
+            let {command} = this.commands[this.position]
             this.position++
             if (command?.match(/^\w+:$/)) {
                 let label = command.replace(":", "")
@@ -343,6 +349,25 @@ export class InterpreterIc10 implements Scope {
             if (slot.has("LineNumber"))
                 slot.set("LineNumber", this.position)
         })
+    }
+
+    public connectDevice(name: string, hash: string | number, slotCount: number, fields: Partial<DeviceFieldsType>) {
+        const d = new DebugDevice(slotCount, fields)
+        try {
+            const deviceData = findDevice(hash)
+            d.propertiesAccess = deviceData.params
+            for (const paramsKey in deviceData.params) {
+                d.properties[paramsKey] = 0
+            }
+            d.properties.PrefabHash = deviceData.PrefabHash
+        } catch (e) {
+            if (typeof hash === 'number') {
+                d.properties.PrefabHash = hash
+            } else {
+                d.properties.PrefabHash = hashStr(hash)
+            }
+        }
+        this.memory.environ.set(name, d)
     }
 }
 
