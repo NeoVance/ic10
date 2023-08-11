@@ -20,3 +20,4 @@ export const valuesRM = [  ] as const
 export type TypeRM = (typeof valuesRM)[number]
 export const isRM = (val: string): val is TypeRM => valuesRM.includes(val as TypeRM)
 export const isKeyword = (s: string) => isChannel(s) || isSlotParameter(s) || isDeviceParameter(s) || isConst(s)
+export const isKeywordNoConst = (s: string) => isChannel(s) || isSlotParameter(s) || isDeviceParameter(s)

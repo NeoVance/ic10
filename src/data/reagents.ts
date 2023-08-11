@@ -54,6 +54,6 @@ export const getReagentMode = (v: string | number): TypeRM | undefined => {
             return v
         return undefined
     }
-
+    // @ts-ignore
     return reverseReagentModeMapping[v]
 }
